@@ -295,6 +295,8 @@ public class HomeActivity extends Activity {
         @JavascriptInterface
         public void openTelia(String label) {
             HomeKeyService.request(label);
+            // let the cover screen appear first, then start Telia behind it
+            try { Thread.sleep(350); } catch (InterruptedException ignored) {}
             // start Telia fresh on its start page, never where it was left last time
             try {
                 Intent i = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
