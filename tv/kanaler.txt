@@ -1,0 +1,13 @@
+# typ|namn|adress   (yt = YouTubes inbäddade livespelare, svt = SVT:s kanal-id)
+svt|SVT1|ch-svt1
+svt|SVT2|ch-svt2
+svt|SVT24|ch-svt24
+svt|SVT Barn|ch-barnkanalen
+svt|Kunskapskanalen|ch-kunskapskanalen
+yt|Sky News|https://www.youtube.com/embed/live_stream?channel=UCoMdktPbSTixAyNGwb-UYkQ&autoplay=1&controls=0&rel=0&playsinline=1
+yt|ABC News Live|https://www.youtube.com/embed/live_stream?channel=UCBi2mrWuNuyYy4gbM6fW3vw&autoplay=1&controls=0&rel=0&playsinline=1
+yt|NBC News NOW|https://www.youtube.com/embed/live_stream?channel=UCeY0bbntWzzVIaj2z3QigXg&autoplay=1&controls=0&rel=0&playsinline=1
+yt|Bloomberg|https://www.youtube.com/embed/live_stream?channel=UCIALMKvObZNtJ6AmdCLP7Lg&autoplay=1&controls=0&rel=0&playsinline=1
+yt|DW News|https://www.youtube.com/embed/live_stream?channel=UCknLrEdhRCp1aegoMqRaCZg&autoplay=1&controls=0&rel=0&playsinline=1
+yt|France 24|https://www.youtube.com/embed/live_stream?channel=UCQfwfsi5VrQ8yKZ-UWmAEFg&autoplay=1&controls=0&rel=0&playsinline=1
+yt|Al Jazeera|https://www.youtube.com/embed/live_stream?channel=UCNye-wNBqNL5ZzHSJj3l8Bg&autoplay=1&controls=0&rel=0&playsinline=1

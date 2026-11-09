@@ -2,14 +2,17 @@ package se.cruzi.tvhem;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -18,21 +21,28 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-/** Plays a live channel inside the launcher, full screen, without leaving the app. */
-@SuppressLint("SetJavaScriptEnabled")
-public class PlayerActivity extends Activity {
-    private WebView web;
-    private TextView label;
-    private final Handler h = new Handler(Looper.getMainLooper());
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-    /** Keeps only the video on screen, full size, playing with sound. */
-    private static final String FOCUS_VIDEO =
-        "(function(){var v=document.querySelector('video');if(!v)return 0;" +
-        "if(!document.getElementById('hemcss')){var s=document.createElement('style');s.id='hemcss';" +
-        "s.textContent='html,body{background:#000!important;overflow:hidden!important}body *{visibility:hidden!important}" +
-        "video{visibility:visible!important;position:fixed!important;left:0!important;top:0!important;width:100vw!important;" +
-        "height:100vh!important;object-fit:contain!important;z-index:2147483647!important;background:#000!important}';" +
-        "document.head.appendChild(s);}v.muted=false;v.volume=1;if(v.paused){var p=v.play();if(p&&p.catch)p.catch(function(){});}return 1;})()";
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+/**
+ * Plays a live channel inside the launcher, full screen.
+ * kind=yt  : official YouTube live stream through YouTube's embeddable player
+ * kind=svt : SVT channel id (e.g. ch-svt1) played from SVT's own HLS stream
+ * Logs "spelar <title>" or "fel <title> ..." under tag HemPlay, so channels can be tested from adb.
+ */
+@SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
+public class PlayerActivity extends Activity {
+    private static final String TAG = "HemPlay";
+    private WebView web;
+    private TextView label, msg;
+    private String title = "";
+    private boolean reported;
+    private final Handler h = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle b) {
@@ -42,24 +52,23 @@ public class PlayerActivity extends Activity {
         root.setBackgroundColor(Color.BLACK);
         web = new WebView(this);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
-        label = new TextView(this);
-        label.setTextColor(Color.WHITE);
-        label.setTextSize(26);
-        label.setShadowLayer(12, 0, 2, Color.BLACK);
-        label.setPadding(60, 46, 60, 46);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
-        root.addView(label, lp);
+        label = text(26, Gravity.TOP | Gravity.START);
+        msg = text(30, Gravity.CENTER);
+        root.addView(label, new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START));
+        root.addView(msg, new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
         setContentView(root);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
-        s.setUserAgentString("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36");
         web.setBackgroundColor(Color.BLACK);
+        web.addJavascriptInterface(new Object() {
+            @JavascriptInterface public void playing() { report(true, ""); }
+            @JavascriptInterface public void error(String e) { report(false, e); }
+        }, "Hem");
         web.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onPermissionRequest(PermissionRequest r) {
+            @Override public void onPermissionRequest(PermissionRequest r) {
                 r.grant(new String[]{PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID});
             }
         });
@@ -69,8 +78,18 @@ public class PlayerActivity extends Activity {
         open();
     }
 
+    private TextView text(int size, int g) {
+        TextView t = new TextView(this);
+        t.setTextColor(Color.WHITE);
+        t.setTextSize(size);
+        t.setShadowLayer(12, 0, 2, Color.BLACK);
+        t.setPadding(60, 46, 60, 46);
+        t.setGravity(g);
+        return t;
+    }
+
     @Override
-    protected void onNewIntent(android.content.Intent i) {
+    protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
         setIntent(i);
         open();
@@ -78,24 +97,94 @@ public class PlayerActivity extends Activity {
 
     private void open() {
         String kind = getIntent().getStringExtra("kind");
-        String url = getIntent().getStringExtra("url");
-        String title = getIntent().getStringExtra("title");
-        label.setText(title == null ? "" : "● LIVE  " + title);
+        final String url = getIntent().getStringExtra("url");
+        title = getIntent().getStringExtra("title");
+        if (title == null) title = "";
+        reported = false;
+        h.removeCallbacksAndMessages(null);
+        msg.setText("");
+        label.setText("● LIVE  " + title);
         label.setAlpha(1f);
         label.animate().alpha(0f).setStartDelay(4000).setDuration(800).start();
-        h.removeCallbacksAndMessages(null);
+        Log.d(TAG, "start " + title);
+        h.postDelayed(new Runnable() {
+            @Override public void run() { report(false, "ingen bild efter 20 s"); }
+        }, 20000);
+
         if ("yt".equals(kind)) {
-            String page = "<html><body style=\"margin:0;background:#000\"><iframe src=\"" + url +
-                "\" style=\"border:0;width:100vw;height:100vh\" allow=\"autoplay; encrypted-media\"></iframe></body></html>";
+            String page = "<html><body style='margin:0;background:#000'>"
+                + "<iframe id='p' src='" + url + "&enablejsapi=1&origin=https://hem.cruzi.se' style='border:0;width:100vw;height:100vh' allow='autoplay; encrypted-media'></iframe>"
+                + "<script src='https://www.youtube.com/iframe_api'></script><script>"
+                + "function onYouTubeIframeAPIReady(){new YT.Player('p',{events:{"
+                + "onStateChange:function(e){if(e.data==1)Hem.playing();},"
+                + "onError:function(e){Hem.error('youtube fel '+e.data);}}});}"
+                + "</script></body></html>";
             web.loadDataWithBaseURL("https://hem.cruzi.se/", page, "text/html", "UTF-8", null);
+        } else if ("svt".equals(kind)) {
+            new Thread(new Runnable() {
+                @Override public void run() {
+                    final String hls = svtStream(url);
+                    h.post(new Runnable() {
+                        @Override public void run() {
+                            if (hls == null) { report(false, "svt gav ingen ström"); return; }
+                            String page = "<html><body style='margin:0;background:#000'>"
+                                + "<video id='v' autoplay playsinline style='width:100vw;height:100vh;background:#000' src='" + hls + "'></video><script>"
+                                + "var v=document.getElementById('v');"
+                                + "v.addEventListener('playing',function(){Hem.playing();});"
+                                + "v.addEventListener('error',function(){Hem.error('video fel '+(v.error?v.error.code:''));});"
+                                + "v.play().catch(function(e){Hem.error('play '+e);});</script></body></html>";
+                            web.loadDataWithBaseURL("https://www.svtplay.se/", page, "text/html", "UTF-8", null);
+                        }
+                    });
+                }
+            }).start();
         } else {
-            web.loadUrl(url);
-            for (int i = 1; i <= 20; i++) {
-                h.postDelayed(new Runnable() {
-                    @Override public void run() { web.evaluateJavascript(FOCUS_VIDEO, null); }
-                }, i * 1000L);
-            }
+            report(false, "okänd kanaltyp");
         }
+    }
+
+    /** Asks SVT for the channel's stream and returns an unencrypted HLS address, or null. */
+    private static String svtStream(String id) {
+        try {
+            HttpURLConnection c = (HttpURLConnection) new URL("https://api.svt.se/video/" + id).openConnection();
+            c.setConnectTimeout(6000);
+            c.setReadTimeout(8000);
+            InputStream in = c.getInputStream();
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+            in.close();
+            JSONArray refs = new JSONObject(bo.toString("UTF-8")).optJSONArray("videoReferences");
+            if (refs == null) return null;
+            String best = null;
+            for (int i = 0; i < refs.length(); i++) {
+                JSONObject r = refs.getJSONObject(i);
+                String f = r.optString("format"), u = r.optString("url");
+                if (u.isEmpty() || f.contains("drm") || f.contains("dash")) continue;
+                if (f.equals("hls")) return u;
+                if (f.startsWith("hls") && best == null) best = u;
+            }
+            return best;
+        } catch (Exception e) {
+            Log.d(TAG, "svt api: " + e);
+            return null;
+        }
+    }
+
+    private void report(final boolean ok, final String why) {
+        h.post(new Runnable() {
+            @Override public void run() {
+                if (reported) return;
+                reported = true;
+                h.removeCallbacksAndMessages(null);
+                if (ok) Log.d(TAG, "spelar " + title);
+                else {
+                    Log.d(TAG, "fel " + title + ": " + why);
+                    msg.setText(title + " kunde inte spelas just nu");
+                }
+            }
+        });
     }
 
     @Override
