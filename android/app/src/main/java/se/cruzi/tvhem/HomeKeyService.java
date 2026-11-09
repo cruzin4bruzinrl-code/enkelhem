@@ -36,6 +36,9 @@ public class HomeKeyService extends AccessibilityService {
     private static int presses;
     private static int phase;
     private static long phaseUntil;
+    private static long phaseStart;
+    private static int settle;
+    private static int retries;
     private final Handler h = new Handler(Looper.getMainLooper());
     private View overlay;
 
@@ -44,6 +47,8 @@ public class HomeKeyService extends AccessibilityService {
         pendingUntil = SystemClock.uptimeMillis() + 14000;
         presses = 0;
         phase = 0;
+        settle = 0;
+        retries = 0;
         HomeKeyService s = instance;
         Log.d(TAG, "öppnar " + label + ", tjänst " + (s == null ? "SAKNAS" : "igång"));
         if (s != null) {
@@ -131,6 +136,20 @@ public class HomeKeyService extends AccessibilityService {
             // Tv-guide: wait until it has loaded, move focus into the channel grid, then start the channel
             if (findLabel(root, "Favoritkanaler") == null && findLabel(root, "Tv-guide") == null) {
                 Log.d(TAG, "väntar på tv-guiden");
+                if (SystemClock.uptimeMillis() - phaseStart > 1600 && retries < 2) {
+                    AccessibilityNodeInfo tv = findLabel(root, "Tv");
+                    if (tv != null && focus != null) {
+                        tv.getBoundsInScreen(t);
+                        if (f.contains(t.centerX(), t.centerY())) {
+                            retries++;
+                            Log.d(TAG, "försöker igen " + retries);
+                            click(focus);
+                            phaseStart = SystemClock.uptimeMillis();
+                        } else {
+                            phase = 0; settle = 0;   // focus moved away: steer back to the Tv row
+                        }
+                    }
+                }
                 return false;
             }
             Log.d(TAG, "guide fokus=" + (focus == null ? "inget" : f.toShortString()));
@@ -150,13 +169,15 @@ public class HomeKeyService extends AccessibilityService {
         boolean smallFocus = focus != null && f.width() < s.width() * 0.45f && f.height() < s.height() * 0.3f;
         if (target != null && target.isVisibleToUser() && smallFocus) {
             if (f.contains(t.centerX(), t.centerY())) {
+                if (settle++ < 1) { Log.d(TAG, "väntar in markeringen"); return false; }
                 Log.d(TAG, "OK på " + pending);
-                press(GLOBAL_ACTION_DPAD_CENTER);
-                if ("Tv".equalsIgnoreCase(pending)) { phase = 1; return false; }
+                click(focus);
+                if ("Tv".equalsIgnoreCase(pending)) { phase = 1; phaseStart = SystemClock.uptimeMillis(); return false; }
                 phase = 2;
                 phaseUntil = SystemClock.uptimeMillis() + 900;
                 return false;
             }
+            settle = 0;
             boolean sameColumn = t.centerX() >= f.left - 40 && t.centerX() <= f.right + 40;
             if (sameColumn) {
                 press(t.centerY() > f.centerY() ? GLOBAL_ACTION_DPAD_DOWN : GLOBAL_ACTION_DPAD_UP);
@@ -165,6 +186,19 @@ public class HomeKeyService extends AccessibilityService {
         }
         press(GLOBAL_ACTION_DPAD_LEFT);
         return false;
+    }
+
+    /** Click the focused row directly; fall back to the OK key. */
+    private void click(AccessibilityNodeInfo node) {
+        boolean ok = false;
+        AccessibilityNodeInfo n = node;
+        for (int i = 0; i < 4 && n != null && !ok; i++) {
+            ok = n.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            if (!ok) n = n.getParent();
+        }
+        Log.d(TAG, "klick " + (ok ? "direkt" : "via OK-knappen"));
+        if (ok) presses++;
+        else press(GLOBAL_ACTION_DPAD_CENTER);
     }
 
     private void press(int action) {
