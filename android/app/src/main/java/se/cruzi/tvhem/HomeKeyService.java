@@ -130,13 +130,22 @@ public class HomeKeyService extends AccessibilityService {
         performGlobalAction(action);
     }
 
+    /** Walks the whole tree ourselves: Telia's menu is not found by findAccessibilityNodeInfosByText. */
     private static AccessibilityNodeInfo findLabel(AccessibilityNodeInfo root, String want) {
-        List<AccessibilityNodeInfo> hits = root.findAccessibilityNodeInfosByText(want);
-        if (hits == null) return null;
-        for (AccessibilityNodeInfo n : hits) {
-            CharSequence t = n.getText();
-            if (t != null && t.toString().trim().equalsIgnoreCase(want)) return n;
+        java.util.ArrayDeque<AccessibilityNodeInfo> q = new java.util.ArrayDeque<>();
+        q.add(root);
+        int seen = 0;
+        while (!q.isEmpty() && seen < 3000) {
+            AccessibilityNodeInfo n = q.poll();
+            if (n == null) continue;
+            seen++;
+            if (matches(n.getText(), want) || matches(n.getContentDescription(), want)) return n;
+            for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
         }
         return null;
+    }
+
+    private static boolean matches(CharSequence c, String want) {
+        return c != null && c.toString().trim().equalsIgnoreCase(want);
     }
 }
