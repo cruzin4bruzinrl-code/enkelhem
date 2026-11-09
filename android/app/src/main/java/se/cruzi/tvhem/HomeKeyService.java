@@ -39,6 +39,9 @@ public class HomeKeyService extends AccessibilityService {
     private static long phaseStart;
     private static int settle;
     private static int retries;
+    private static int stuck;
+    private static int backs;
+    private static String lastFocus = "";
     private final Handler h = new Handler(Looper.getMainLooper());
     private View overlay;
 
@@ -49,6 +52,9 @@ public class HomeKeyService extends AccessibilityService {
         phase = 0;
         settle = 0;
         retries = 0;
+        stuck = 0;
+        backs = 0;
+        lastFocus = "";
         HomeKeyService s = instance;
         Log.d(TAG, "öppnar " + label + ", tjänst " + (s == null ? "SAKNAS" : "igång"));
         if (s != null) {
@@ -184,18 +190,22 @@ public class HomeKeyService extends AccessibilityService {
                 return false;
             }
         }
+        String fk = f.toShortString();
+        if (fk.equals(lastFocus)) stuck++; else stuck = 0;
+        lastFocus = fk;
+        if (stuck >= 2 && backs < 4) {
+            backs++; stuck = 0;
+            Log.d(TAG, "fast på en undersida, trycker Bakåt");
+            press(GLOBAL_ACTION_BACK);
+            return false;
+        }
         press(GLOBAL_ACTION_DPAD_LEFT);
         return false;
     }
 
     /** Click the focused row directly; fall back to the OK key. */
     private void click(AccessibilityNodeInfo node) {
-        boolean ok = false;
-        AccessibilityNodeInfo n = node;
-        for (int i = 0; i < 4 && n != null && !ok; i++) {
-            ok = n.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            if (!ok) n = n.getParent();
-        }
+        boolean ok = node != null && node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
         Log.d(TAG, "klick " + (ok ? "direkt" : "via OK-knappen"));
         if (ok) presses++;
         else press(GLOBAL_ACTION_DPAD_CENTER);

@@ -275,7 +275,15 @@ public class HomeActivity extends Activity {
         @JavascriptInterface
         public void openTelia(String label) {
             HomeKeyService.request(label);
-            launch(HomeKeyService.TELIA);
+            // start Telia fresh on its start page, never where it was left last time
+            try {
+                Intent i = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                    .setClassName(HomeKeyService.TELIA, HomeKeyService.TELIA + ".MainActivity")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(i);
+            } catch (Exception e) {
+                launch(HomeKeyService.TELIA);
+            }
         }
 
         @JavascriptInterface
