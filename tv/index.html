@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v19 -->
+<!-- HEM-v20 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -211,7 +211,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="19.0";
+const VERSION="20.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -376,11 +376,11 @@ const SVT="se.svt.android.svtplay";
 const YT=id=>"https://www.youtube.com/embed/live_stream?channel="+id+"&autoplay=1&controls=0&rel=0&playsinline=1";
 const LIVE=[
  {tab:"Sverige",ch:[
-  {n:"SVT1",s:"Nyheter, drama och nöje",c:"#1e7a4a",k:"web",u:"https://www.svtplay.se/kanaler/svt1"},
-  {n:"SVT2",s:"Dokumentärer och kultur",c:"#1d5f8a",k:"web",u:"https://www.svtplay.se/kanaler/svt2"},
-  {n:"SVT24",s:"Nyheter och repriser",c:"#28323d",k:"web",u:"https://www.svtplay.se/kanaler/svt24"},
-  {n:"SVT Barn",s:"Barnprogram",c:"#d9831f",k:"web",u:"https://www.svtplay.se/kanaler/svtbarn"},
-  {n:"Kunskapskanalen",s:"Fakta och samhälle",c:"#7a3fa0",k:"web",u:"https://www.svtplay.se/kanaler/kunskapskanalen"},
+  {n:"SVT1",s:"Nyheter, drama och nöje",c:"#1e7a4a",k:"svt",u:"ch-svt1"},
+  {n:"SVT2",s:"Dokumentärer och kultur",c:"#1d5f8a",k:"svt",u:"ch-svt2"},
+  {n:"SVT24",s:"Nyheter och repriser",c:"#28323d",k:"svt",u:"ch-svt24"},
+  {n:"SVT Barn",s:"Barnprogram",c:"#d9831f",k:"svt",u:"ch-barnkanalen"},
+  {n:"Kunskapskanalen",s:"Fakta och samhälle",c:"#7a3fa0",k:"svt",u:"ch-kunskapskanalen"},
   {n:"TV4",s:"Ingår i ditt Telia-paket",c:"#c4122f",k:"telia"},
   {n:"Axess TV",s:"Ingår i ditt Telia-paket",c:"#8a1f3d",k:"telia"}]},
  {tab:"Nyheter på engelska",ch:[
