@@ -2,6 +2,7 @@ package se.cruzi.tvhem;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -14,28 +15,27 @@ import java.util.List;
 
 /**
  * 1) Sends the remote's HOME button to this launcher (Telia's launcher stays installed for Telia Play).
- * 2) Opens a section inside Telia (Tv, Mitt innehåll, Mitt konto) by pressing that menu item for the user.
+ * 2) Opens a section inside Telia (Tv, Mitt innehåll, Mitt konto) by steering Telia's side menu
+ *    with the D-pad, like a person would. OK is only pressed once the wanted item has focus.
  */
 public class HomeKeyService extends AccessibilityService {
     static final String TELIA = "se.telia.androidtv.launcher";
     private static HomeKeyService instance;
     private static String pending;
     private static long pendingUntil;
-    private static int leftPresses;
+    private static int presses;
     private final Handler h = new Handler(Looper.getMainLooper());
 
     static void request(String label) {
         pending = label;
-        pendingUntil = SystemClock.uptimeMillis() + 9000;
-        leftPresses = 0;
+        pendingUntil = SystemClock.uptimeMillis() + 10000;
+        presses = 0;
         HomeKeyService s = instance;
-        if (s != null) s.schedule(700);
+        if (s != null) s.schedule(1100);
     }
 
     @Override
-    protected void onServiceConnected() {
-        instance = this;
-    }
+    protected void onServiceConnected() { instance = this; }
 
     @Override
     public boolean onUnbind(Intent intent) {
@@ -57,11 +57,7 @@ public class HomeKeyService extends AccessibilityService {
     }
 
     @Override
-    public void onAccessibilityEvent(AccessibilityEvent e) {
-        if (pending == null || e == null) return;
-        CharSequence p = e.getPackageName();
-        if (p != null && TELIA.contentEquals(p)) schedule(250);
-    }
+    public void onAccessibilityEvent(AccessibilityEvent e) {}
 
     @Override
     public void onInterrupt() {}
@@ -75,44 +71,55 @@ public class HomeKeyService extends AccessibilityService {
         @Override
         public void run() {
             if (pending == null) return;
-            if (SystemClock.uptimeMillis() > pendingUntil) { pending = null; return; }
+            if (SystemClock.uptimeMillis() > pendingUntil || presses > 24) { pending = null; return; }
             boolean done = false;
-            try { done = tryClick(); } catch (Exception ignored) {}
+            try { done = step(); } catch (Exception ignored) {}
             if (done) pending = null;
-            else schedule(400);
+            else schedule(380);
         }
     };
 
-    private boolean tryClick() {
+    /** One move per call. Returns true when finished. */
+    private boolean step() {
+        if (Build.VERSION.SDK_INT < 33) return true;
         AccessibilityNodeInfo root = getRootInActiveWindow();
         if (root == null) return false;
         CharSequence pkg = root.getPackageName();
         if (pkg == null || !TELIA.contentEquals(pkg)) return false;
-        String want = pending;
-        List<AccessibilityNodeInfo> hits = root.findAccessibilityNodeInfosByText(want);
-        if (hits != null) {
-            for (AccessibilityNodeInfo n : hits) {
-                CharSequence t = n.getText();
-                if (t == null || !t.toString().trim().equalsIgnoreCase(want)) continue;
-                AccessibilityNodeInfo node = n;
-                for (int i = 0; i < 6 && node != null; i++) {
-                    if (node.isClickable() && node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true;
-                    if (node.isFocusable() && Build.VERSION.SDK_INT >= 33) {
-                        node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-                        h.postDelayed(new Runnable() {
-                            @Override public void run() { performGlobalAction(GLOBAL_ACTION_DPAD_CENTER); }
-                        }, 180);
-                        return true;
-                    }
-                    node = node.getParent();
-                }
+
+        AccessibilityNodeInfo target = findLabel(root, pending);
+        AccessibilityNodeInfo focus = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+        if (target != null && target.isVisibleToUser() && focus != null) {
+            Rect t = new Rect(), f = new Rect();
+            target.getBoundsInScreen(t);
+            focus.getBoundsInScreen(f);
+            if (f.contains(t.centerX(), t.centerY())) {
+                press(GLOBAL_ACTION_DPAD_CENTER);
+                return true;
+            }
+            boolean sameColumn = t.centerX() >= f.left - 40 && t.centerX() <= f.right + 40;
+            if (sameColumn) {
+                press(t.centerY() > f.centerY() ? GLOBAL_ACTION_DPAD_DOWN : GLOBAL_ACTION_DPAD_UP);
+                return false;
             }
         }
-        // menu labels are hidden while Telia's side menu is collapsed: open it with LEFT
-        if (leftPresses < 3 && Build.VERSION.SDK_INT >= 33) {
-            leftPresses++;
-            performGlobalAction(GLOBAL_ACTION_DPAD_LEFT);
-        }
+        // focus is in the content or the menu is collapsed: move left towards the side menu
+        press(GLOBAL_ACTION_DPAD_LEFT);
         return false;
+    }
+
+    private void press(int action) {
+        presses++;
+        performGlobalAction(action);
+    }
+
+    private static AccessibilityNodeInfo findLabel(AccessibilityNodeInfo root, String want) {
+        List<AccessibilityNodeInfo> hits = root.findAccessibilityNodeInfosByText(want);
+        if (hits == null) return null;
+        for (AccessibilityNodeInfo n : hits) {
+            CharSequence t = n.getText();
+            if (t != null && t.toString().trim().equalsIgnoreCase(want)) return n;
+        }
+        return null;
     }
 }
