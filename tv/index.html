@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v12 -->
+<!-- HEM-v13 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -175,7 +175,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="12.0";
+const VERSION="13.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -200,7 +200,8 @@ const find=re=>APPS.find(a=>re.test(a.label)||re.test(a.pkg));
 const getRecent=()=>LS.get("recent",[]);
 const getFav=()=>LS.get("fav",[]);
 function remember(pkg){let r=getRecent().filter(x=>x.pkg!==pkg);r.unshift({pkg,t:Date.now()});LS.set("recent",r.slice(0,8));}
-function launch(pkg,label){if(!pkg){toast((label||"Appen")+" finns inte på boxen");return;}remember(pkg);
+let leftForApp=false;
+function launch(pkg,label){if(!pkg){toast((label||"Appen")+" finns inte på boxen");return;}remember(pkg);leftForApp=true;
   if(call("launch",pkg)===null&&!B)console.log("öppna",pkg);}
 function ago(t){const m=Math.round((Date.now()-t)/6e4);if(m<1)return "nyss";if(m<60)return m+" min sedan";
   const h=Math.round(m/60);if(h<24)return h+" tim sedan";const d=Math.round(h/24);return d===1?"igår":d+" dagar sedan";}
@@ -235,7 +236,7 @@ function act(a,el){
       const p=teliaPkg();
       if(p===TELIA_LAUNCHER&&B&&!B.openUri){toast("Tryck HOME på fjärren för att komma till Telia");return;}
       if(a==="tv")toast("Välj Tv i Telias meny");return launch(p,"Telia");}
-    case "youtube":{const y=find(/smarttube/i)||find(/youtube(?!.*music)/i);return launch(y&&y.pkg,"YouTube");}
+    case "youtube":{const y=byPkg("com.google.android.youtube.tv")||APPS.find(a=>/youtube/i.test(a.label)&&!/music|kids|smarttube/i.test(a.label+a.pkg));return launch(y&&y.pkg,"YouTube");}
     case "music":{const s=find(/spotify/i);return launch(s&&s.pkg,"Spotify");}
     case "store":return launch("com.android.vending","Play Butik");
     case "web":{const w=browser();return launch(w&&w.pkg,"BrowseHere");}
@@ -475,8 +476,11 @@ setInterval(checkUpdate,15*60*1000);setTimeout(checkUpdate,20000);
 
 /* ===== wiring ===== */
 window.oceanKey=key;
-window.oceanShown=function(){checkUpdate();if(saverOn)stopSaver();if(zone!=="main"){["grid","places"].forEach(i=>$(i).classList.remove("open"));$("qp").classList.remove("open");zone="main";}
-  buildRecent();tick();R=1;C=1;render();bumpIdle();newBackdrop();};
+/* called by the app whenever the window regains focus (also after volume popups etc.):
+   only refresh when we actually came back from another app, and never move the highlight */
+window.oceanShown=function(){checkUpdate();tick();if(!leftForApp)return;leftForApp=false;
+  if(saverOn)stopSaver();if(zone!=="main"){["grid","places"].forEach(i=>$(i).classList.remove("open"));$("qp").classList.remove("open");zone="main";}
+  buildRecent();render();bumpIdle();newBackdrop();};
 addEventListener("keydown",e=>{const m={ArrowRight:"right",ArrowLeft:"left",ArrowUp:"up",ArrowDown:"down",Enter:"ok",Escape:"back",Backspace:"back",h:"hold",
    MediaPlayPause:"playkey",MediaPlay:"playkey",MediaPause:"playkey",p:"playkey",MediaRecord:"rec",ColorF0Red:"rec",r:"rec",
    MediaLast:"last",l:"last",AllApps:"allapps",a:"allapps"};
