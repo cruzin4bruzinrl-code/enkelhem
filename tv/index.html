@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v16 -->
+<!-- HEM-v17 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -80,6 +80,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
   display:grid;place-items:center;font-size:22px;font-weight:700;}
 .rc.focus{transform:scale(1.06);box-shadow:0 22px 44px rgba(0,0,0,.5);z-index:2;}
 .gw .rc.focus{box-shadow:0 0 0 3px #fff,0 22px 44px rgba(0,0,0,.5);}
+.rc.media .mshade{position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.82));}
+.rc.media .mt{position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:center;gap:10px;font-size:21px;font-weight:600;}
+.rc.media .mt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc.media .mi{width:30px;height:30px;border-radius:8px;flex:0 0 auto;}
+.rc.media .mplay{position:absolute;left:50%;top:42%;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;background:rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.8);}
+.rc.media .mplay::after{content:"";position:absolute;left:24px;top:18px;border-left:20px solid #fff;border-top:13px solid transparent;border-bottom:13px solid transparent;}
 .empty{font-size:25px;opacity:.5;align-self:center;}
 
 /* overlays */
@@ -185,7 +191,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="16.0";
+const VERSION="17.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -223,14 +229,22 @@ function card(a,num){const c=document.createElement("div");c.className="rc f";c.
   if(num)c.insertAdjacentHTML("beforeend",`<div class="num">${num}</div>`);
   return c;}
 
+function mediaCard(a,m){const c=document.createElement("div");c.className="rc f media";c.dataset.pkg=a.pkg;
+  const src=m.art?"data:image/jpeg;base64,"+m.art:m.artUri;const ic=a.icon?`<img class="mi" src="data:image/png;base64,${a.icon}">`:"";
+  c.innerHTML=`<img class="ban" src="${src}"><div class="mshade"></div><div class="mt">${ic}<span>${m.title.replace(/</g,"&lt;")}</span></div><div class="mplay"></div>`;return c;}
 function buildRecent(){
   let rec=getRecent().map(x=>({...x,app:byPkg(x.pkg)})).filter(x=>x.app);
   if(!rec.length&&!B)rec=[["se.telia.androidtv.launcher",35],["com.google.android.youtube.tv",180],["com.spotify.tv.android",1500]]
     .map(([p,m])=>({pkg:p,t:Date.now()-m*6e4,app:byPkg(p)}));
   const box=$("recent"),pb=$("playbtn");box.innerHTML="";
   if(!rec.length){$("ctitle").textContent="Välkommen";$("cmeta").textContent="Appar du öppnar dyker upp här";pb.style.display="none";return;}
-  pb.style.display="";$("ctitle").textContent=rec[0].app.label;$("cmeta").textContent="Senast öppnad · "+ago(rec[0].t);
-  pb.dataset.pkg=rec[0].pkg;rec.slice(0,3).forEach(x=>box.appendChild(card(x.app)));
+  let media={};try{const r=call("getMedia");if(r)media=JSON.parse(r);}catch(e){}
+  const mOf=x=>{const m=media[x.pkg];return m&&m.t>=x.t-6e4?m:null;};
+  const m0=mOf(rec[0]);pb.style.display="";
+  if(m0){$("ctitle").textContent=m0.title;$("cmeta").textContent=rec[0].app.label+(m0.sub?" · "+m0.sub:"")+" · "+ago(m0.t);}
+  else{$("ctitle").textContent=rec[0].app.label;$("cmeta").textContent="Senast öppnad · "+ago(rec[0].t);}
+  pb.dataset.pkg=rec[0].pkg;
+  rec.slice(0,3).forEach(x=>{const m=mOf(x);box.appendChild(m&&(m.art||m.artUri)?mediaCard(x.app,m):card(x.app));});
 }
 
 /* ===== actions ===== */
@@ -243,14 +257,16 @@ function act(a,el){
     case "panel":return openPanel();
     case "resume":return launch(el.dataset.pkg);
     case "tv":case "telia":case "content":{
+      const section={tv:"Tv",content:"Mitt innehåll"}[a];
+      if(B&&B.openTelia&&section){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia(section);return;}
       const p=teliaPkg();
       if(p===TELIA_LAUNCHER&&B&&!B.openUri){toast("Tryck HOME på fjärren för att komma till Telia");return;}
-      if(a==="tv")toast("Välj Tv i Telias meny");return launch(p,"Telia");}
+      if(section)toast("Välj "+section+" i Telias meny");return launch(p,"Telia");}
     case "youtube":{const y=byPkg("com.google.android.youtube.tv")||APPS.find(a=>/youtube/i.test(a.label)&&!/music|kids|smarttube/i.test(a.label+a.pkg));return launch(y&&y.pkg,"YouTube");}
     case "music":{const s=find(/spotify/i);return launch(s&&s.pkg,"Spotify");}
     case "store":return launch("com.android.vending","Play Butik");
     case "web":{const w=browser();return launch(w&&w.pkg,"BrowseHere");}
-    case "account":{const w=browser();if(B&&!B.openUri){toast("Gå till telia.se/mitt-telia i webbläsaren");return launch(w&&w.pkg,"BrowseHere");}if(w)remember(w.pkg);call("openUri","https://www.telia.se/mitt-telia",w?w.pkg:"");return;}
+    case "account":{if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Mitt konto");return;}const w=browser();if(B&&!B.openUri){toast("Gå till telia.se/mitt-telia i webbläsaren");return launch(w&&w.pkg,"BrowseHere");}if(w)remember(w.pkg);call("openUri","https://www.telia.se/mitt-telia",w?w.pkg:"");return;}
   }
 }
 
