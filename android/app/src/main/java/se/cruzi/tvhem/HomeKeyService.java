@@ -32,6 +32,8 @@ public class HomeKeyService extends AccessibilityService {
     private static final String TAG = "HemTv";
     private static HomeKeyService instance;
     private static String pending;
+    private static String channel;
+    private static int scans;
     private static long pendingUntil;
     private static int presses;
     private static int phase;
@@ -46,8 +48,12 @@ public class HomeKeyService extends AccessibilityService {
     private View overlay;
 
     static void request(String label) {
+        channel = null;
+        int c = label.indexOf(':');
+        if (c > 0) { channel = label.substring(c + 1).trim(); label = label.substring(0, c); }
+        scans = 0;
         pending = label;
-        pendingUntil = SystemClock.uptimeMillis() + 14000;
+        pendingUntil = SystemClock.uptimeMillis() + 20000;
         presses = 0;
         phase = 0;
         settle = 0;
@@ -136,7 +142,13 @@ public class HomeKeyService extends AccessibilityService {
         AccessibilityNodeInfo focus = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
         if (focus != null) focus.getBoundsInScreen(f);
 
-        if (phase == 2) return SystemClock.uptimeMillis() > phaseUntil;
+        if (phase == 2) {
+            boolean guide = findLabel(root, "Favoritkanaler") != null || findLabel(root, "Tv-guide") != null;
+            if (!guide && phaseStart == 0) phaseStart = SystemClock.uptimeMillis();
+            if (guide) phaseStart = 0;
+            if (phaseStart != 0 && SystemClock.uptimeMillis() - phaseStart > 700) return true;
+            return SystemClock.uptimeMillis() > phaseUntil;
+        }
 
         if (phase == 1) {
             // Tv-guide: wait until it has loaded, move focus into the channel grid, then start the channel
@@ -162,9 +174,26 @@ public class HomeKeyService extends AccessibilityService {
             if (focus == null) return false;
             if (f.left < s.width() * 0.2f) { press(GLOBAL_ACTION_DPAD_RIGHT); return false; }
             if (f.centerY() < s.height() * 0.47f) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+            if (channel != null) {
+                AccessibilityNodeInfo ch = findContains(root, channel, s.width());
+                if (ch != null && ch.isVisibleToUser()) {
+                    Rect c = new Rect();
+                    ch.getBoundsInScreen(c);
+                    if (c.centerY() < f.top) { press(GLOBAL_ACTION_DPAD_UP); return false; }
+                    if (c.centerY() > f.bottom) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+                    Log.d(TAG, "rätt kanal: " + channel);
+                } else if (scans++ < 14) {
+                    Log.d(TAG, "letar efter " + channel);
+                    press(GLOBAL_ACTION_DPAD_DOWN);
+                    return false;
+                } else {
+                    Log.d(TAG, "hittade inte " + channel + ", tar markerad kanal");
+                }
+            }
             press(GLOBAL_ACTION_DPAD_CENTER);
             phase = 2;
-            phaseUntil = SystemClock.uptimeMillis() + 1800;
+            phaseStart = 0;
+            phaseUntil = SystemClock.uptimeMillis() + 10000;
             return false;
         }
 
@@ -227,6 +256,25 @@ public class HomeKeyService extends AccessibilityService {
             if (n == null) continue;
             seen++;
             if (matches(n.getText(), want) || matches(n.getContentDescription(), want)) return n;
+            for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
+        }
+        return null;
+    }
+
+    /** First small node whose text or description contains the word (channel logos carry a description). */
+    private static AccessibilityNodeInfo findContains(AccessibilityNodeInfo root, String want, int screenW) {
+        String w = want.toLowerCase();
+        ArrayDeque<AccessibilityNodeInfo> q = new ArrayDeque<>();
+        q.add(root);
+        int seen = 0;
+        Rect r = new Rect();
+        while (!q.isEmpty() && seen < 3000) {
+            AccessibilityNodeInfo n = q.poll();
+            if (n == null) continue;
+            seen++;
+            CharSequence t = n.getText(), d = n.getContentDescription();
+            boolean hit = (t != null && t.toString().toLowerCase().contains(w)) || (d != null && d.toString().toLowerCase().contains(w));
+            if (hit) { n.getBoundsInScreen(r); if (r.width() < screenW / 2) return n; }
             for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
         }
         return null;

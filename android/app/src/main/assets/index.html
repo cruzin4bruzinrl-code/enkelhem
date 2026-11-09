@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v19 -->
+<!-- HEM-v21 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -211,7 +211,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="19.0";
+const VERSION="21.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -376,14 +376,14 @@ const SVT="se.svt.android.svtplay";
 const YT=id=>"https://www.youtube.com/embed/live_stream?channel="+id+"&autoplay=1&controls=0&rel=0&playsinline=1";
 const LIVE=[
  {tab:"Sverige",ch:[
-  {n:"SVT1",s:"Nyheter, drama och nöje",c:"#1e7a4a",k:"web",u:"https://www.svtplay.se/kanaler/svt1"},
-  {n:"SVT2",s:"Dokumentärer och kultur",c:"#1d5f8a",k:"web",u:"https://www.svtplay.se/kanaler/svt2"},
-  {n:"SVT24",s:"Nyheter och repriser",c:"#28323d",k:"web",u:"https://www.svtplay.se/kanaler/svt24"},
-  {n:"SVT Barn",s:"Barnprogram",c:"#d9831f",k:"web",u:"https://www.svtplay.se/kanaler/svtbarn"},
-  {n:"Kunskapskanalen",s:"Fakta och samhälle",c:"#7a3fa0",k:"web",u:"https://www.svtplay.se/kanaler/kunskapskanalen"},
+  {n:"SVT1",s:"Nyheter, drama och nöje",c:"#1e7a4a",k:"svt",u:"ch-svt1"},
+  {n:"SVT2",s:"Dokumentärer och kultur",c:"#1d5f8a",k:"svt",u:"ch-svt2"},
+  {n:"SVT24",s:"Nyheter och repriser",c:"#28323d",k:"svt",u:"ch-svt24"},
+  {n:"SVT Barn",s:"Barnprogram",c:"#d9831f",k:"svt",u:"ch-barnkanalen"},
+  {n:"Kunskapskanalen",s:"Fakta och samhälle",c:"#7a3fa0",k:"svt",u:"ch-kunskapskanalen"},
   {n:"TV4",s:"Ingår i ditt Telia-paket",c:"#c4122f",k:"telia"},
   {n:"Axess TV",s:"Ingår i ditt Telia-paket",c:"#8a1f3d",k:"telia"}]},
- {tab:"Nyheter på engelska",ch:[
+ {tab:"Nyheter",ch:[
   {n:"Sky News",s:"Brittiska nyheter",c:"#b3121b",k:"yt",u:YT("UCoMdktPbSTixAyNGwb-UYkQ")},
   {n:"ABC News Live",s:"Amerikanska nyheter",c:"#1c2a44",k:"yt",u:YT("UCBi2mrWuNuyYy4gbM6fW3vw")},
   {n:"NBC News NOW",s:"Amerikanska nyheter",c:"#2b2f6b",k:"yt",u:YT("UCeY0bbntWzzVIaj2z3QigXg")},
@@ -391,8 +391,19 @@ const LIVE=[
   {n:"DW News",s:"Internationella nyheter",c:"#0b3d6e",k:"yt",u:YT("UCknLrEdhRCp1aegoMqRaCZg")},
   {n:"France 24",s:"Internationella nyheter",c:"#0b5aa6",k:"yt",u:YT("UCQfwfsi5VrQ8yKZ-UWmAEFg")},
   {n:"Al Jazeera",s:"Internationella nyheter",c:"#c27a0e",k:"yt",u:YT("UCNye-wNBqNL5ZzHSJj3l8Bg")}]}];
+/* channel list lives in tv/kanaler.txt on GitHub (built-in list above is the offline fallback) */
+const KSRC="https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/kanaler.txt";
+function parseKanaler(t){const tabs=[];
+  t.split("\n").forEach(l=>{l=l.trim();if(!l||l[0]==="#")return;const[k,n,u,tab,s,c]=l.split("|");if(!n||!tab)return;
+    let T=tabs.find(x=>x.tab===tab);if(!T){T={tab,ch:[]};tabs.push(T);}
+    T.ch.push({k,n,s:s||"",c:c||"#2a2c31",u:k==="yt"?YT(u):u,tg:k==="telia"?u:null});});
+  return tabs.length?tabs:null;}
+function loadKanaler(){try{const c=LS.get("kanaler",null);if(c){const p=parseKanaler(c);if(p)LIVE.splice(0,LIVE.length,...p);}}catch(e){}
+  fetch(KSRC+"?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{const p=t&&parseKanaler(t);
+    if(p){LS.set("kanaler",t);LIVE.splice(0,LIVE.length,...p);if(zone==="live")fillLive();}}).catch(()=>{});}
+loadKanaler();
 let lt=0,lr=1,li=0,lOff=0;
-function openLive(){lt=0;lr=1;li=0;zone="live";fillLive();$("live").classList.add("open");render();}
+function openLive(){loadKanaler();lt=0;lr=1;li=0;zone="live";fillLive();$("live").classList.add("open");render();}
 function closeLive(){$("live").classList.remove("open");zone="main";render();}
 function fillLive(){
   $("ltabs").innerHTML=LIVE.map((t,i)=>`<div class="ltab${i===lt?" sel":""}">${t.tab}</div>`).join("");
@@ -409,7 +420,7 @@ function liveKey(k){const n=LIVE[lt].ch.length;
   render();const g=document.querySelectorAll("#lgrid .lc")[li];if(g){const row=Math.floor(li/4),rh=g.offsetHeight+34;
     lOff=-Math.max(0,row-2)*rh;$("lgrid").style.transform=`translateY(${lOff}px)`;}}
 function playLive(c){
-  if(c.k==="telia"){if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Tv");}else toast("Tryck HOME för att komma till Telia");return;}
+  if(c.k==="telia"){if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Tv"+(c.tg?":"+c.tg:""));}else toast("Tryck HOME för att komma till Telia");return;}
   if(!(B&&B.play)){toast(B?"Kräver nya appversionen: skriv tv uppdatera":"Spelas upp på TV:n");return;}
   leftForApp=true;B.play(c.k,c.u,c.n);}
 

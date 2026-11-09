@@ -3,8 +3,10 @@
 [ -f ~/.tvconf ] && . ~/.tvconf; ADDR=${ADDR:-192.168.0.116:37363}
 adb connect "$ADDR" >/dev/null 2>&1
 RES=$PREFIX/tmp/kanaltest.txt; : > "$RES"
-curl -fsSL "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/kanaler.txt?t=$RANDOM" | grep -v '^#' | while IFS='|' read -r kind name url; do
+curl -fsSL "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/kanaler.txt?t=$RANDOM" | grep -v '^#' | while IFS='|' read -r kind name url tab desc col; do
   [ -z "$name" ] && continue
+  [ "$kind" = telia ] && continue
+  [ "$kind" = yt ] && url="https://www.youtube.com/embed/live_stream?channel=$url&autoplay=1&controls=0&rel=0&playsinline=1"
   printf '%-18s ' "$name"
   adb logcat -c
   adb shell am start -n se.cruzi.tvhem/.PlayerActivity --es kind "$kind" --es url "'$url'" --es title "'$name'" >/dev/null 2>&1
