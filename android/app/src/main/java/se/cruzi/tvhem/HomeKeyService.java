@@ -2,50 +2,67 @@ package se.cruzi.tvhem;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
-import java.util.List;
+import java.util.ArrayDeque;
 
 /**
  * 1) Sends the remote's HOME button to this launcher (Telia's launcher stays installed for Telia Play).
- * 2) Opens a section inside Telia (Tv, Mitt innehåll, Mitt konto) by steering Telia's side menu
- *    with the D-pad, like a person would. OK is only pressed once the wanted item has focus.
+ * 2) Opens a section inside Telia (Tv, Mitt innehåll, Mitt konto) by steering Telia's side menu with
+ *    the D-pad behind a cover screen, so Telia's start page is never seen. For "Tv" it also starts the
+ *    first channel in the guide.
  */
 public class HomeKeyService extends AccessibilityService {
     static final String TELIA = "se.telia.androidtv.launcher";
+    private static final String TAG = "HemTv";
     private static HomeKeyService instance;
     private static String pending;
     private static long pendingUntil;
     private static int presses;
+    private static int phase;
+    private static long phaseUntil;
     private final Handler h = new Handler(Looper.getMainLooper());
+    private View overlay;
 
     static void request(String label) {
         pending = label;
-        pendingUntil = SystemClock.uptimeMillis() + 10000;
-        Log.d("HemTv", "öppnar " + label + ", tjänst " + (instance == null ? "SAKNAS" : "igång"));
+        pendingUntil = SystemClock.uptimeMillis() + 14000;
         presses = 0;
+        phase = 0;
         HomeKeyService s = instance;
-        if (s != null) s.schedule(1100);
+        Log.d(TAG, "öppnar " + label + ", tjänst " + (s == null ? "SAKNAS" : "igång"));
+        if (s != null) {
+            s.showOverlay(label);
+            s.schedule(1100);
+        }
     }
 
     @Override
     protected void onServiceConnected() {
         instance = this;
-        Log.d("HemTv", "tjänsten startad");
-        if (pending != null) schedule(900);
+        Log.d(TAG, "tjänsten startad");
+        if (pending != null) { showOverlay(pending); schedule(900); }
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         instance = null;
+        hideOverlay();
         return super.onUnbind(intent);
     }
 
@@ -53,7 +70,7 @@ public class HomeKeyService extends AccessibilityService {
     protected boolean onKeyEvent(KeyEvent e) {
         if (e.getKeyCode() != KeyEvent.KEYCODE_HOME) return false;
         if (e.getAction() == KeyEvent.ACTION_UP) {
-            pending = null;
+            finish("HOME");
             try {
                 startActivity(new Intent(this, HomeActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
@@ -77,14 +94,21 @@ public class HomeKeyService extends AccessibilityService {
         h.postDelayed(tick, ms);
     }
 
+    private void finish(String why) {
+        if (pending != null) Log.d(TAG, "klar: " + why);
+        pending = null;
+        h.removeCallbacks(tick);
+        hideOverlay();
+    }
+
     private final Runnable tick = new Runnable() {
         @Override
         public void run() {
             if (pending == null) return;
-            if (SystemClock.uptimeMillis() > pendingUntil || presses > 24) { pending = null; return; }
+            if (SystemClock.uptimeMillis() > pendingUntil || presses > 30) { finish("gav upp"); return; }
             boolean done = false;
-            try { done = step(); } catch (Exception ignored) {}
-            if (done) pending = null;
+            try { done = step(); } catch (Exception ex) { Log.d(TAG, "fel: " + ex); }
+            if (done) finish("lyckades");
             else schedule(380);
         }
     };
@@ -96,22 +120,42 @@ public class HomeKeyService extends AccessibilityService {
         if (root == null) return false;
         CharSequence pkg = root.getPackageName();
         if (pkg == null || !TELIA.contentEquals(pkg)) return false;
+        Rect s = new Rect(), f = new Rect(), t = new Rect();
+        root.getBoundsInScreen(s);
+        AccessibilityNodeInfo focus = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
+        if (focus != null) focus.getBoundsInScreen(f);
+
+        if (phase == 2) return SystemClock.uptimeMillis() > phaseUntil;
+
+        if (phase == 1) {
+            // Tv-guide: wait until it has loaded, move focus into the channel grid, then start the channel
+            if (findLabel(root, "Favoritkanaler") == null && findLabel(root, "Tv-guide") == null) {
+                Log.d(TAG, "väntar på tv-guiden");
+                return false;
+            }
+            Log.d(TAG, "guide fokus=" + (focus == null ? "inget" : f.toShortString()));
+            if (focus == null) return false;
+            if (f.left < s.width() * 0.2f) { press(GLOBAL_ACTION_DPAD_RIGHT); return false; }
+            if (f.centerY() < s.height() * 0.47f) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+            press(GLOBAL_ACTION_DPAD_CENTER);
+            phase = 2;
+            phaseUntil = SystemClock.uptimeMillis() + 1800;
+            return false;
+        }
 
         AccessibilityNodeInfo target = findLabel(root, pending);
-        AccessibilityNodeInfo focus = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
-        Rect t = new Rect(), f = new Rect(), s = new Rect();
-        root.getBoundsInScreen(s);
         if (target != null) target.getBoundsInScreen(t);
-        if (focus != null) focus.getBoundsInScreen(f);
-        Log.d("HemTv", "steg " + presses + " mål=" + (target == null ? "saknas" : t.toShortString() + (target.isVisibleToUser() ? " synlig" : " dold"))
-            + " fokus=" + (focus == null ? "inget" : f.toShortString() + " " + focus.getClassName() + " \"" + focus.getText() + "\"")
-            + " skärm=" + s.toShortString());
+        Log.d(TAG, "steg " + presses + " mål=" + (target == null ? "saknas" : t.toShortString() + (target.isVisibleToUser() ? " synlig" : " dold"))
+            + " fokus=" + (focus == null ? "inget" : f.toShortString()));
         boolean smallFocus = focus != null && f.width() < s.width() * 0.45f && f.height() < s.height() * 0.3f;
         if (target != null && target.isVisibleToUser() && smallFocus) {
             if (f.contains(t.centerX(), t.centerY())) {
-                Log.d("HemTv", "OK på " + pending);
+                Log.d(TAG, "OK på " + pending);
                 press(GLOBAL_ACTION_DPAD_CENTER);
-                return true;
+                if ("Tv".equalsIgnoreCase(pending)) { phase = 1; return false; }
+                phase = 2;
+                phaseUntil = SystemClock.uptimeMillis() + 900;
+                return false;
             }
             boolean sameColumn = t.centerX() >= f.left - 40 && t.centerX() <= f.right + 40;
             if (sameColumn) {
@@ -119,20 +163,19 @@ public class HomeKeyService extends AccessibilityService {
                 return false;
             }
         }
-        // focus is in the content or the menu is collapsed: move left towards the side menu
         press(GLOBAL_ACTION_DPAD_LEFT);
         return false;
     }
 
     private void press(int action) {
-        Log.d("HemTv", "tryck " + action);
+        Log.d(TAG, "tryck " + action);
         presses++;
         performGlobalAction(action);
     }
 
     /** Walks the whole tree ourselves: Telia's menu is not found by findAccessibilityNodeInfosByText. */
     private static AccessibilityNodeInfo findLabel(AccessibilityNodeInfo root, String want) {
-        java.util.ArrayDeque<AccessibilityNodeInfo> q = new java.util.ArrayDeque<>();
+        ArrayDeque<AccessibilityNodeInfo> q = new ArrayDeque<>();
         q.add(root);
         int seen = 0;
         while (!q.isEmpty() && seen < 3000) {
@@ -147,5 +190,57 @@ public class HomeKeyService extends AccessibilityService {
 
     private static boolean matches(CharSequence c, String want) {
         return c != null && c.toString().trim().equalsIgnoreCase(want);
+    }
+
+    // ---------- cover screen while Telia is being steered ----------
+    private void showOverlay(final String label) {
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                if (overlay != null) return;
+                try {
+                    LinearLayout box = new LinearLayout(HomeKeyService.this);
+                    box.setOrientation(LinearLayout.VERTICAL);
+                    box.setGravity(Gravity.CENTER);
+                    box.setBackgroundColor(0xFF0C0D0F);
+                    ProgressBar pb = new ProgressBar(HomeKeyService.this);
+                    TextView tv = new TextView(HomeKeyService.this);
+                    tv.setText("Tv".equalsIgnoreCase(label) ? "Startar tv…" : "Öppnar " + label + "…");
+                    tv.setTextColor(0xFFFFFFFF);
+                    tv.setTextSize(26);
+                    tv.setPadding(0, 36, 0, 0);
+                    box.addView(pb);
+                    box.addView(tv);
+                    WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                            | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                            | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                        PixelFormat.OPAQUE);
+                    ((WindowManager) getSystemService(WINDOW_SERVICE)).addView(box, lp);
+                    overlay = box;
+                } catch (Exception ex) {
+                    Log.d(TAG, "täckskärm: " + ex);
+                }
+            }
+        });
+    }
+
+    private void hideOverlay() {
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                final View v = overlay;
+                overlay = null;
+                if (v == null) return;
+                v.animate().alpha(0f).setDuration(350).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        try { ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(v); } catch (Exception ignored) {}
+                    }
+                }).start();
+            }
+        });
     }
 }
