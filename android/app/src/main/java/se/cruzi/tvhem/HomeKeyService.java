@@ -37,7 +37,11 @@ public class HomeKeyService extends AccessibilityService {
     }
 
     @Override
-    protected void onServiceConnected() { instance = this; }
+    protected void onServiceConnected() {
+        instance = this;
+        Log.d("HemTv", "tjänsten startad");
+        if (pending != null) schedule(900);
+    }
 
     @Override
     public boolean onUnbind(Intent intent) {
@@ -59,7 +63,11 @@ public class HomeKeyService extends AccessibilityService {
     }
 
     @Override
-    public void onAccessibilityEvent(AccessibilityEvent e) {}
+    public void onAccessibilityEvent(AccessibilityEvent e) {
+        if (pending == null || e == null) return;
+        CharSequence p = e.getPackageName();
+        if (p != null && TELIA.contentEquals(p) && !h.hasCallbacks(tick)) schedule(500);
+    }
 
     @Override
     public void onInterrupt() {}
