@@ -8,12 +8,12 @@ curl -fsSL "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main
   [ "$kind" = telia ] && continue
   [ "$kind" = yt ] && url="https://www.youtube.com/embed/live_stream?channel=$url&autoplay=1&controls=0&rel=0&playsinline=1"
   printf '%-18s ' "$name"
-  adb logcat -c
-  adb shell am start -n se.cruzi.tvhem/.PlayerActivity --es kind "$kind" --es url "'$url'" --es title "'$name'" >/dev/null 2>&1
+  adb logcat -c </dev/null
+  adb shell am start -n se.cruzi.tvhem/.PlayerActivity --es kind "$kind" --es url "'$url'" --es title "'$name'" </dev/null >/dev/null 2>&1
   r=""
   for i in $(seq 1 22); do
     sleep 1
-    r=$(adb logcat -d -s HemPlay | grep -E "spelar|fel " | tail -1)
+    r=$(adb logcat -d -s HemPlay </dev/null | grep -E "spelar|fel " | tail -1)
     [ -n "$r" ] && break
   done
   case "$r" in
