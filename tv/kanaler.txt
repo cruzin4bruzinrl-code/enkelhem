@@ -1,26 +1,10 @@
 # typ|namn|adress|flik|beskrivning|färg
-# typ: svt = SVT:s kanal-id, yt = YouTubes inbäddade livespelare (kanal-id), telia = via Telia (sökord i Telias guide)
-svt|SVT1|ch-svt1|Sverige|Nyheter, drama och nöje|#1e7a4a
-svt|SVT2|ch-svt2|Sverige|Dokumentärer och kultur|#1d5f8a
-svt|SVT24|ch-svt24|Sverige|Nyheter och repriser|#28323d
-svt|SVT Barn|ch-barnkanalen|Sverige|Barnprogram|#d9831f
-svt|Kunskapskanalen|ch-kunskapskanalen|Sverige|Fakta och samhälle|#7a3fa0
-telia|TV4|TV4|Sverige|Ingår i ditt Telia-paket|#c4122f
-telia|Axess TV|Axess|Sverige|Ingår i ditt Telia-paket|#8a1f3d
-yt|Sky News|UCoMdktPbSTixAyNGwb-UYkQ|Nyheter|Brittiska nyheter|#b3121b
-yt|GB News|UC0vn8ISa4LKMunLbzaXLnOQ|Nyheter|Brittiska nyheter|#14335c
-yt|ABC News Live|UCBi2mrWuNuyYy4gbM6fW3vw|Nyheter|Amerikanska nyheter|#1c2a44
-yt|NBC News NOW|UCeY0bbntWzzVIaj2z3QigXg|Nyheter|Amerikanska nyheter|#2b2f6b
-yt|CBS News|UC8p1vwvWtl6T73JiExfWs1g|Nyheter|Amerikanska nyheter|#1f2d4f
-yt|LiveNOW from FOX|UCJg9wBPyKMNA5sRDnvzmkdg|Nyheter|Amerikanska nyheter live|#0f3a7a
-yt|Bloomberg|UCIALMKvObZNtJ6AmdCLP7Lg|Nyheter|Ekonominyheter|#3a2a8a
-yt|Euronews|UCSrZ3UV4jOidv8ppoVuvW9Q|Nyheter|Europeiska nyheter|#0d4d8a
-yt|DW News|UCknLrEdhRCp1aegoMqRaCZg|Nyheter|Internationella nyheter|#0b3d6e
-yt|France 24|UCQfwfsi5VrQ8yKZ-UWmAEFg|Nyheter|Internationella nyheter|#0b5aa6
-yt|Al Jazeera|UCNye-wNBqNL5ZzHSJj3l8Bg|Nyheter|Internationella nyheter|#c27a0e
-yt|CNA|UC83jt4dlz1Gjl58fzQrrKZg|Nyheter|Asiatiska nyheter|#a3142a
-yt|TRT World|UC7fWeaHhqgM4Ry-RMpM2YYw|Nyheter|Internationella nyheter|#1a6fa8
-yt|WION|UC_gUM8rL-Lrg6O3adPW9K1g|Nyheter|Internationella nyheter|#2a5a3a
-yt|Lofi Girl|UCSJ4gkVC6NrvII8umztf0Ow|Musik och natur|Lugn musik dygnet runt|#5a3f8a
-yt|NASA|UCLA_DiR1FfKNvjuUpBHmylQ|Musik och natur|Rymden och rymdstationen live|#0b2a5a
-yt|Explore.org|UC-2KSeUU5SMCX6XLRD-AEvw|Musik och natur|Djur och natur, livekameror|#2f5a2a
+# typ: svt = SVT:s kanal-id (spelas i launcherns spelare), telia = via Telia (sökord i Telias guide)
+# Testade på boxen 2026-11-09: alla SVT-kanaler fungerar.
+svt|SVT1|ch-svt1|Kanaler|Nyheter, drama och nöje|#1e7a4a
+svt|SVT2|ch-svt2|Kanaler|Dokumentärer och kultur|#1d5f8a
+telia|TV4|TV4|Kanaler|Via ditt Telia-paket|#c4122f
+svt|SVT24|ch-svt24|Kanaler|Nyheter och repriser|#28323d
+svt|Kunskapskanalen|ch-kunskapskanalen|Kanaler|Fakta och samhälle|#7a3fa0
+telia|Axess TV|Axess|Kanaler|Via ditt Telia-paket|#8a1f3d
+svt|SVT Barn|ch-barnkanalen|Kanaler|Barnprogram|#d9831f
