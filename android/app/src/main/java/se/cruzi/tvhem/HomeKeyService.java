@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -29,6 +30,7 @@ public class HomeKeyService extends AccessibilityService {
     static void request(String label) {
         pending = label;
         pendingUntil = SystemClock.uptimeMillis() + 10000;
+        Log.d("HemTv", "öppnar " + label + ", tjänst " + (instance == null ? "SAKNAS" : "igång"));
         presses = 0;
         HomeKeyService s = instance;
         if (s != null) s.schedule(1100);
@@ -89,11 +91,17 @@ public class HomeKeyService extends AccessibilityService {
 
         AccessibilityNodeInfo target = findLabel(root, pending);
         AccessibilityNodeInfo focus = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
-        if (target != null && target.isVisibleToUser() && focus != null) {
-            Rect t = new Rect(), f = new Rect();
-            target.getBoundsInScreen(t);
-            focus.getBoundsInScreen(f);
+        Rect t = new Rect(), f = new Rect(), s = new Rect();
+        root.getBoundsInScreen(s);
+        if (target != null) target.getBoundsInScreen(t);
+        if (focus != null) focus.getBoundsInScreen(f);
+        Log.d("HemTv", "steg " + presses + " mål=" + (target == null ? "saknas" : t.toShortString() + (target.isVisibleToUser() ? " synlig" : " dold"))
+            + " fokus=" + (focus == null ? "inget" : f.toShortString() + " " + focus.getClassName() + " \"" + focus.getText() + "\"")
+            + " skärm=" + s.toShortString());
+        boolean smallFocus = focus != null && f.width() < s.width() * 0.45f && f.height() < s.height() * 0.3f;
+        if (target != null && target.isVisibleToUser() && smallFocus) {
             if (f.contains(t.centerX(), t.centerY())) {
+                Log.d("HemTv", "OK på " + pending);
                 press(GLOBAL_ACTION_DPAD_CENTER);
                 return true;
             }
@@ -109,6 +117,7 @@ public class HomeKeyService extends AccessibilityService {
     }
 
     private void press(int action) {
+        Log.d("HemTv", "tryck " + action);
         presses++;
         performGlobalAction(action);
     }
