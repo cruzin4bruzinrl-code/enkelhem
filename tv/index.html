@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v13 -->
+<!-- HEM-v14 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -102,6 +102,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
   box-shadow:-40px 0 80px rgba(0,0,0,.5);}
 #qp.open{transform:none;}
 #qp h2{font-size:40px;font-weight:600;margin-bottom:30px;}
+.qvp{height:860px;overflow:hidden;margin:0 -10px;padding:0 10px;}
+#qlist{transition:transform .45s var(--ease);}
 .qi{display:flex;align-items:center;gap:22px;padding:18px 22px;border-radius:22px;margin-bottom:10px;transition:background .2s,transform .3s var(--ease);}
 .qi .qic{width:62px;height:62px;border-radius:18px;background:rgba(255,255,255,.08);display:grid;place-items:center;flex:0 0 auto;}
 .qi .qic svg{width:32px;height:32px;}
@@ -164,7 +166,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
   <div id="qp">
     <h2>Snabbpanel</h2>
-    <div id="qlist"></div>
+    <div class="qvp"><div id="qlist"></div></div>
     <div class="ver" id="ver"></div>
   </div>
 
@@ -175,7 +177,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="13.0";
+const VERSION="14.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -250,7 +252,9 @@ const rows=()=>[[...document.querySelectorAll(".topr .f")],[...document.querySel
   [$("playbtn"),...document.querySelectorAll("#recent .rc")].filter(e=>e.style.display!=="none")];
 function render(){noScroll();document.querySelectorAll(".focus").forEach(e=>e.classList.remove("focus"));if(zone!=="main")blobTo(null);
   if(zone==="grid"){const g=document.querySelectorAll("#gw .rc");if(g[gi]){g[gi].classList.add("focus");}return;}
-  if(zone==="panel"){const q=document.querySelectorAll(".qi");if(q[qi])q[qi].classList.add("focus");return;}
+  if(zone==="panel"){const q=document.querySelectorAll(".qi");if(q[qi]){q[qi].classList.add("focus");
+    const it=q[qi],vh=860,top=it.offsetTop,bot=top+it.offsetHeight,max=Math.max(0,$("qlist").scrollHeight-vh);
+    let off=Math.min(max,Math.max(0,bot-vh+40));if(top<off)off=Math.max(0,top-20);$("qlist").style.transform=`translateY(${-off}px)`;}return;}
   if(zone==="places"){const p=document.querySelectorAll("#pl div");if(p[pi]){p[pi].classList.add("focus");}return;}
   const row=rows()[R];C=Math.max(0,Math.min(C,row.length-1));if(row[C])row[C].classList.add("focus");blobTo(row[C]);}
 const blob=$("blob");let bs=null,bt=null,bAnim=false;
@@ -368,7 +372,7 @@ let QI=[];
 function fillPanel(){QI=qItems();$("qlist").innerHTML=QI.map(([ic,t,s])=>
   `<div class="qi"><div class="qic"><svg viewBox="0 0 24 24">${IC[ic]}</svg></div><div><b>${t}</b><small>${s}</small></div></div>`).join("");
   $("ver").textContent="Version "+VERSION;render();}
-function openPanel(){qi=0;zone="panel";fillPanel();$("qp").classList.add("open");}
+function openPanel(){qi=0;zone="panel";$("qlist").style.transform="";fillPanel();$("qp").classList.add("open");}
 function closePanel(){$("qp").classList.remove("open");zone="main";render();}
 function panelKey(k){if(k==="down")qi=Math.min(QI.length-1,qi+1);else if(k==="up")qi=Math.max(0,qi-1);
   else if(k==="ok"){QI[qi][3]();return;}else if(k==="back"||k==="left")return closePanel();render();}
