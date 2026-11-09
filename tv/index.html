@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v15 -->
+<!-- HEM-v16 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -88,7 +88,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 #grid{background:rgba(12,13,15,.97);padding:80px 110px;}
 #grid h2,#places h2{font-size:44px;font-weight:600;}
 .hint{font-size:23px;opacity:.55;margin:10px 0 36px;}
-#grid .gw .rc{opacity:0;transform:scale(.82);transition:opacity .4s ease,transform .55s var(--ease),box-shadow .3s;}
+#grid .gw .rc{opacity:0;transform:scale(.45) rotate(-5deg);transition:opacity .35s ease,transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;}
+#grid .gw .rc.gone{opacity:0;transform:scale(.3) translateY(40px);transition:opacity .3s ease,transform .45s cubic-bezier(.5,0,.75,0);}
+#grid h2,#grid .hint{transform:translateY(-24px);opacity:0;transition:opacity .45s ease .1s,transform .6s var(--ease) .1s;}
+#grid.open h2{transform:none;opacity:1;}#grid.open .hint{transform:none;opacity:.55;}
 #grid .gw .rc.lit{opacity:1;transform:none;}
 #grid .gw .rc.lit.focus{transform:scale(1.06);}
 #gfx{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;}
@@ -182,7 +185,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="15.0";
+const VERSION="16.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -334,40 +337,45 @@ function fillGrid(){const w=$("gw"),wasOpen=$("grid").classList.contains("open")
 let gOff=0;
 function openGrid(){fillGrid();gi=0;gOff=0;zone="grid";$("gw").style.transform="";$("grid").classList.add("open");render();
   requestAnimationFrame(()=>requestAnimationFrame(gridIn));}
-function closeGrid(){gridOut();zone="main";setTimeout(()=>$("grid").classList.remove("open"),180);render();}
+let pulseT=0;
+function appsTile(){const t=document.querySelector('.tile[data-a="apps"] .sq'),r=stagePos(t);return{x:r.x+r.w/2,y:r.y+r.h/2,el:t};}
+function pulseTile(){const n=performance.now();if(n-pulseT<120)return;pulseT=n;const s=appsTile().el;s.style.transform="scale(1.16)";setTimeout(()=>s.style.transform="",170);}
+function closeGrid(){const d=gridOut()||0;zone="main";setTimeout(()=>$("grid").classList.remove("open"),Math.min(520,d+320));render();}
 
-/* ===== particles build the app grid ===== */
+/* ===== particles: burst out of the Appar tile into the grid, and get sucked back in ===== */
 const gfx=$("gfx"),gg=gfx.getContext("2d");let GP=[],gAnim=false;
 function gfxRun(){if(gAnim)return;gAnim=true;requestAnimationFrame(gStep);}
+function bez(p,k){const q=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,iq=1-q;return[iq*iq*p.sx+2*iq*q*p.cx+q*q*p.tx,iq*iq*p.sy+2*iq*q*p.cy+q*q*p.ty];}
 function gStep(t){gg.clearRect(0,0,960,540);let alive=false;
-  for(const p of GP){const e=t-p.t0;if(e<0){alive=true;continue;}let x,y,a,s=p.s;
-    if(p.kind==="in"){const k=Math.min(1,e/p.d),q=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,iq=1-q;
-      x=iq*iq*p.sx+2*iq*q*p.cx+q*q*p.tx;y=iq*iq*p.sy+2*iq*q*p.cy+q*q*p.ty;
-      if(k>=1){if(p.card&&!p.card.classList.contains("lit"))p.card.classList.add("lit");
-        const f=(e-p.d)/320;if(f>=1)continue;a=p.a*(1-f);s=p.s*(1+f*1.5);}
-      else a=p.a*Math.min(1,k*3);}
-    else{const k=e/p.d;if(k>=1)continue;x=p.sx+p.vx*k;y=p.sy+p.vy*k-30*k*k;a=p.a*(1-k);}
+  for(const p of GP){const e=t-p.t0;if(e<0){alive=true;continue;}let a,s=p.s,x,y;
+    if(p.kind==="out"){const k=e/p.d;if(k>=1)continue;x=p.sx+p.vx*k;y=p.sy+p.vy*k-30*k*k;a=p.a*(1-k);}
+    else{const k=Math.min(1,e/p.d);[x,y]=bez(p,k);
+      if(k>=1){if(!p.done){p.done=1;if(p.card)p.card.classList.add("lit");else if(p.onEnd)p.onEnd();}
+        const f=(e-p.d)/300;if(f>=1)continue;a=p.a*(1-f);s=p.s*(1+f*1.6);}
+      else{a=p.a*Math.min(1,k*3);if(k>.05){const g=bez(p,k-.06);gg.globalAlpha=a*.35;gg.drawImage(p.k,g[0]/2-s*.35,g[1]/2-s*.35,s*.7,s*.7);}}}
     alive=true;gg.globalAlpha=a;gg.drawImage(p.k,x/2-s/2,y/2-s/2,s,s);}
   gg.globalAlpha=1;if(alive)requestAnimationFrame(gStep);else{gAnim=false;GP=[];gg.clearRect(0,0,960,540);}}
 function gridIn(){const cards=[...document.querySelectorAll("#gw .rc")];if(!cards.length)return;const now=performance.now();
+  cards.forEach(c=>c.classList.remove("gone"));
   if(LS.get("perf",false)){cards.forEach((c,i)=>{c.style.transitionDelay=Math.min(i,24)*25+"ms";c.classList.add("lit");});return;}
-  const R=cards.map(c=>stagePos(c)),vis=R.map(r=>r.y<1040),vr=R.filter((r,i)=>vis[i]);
-  const cx=vr.reduce((s,r)=>s+r.x+r.w/2,0)/vr.length,cy=vr.reduce((s,r)=>s+r.y+r.h/2,0)/vr.length;
-  GP=GP.filter(p=>p.kind==="out");let n=0;
-  cards.forEach((c,i)=>{c.style.transitionDelay="0ms";if(!vis[i]){setTimeout(()=>c.classList.add("lit"),750);return;}
-    const r=R[i],delay=Math.hypot(r.x+r.w/2-cx,r.y+r.h/2-cy)*0.42;
-    for(let j=0;j<9;j++){const src=P[(n++)%P.length],sx=src.x*2,sy=src.y*2,tx=r.x+Math.random()*r.w,ty=r.y+Math.random()*r.h;
-      const dx=tx-sx,dy=ty-sy,b=(Math.random()-.5)*.6;
-      GP.push({kind:"in",card:c,t0:now+delay+Math.random()*90,d:600+Math.random()*180,sx,sy,tx,ty,
-        cx:(sx+tx)/2-dy*b,cy:(sy+ty)/2+dx*b,s:10+Math.random()*14,a:.55+Math.random()*.4,k:SPR[j%3]});}});
-  gfxRun();
-  setTimeout(()=>cards.forEach(c=>c.classList.add("lit")),2200);}
-function gridOut(){const now=performance.now(),cards=[...document.querySelectorAll("#gw .rc.lit")];
-  if(!LS.get("perf",false))cards.forEach(c=>{const r=stagePos(c);r.y+=gOff;if(r.y>1040||r.y+r.h<0)return;
-    for(let j=0;j<6;j++){const ang=Math.random()*6.283,sp=60+Math.random()*170;
-      GP.push({kind:"out",t0:now+Math.random()*70,d:520+Math.random()*220,sx:r.x+Math.random()*r.w,sy:r.y+Math.random()*r.h,
-        vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,s:8+Math.random()*12,a:.75,k:SPR[j%3]});}});
-  GP=GP.filter(p=>p.kind==="out");cards.forEach(c=>{c.style.transitionDelay="0ms";c.classList.remove("lit");});gfxRun();}
+  const o=appsTile(),R=cards.map(c=>stagePos(c)),vis=R.map(r=>r.y<1040);
+  GP=GP.filter(p=>p.kind==="out");
+  cards.forEach((c,i)=>{c.style.transitionDelay="0ms";if(!vis[i]){setTimeout(()=>c.classList.add("lit"),900);return;}
+    const r=R[i],delay=Math.hypot(r.x+r.w/2-o.x,r.y+r.h/2-o.y)*0.18;
+    for(let j=0;j<7;j++){const tx=r.x+Math.random()*r.w,ty=r.y+Math.random()*r.h,ang=Math.random()*6.283,fl=180+Math.random()*320;
+      GP.push({kind:"in",card:c,t0:now+delay+Math.random()*120,d:520+Math.random()*220,sx:o.x,sy:o.y,tx,ty,
+        cx:o.x+Math.cos(ang)*fl,cy:o.y+Math.sin(ang)*fl,s:9+Math.random()*13,a:.6+Math.random()*.35,k:SPR[j%3]});}});
+  gfxRun();setTimeout(()=>cards.forEach(c=>c.classList.add("lit")),2400);}
+function gridOut(){const now=performance.now(),o=appsTile(),cards=[...document.querySelectorAll("#gw .rc.lit")],perf=LS.get("perf",false);let maxD=0;
+  GP=GP.filter(p=>!p.card);
+  cards.forEach(c=>{const r=stagePos(c);r.y+=gOff;const vis=!(r.y>1040||r.y+r.h<0);
+    const delay=Math.hypot(r.x+r.w/2-o.x,r.y+r.h/2-o.y)*0.14;maxD=Math.max(maxD,delay);
+    c.style.transitionDelay=Math.round(delay)+"ms";c.classList.remove("lit");c.classList.add("gone");
+    if(perf||!vis)return;
+    for(let j=0;j<5;j++){const sx=r.x+Math.random()*r.w,sy=r.y+Math.random()*r.h,ang=Math.random()*6.283,fl=80+Math.random()*200;
+      GP.push({kind:"in",t0:now+delay+80+Math.random()*80,d:480+Math.random()*180,sx,sy,tx:o.x+(Math.random()-.5)*60,ty:o.y+(Math.random()-.5)*60,
+        cx:sx+Math.cos(ang)*fl,cy:sy+Math.sin(ang)*fl,s:8+Math.random()*11,a:.75,k:SPR[j%3],onEnd:pulseTile});}});
+  gfxRun();return maxD;}
 function gridKey(k){const N=APPS.length,list=sortedApps();
   if(k==="right")gi=Math.min(N-1,gi+1);else if(k==="left")gi=Math.max(0,gi-1);
   else if(k==="down")gi=Math.min(N-1,gi+6);else if(k==="up")gi=Math.max(0,gi-6);
