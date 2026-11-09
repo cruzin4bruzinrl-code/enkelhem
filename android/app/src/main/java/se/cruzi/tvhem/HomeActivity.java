@@ -95,6 +95,19 @@ public class HomeActivity extends Activity {
         else web.loadUrl("file:///android_asset/index.html");
     }
 
+    /** Re-enable our accessibility service if Android switched it off (needs WRITE_SECURE_SETTINGS, granted once via adb). */
+    private void ensureHomeKey() {
+        try {
+            if (checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED) return;
+            String me = getPackageName() + "/" + HomeKeyService.class.getName();
+            String cur = Settings.Secure.getString(getContentResolver(), "enabled_accessibility_services");
+            if (cur != null && cur.contains(HomeKeyService.class.getName())) return;
+            String next = (cur == null || cur.isEmpty()) ? me : cur + ":" + me;
+            Settings.Secure.putString(getContentResolver(), "enabled_accessibility_services", next);
+            Settings.Secure.putString(getContentResolver(), "accessibility_enabled", "1");
+        } catch (Exception ignored) {}
+    }
+
     private void saveUrl(Intent i) {
         if (i == null) return;
         String u = i.getStringExtra("url");
@@ -148,6 +161,7 @@ public class HomeActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        ensureHomeKey();
         fetchRemote();
         if (web != null) web.evaluateJavascript("window.oceanShown && oceanShown()", null);
     }
@@ -270,6 +284,12 @@ public class HomeActivity extends Activity {
                 } catch (Exception ignored) {}
             }
             return arr.toString();
+        }
+
+        @JavascriptInterface
+        public void play(String kind, String url, String title) {
+            startActivity(new Intent(HomeActivity.this, PlayerActivity.class)
+                .putExtra("kind", kind).putExtra("url", url).putExtra("title", title));
         }
 
         @JavascriptInterface

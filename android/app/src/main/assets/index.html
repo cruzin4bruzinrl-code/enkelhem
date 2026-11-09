@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v18 -->
+<!-- HEM-v19 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -211,7 +211,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="18.0";
+const VERSION="19.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -373,40 +373,32 @@ function numKey(n){if(zone==="grid"&&n>0){return pinTo(sortedApps()[gi].pkg,n);}
 function shade(hex,p){const n=parseInt(hex.slice(1),16);const f=v=>Math.max(0,Math.min(255,Math.round(v+v*p/100)));
   return "#"+[(n>>16)&255,(n>>8)&255,n&255].map(v=>f(v).toString(16).padStart(2,"0")).join("");}
 const SVT="se.svt.android.svtplay";
+const YT=id=>"https://www.youtube.com/embed/live_stream?channel="+id+"&autoplay=1&controls=0&rel=0&playsinline=1";
 const LIVE=[
  {tab:"Sverige",ch:[
-  {n:"SVT1",s:"Nyheter, drama och nöje",c:"#1e7a4a",app:"svt",u:"https://www.svtplay.se/kanaler/svt1"},
-  {n:"SVT2",s:"Dokumentärer och kultur",c:"#1d5f8a",app:"svt",u:"https://www.svtplay.se/kanaler/svt2"},
-  {n:"TV4",s:"Via Telia",c:"#c4122f",app:"telia"},
-  {n:"SVT24",s:"Nyheter och repriser",c:"#28323d",app:"svt",u:"https://www.svtplay.se/kanaler/svt24"},
-  {n:"SVT Barn",s:"Barnprogram",c:"#d9831f",app:"svt",u:"https://www.svtplay.se/kanaler/svtbarn"},
-  {n:"Kunskapskanalen",s:"Fakta och samhälle",c:"#7a3fa0",app:"svt",u:"https://www.svtplay.se/kanaler/kunskapskanalen"}]},
- {tab:"Finland",ch:[
-  {n:"Yle TV1",s:"Nyheter och fakta",c:"#0b6fb8",app:"yle",u:"https://areena.yle.fi/tv/opas"},
-  {n:"Yle TV2",s:"Underhållning och sport",c:"#0a8a6e",app:"yle",u:"https://areena.yle.fi/tv/opas"},
-  {n:"Yle Teema & Fem",s:"Kultur, på svenska och finska",c:"#8a3a6a",app:"yle",u:"https://areena.yle.fi/tv/opas"}]},
- {tab:"Engelska",ch:[
-  {n:"Sky News",s:"Brittiska nyheter",c:"#b3121b",app:"yt",u:"https://www.youtube.com/@SkyNews/live"},
-  {n:"ABC News Live",s:"Amerikanska nyheter",c:"#1c2a44",app:"yt",u:"https://www.youtube.com/@ABCNews/live"},
-  {n:"NBC News NOW",s:"Amerikanska nyheter",c:"#2b2f6b",app:"yt",u:"https://www.youtube.com/@NBCNews/live"},
-  {n:"DW News",s:"Internationella nyheter",c:"#0b3d6e",app:"yt",u:"https://www.youtube.com/@dwnews/live"},
-  {n:"France 24",s:"Internationella nyheter",c:"#0b5aa6",app:"yt",u:"https://www.youtube.com/@FRANCE24English/live"},
-  {n:"Al Jazeera",s:"Internationella nyheter",c:"#c27a0e",app:"yt",u:"https://www.youtube.com/@aljazeeraenglish/live"},
-  {n:"Pluto TV",s:"Ett 70-tal kanaler: film, serier, dokumentär",c:"#2a2a7a",app:"pluto"}]}];
-const APPINFO={svt:{label:"SVT Play",re:/svtplay/i,id:SVT},yle:{label:"Yle Areena",re:/areena|yle/i,id:"fi.yle.areena"},
-  yt:{label:"YouTube",re:/^com\.google\.android\.youtube\.tv$|smarttube/i,id:"com.google.android.youtube.tv"},
-  pluto:{label:"Pluto TV",re:/pluto/i,id:"tv.pluto.android"}};
+  {n:"SVT1",s:"Nyheter, drama och nöje",c:"#1e7a4a",k:"web",u:"https://www.svtplay.se/kanaler/svt1"},
+  {n:"SVT2",s:"Dokumentärer och kultur",c:"#1d5f8a",k:"web",u:"https://www.svtplay.se/kanaler/svt2"},
+  {n:"SVT24",s:"Nyheter och repriser",c:"#28323d",k:"web",u:"https://www.svtplay.se/kanaler/svt24"},
+  {n:"SVT Barn",s:"Barnprogram",c:"#d9831f",k:"web",u:"https://www.svtplay.se/kanaler/svtbarn"},
+  {n:"Kunskapskanalen",s:"Fakta och samhälle",c:"#7a3fa0",k:"web",u:"https://www.svtplay.se/kanaler/kunskapskanalen"},
+  {n:"TV4",s:"Ingår i ditt Telia-paket",c:"#c4122f",k:"telia"},
+  {n:"Axess TV",s:"Ingår i ditt Telia-paket",c:"#8a1f3d",k:"telia"}]},
+ {tab:"Nyheter på engelska",ch:[
+  {n:"Sky News",s:"Brittiska nyheter",c:"#b3121b",k:"yt",u:YT("UCoMdktPbSTixAyNGwb-UYkQ")},
+  {n:"ABC News Live",s:"Amerikanska nyheter",c:"#1c2a44",k:"yt",u:YT("UCBi2mrWuNuyYy4gbM6fW3vw")},
+  {n:"NBC News NOW",s:"Amerikanska nyheter",c:"#2b2f6b",k:"yt",u:YT("UCeY0bbntWzzVIaj2z3QigXg")},
+  {n:"Bloomberg",s:"Ekonominyheter",c:"#3a2a8a",k:"yt",u:YT("UCIALMKvObZNtJ6AmdCLP7Lg")},
+  {n:"DW News",s:"Internationella nyheter",c:"#0b3d6e",k:"yt",u:YT("UCknLrEdhRCp1aegoMqRaCZg")},
+  {n:"France 24",s:"Internationella nyheter",c:"#0b5aa6",k:"yt",u:YT("UCQfwfsi5VrQ8yKZ-UWmAEFg")},
+  {n:"Al Jazeera",s:"Internationella nyheter",c:"#c27a0e",k:"yt",u:YT("UCNye-wNBqNL5ZzHSJj3l8Bg")}]}];
 let lt=0,lr=1,li=0,lOff=0;
-function liveApp(k){const i=APPINFO[k];return byPkg(i.id)||APPS.find(a=>i.re.test(a.pkg)||i.re.test(a.label));}
 function openLive(){lt=0;lr=1;li=0;zone="live";fillLive();$("live").classList.add("open");render();}
 function closeLive(){$("live").classList.remove("open");zone="main";render();}
 function fillLive(){
   $("ltabs").innerHTML=LIVE.map((t,i)=>`<div class="ltab${i===lt?" sel":""}">${t.tab}</div>`).join("");
-  $("lgrid").innerHTML=LIVE[lt].ch.map(c=>{const a=c.app==="telia"?{label:"Telia"}:(APPINFO[c.app]||{});
-    const missing=c.app!=="telia"&&B&&!liveApp(c.app);
-    return `<div class="lc" style="background:linear-gradient(150deg,${c.c},${shade(c.c,-45)})"><div class="lv">LIVE</div>
-      <div class="lapp">${missing?"Installera "+a.label:a.label}</div><div class="ln">${c.n}</div><div class="ls">${c.s}</div></div>`;}).join("");
-  $("lhint").textContent=lt===1?"Vissa Yle-sändningar kan vara spärrade utanför Finland":"OK startar kanalen · Bakåt stänger";
+  $("lgrid").innerHTML=LIVE[lt].ch.map(c=>`<div class="lc" style="background:linear-gradient(150deg,${c.c},${shade(c.c,-45)})"><div class="lv">LIVE</div>
+      ${c.k==="telia"?'<div class="lapp">Via Telia</div>':""}<div class="ln">${c.n}</div><div class="ls">${c.s}</div></div>`).join("");
+  $("lhint").textContent="OK startar kanalen · Bakåt stänger";
   lOff=0;$("lgrid").style.transform="";}
 function liveKey(k){const n=LIVE[lt].ch.length;
   if(lr===0){if(k==="left"&&lt>0){lt--;li=0;fillLive();}else if(k==="right"&&lt<LIVE.length-1){lt++;li=0;fillLive();}
@@ -417,12 +409,9 @@ function liveKey(k){const n=LIVE[lt].ch.length;
   render();const g=document.querySelectorAll("#lgrid .lc")[li];if(g){const row=Math.floor(li/4),rh=g.offsetHeight+34;
     lOff=-Math.max(0,row-2)*rh;$("lgrid").style.transform=`translateY(${lOff}px)`;}}
 function playLive(c){
-  if(c.app==="telia"){if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Tv");}else toast("Tryck HOME för att komma till Telia");return;}
-  const info=APPINFO[c.app],a=liveApp(c.app);
-  if(!a&&B){toast("Installera "+info.label+" från Play Butik");call("openUri","market://details?id="+info.id,"com.android.vending");return;}
-  if(a)remember(a.pkg);leftForApp=true;
-  if(c.u&&B&&B.openUri){B.openUri(c.u,a?a.pkg:"");return;}
-  launch(a&&a.pkg,info.label);}
+  if(c.k==="telia"){if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Tv");}else toast("Tryck HOME för att komma till Telia");return;}
+  if(!(B&&B.play)){toast(B?"Kräver nya appversionen: skriv tv uppdatera":"Spelas upp på TV:n");return;}
+  leftForApp=true;B.play(c.k,c.u,c.n);}
 
 /* ===== all apps ===== */
 function sortedApps(){const f=getFav().filter(Boolean);return [...f.map(byPkg).filter(Boolean),...APPS.filter(a=>!f.includes(a.pkg))];}
