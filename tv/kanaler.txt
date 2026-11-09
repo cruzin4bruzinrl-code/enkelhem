@@ -8,3 +8,21 @@ svt|SVT24|ch-svt24|Kanaler|Nyheter och repriser|#28323d
 svt|Kunskapskanalen|ch-kunskapskanalen|Kanaler|Fakta och samhälle|#7a3fa0
 telia|Axess TV|Axess|Kanaler|Via ditt Telia-paket|#8a1f3d
 svt|SVT Barn|ch-barnkanalen|Kanaler|Barnprogram|#d9831f
+# pluto = öppnas direkt i Pluto TV på kanalen (adress = kanalens namn hos Pluto)
+pluto|Paradise Hotel|paradise-hotel-se|Film och serier|Svensk reality|#c2185b
+pluto|Lyxfällan|lyxfallan-se|Film och serier|Svensk reality|#7a5a1a
+pluto|Frusna vägar|frusna-vagar-se|Film och serier|Svensk dokusåpa|#1d5f8a
+pluto|Svenska truckers|svenska-truckers-se|Film och serier|Svensk dokusåpa|#5a4a2a
+pluto|Svenska Hollywoodfruar|svenska-hollywoodfruar-se|Film och serier|Svensk reality|#8a3a6a
+pluto|Top Gear|top-gear-se|Film och serier|Bilar och motor|#2a3a4a
+pluto|Pluto Film|pluto-tv-film-se|Film och serier|Filmer dygnet runt|#3a2a6a
+pluto|Pluto Action|pluto-tv-action-se|Film och serier|Actionfilmer|#8a1f1f
+pluto|Pluto Komedi|pluto-tv-komedi-se|Film och serier|Komedi|#c27a0e
+pluto|True Crime|pluto-tv-true-crime-se|Film och serier|Verkliga brott|#3a3a3a
+pluto|Dokumentär|pluto-tv-dokumentar-se|Film och serier|Dokumentärer|#2f5a2a
+pluto|Hell's Kitchen|hells-kitchen-se|Film och serier|Matlagning|#a3142a
+pluto|South Park|south-park-se|Film och serier|Animerad humor|#0b5aa6
+pluto|Star Trek|star-trek-se|Film och serier|Science fiction|#1c2a44
+pluto|Pluto Sport|pluto-tv-sport-se|Film och serier|Sport|#0f6a3a
+pluto|Juniorklubben|pluto-tv-juniorklubben-se|Film och serier|För barn|#d9831f
+pluto|SvampBob Fyrkant|svampbob-fyrkant-se|Film och serier|För barn|#c9a20e

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v22 -->
+<!-- HEM-v23 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;cursor:none;
@@ -211,7 +211,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="22.0";
+const VERSION="23.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -414,6 +414,7 @@ function liveKey(k){const n=LIVE[lt].ch.length;
     lOff=-Math.max(0,row-2)*rh;$("lgrid").style.transform=`translateY(${lOff}px)`;}}
 function playLive(c){
   if(c.k==="telia"){if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Tv"+(c.tg?":"+c.tg:""));}else toast("Tryck HOME för att komma till Telia");return;}
+  if(c.k==="pluto"){if(B&&B.openUri){remember("tv.pluto.android");leftForApp=true;B.openUri("https://pluto.tv/live-tv/"+c.u,"tv.pluto.android");}else toast("Spelas upp på TV:n");return;}
   if(!(B&&B.play)){toast(B?"Kräver nya appversionen: skriv tv uppdatera":"Spelas upp på TV:n");return;}
   leftForApp=true;B.play(c.k,c.u,c.n);}
 
