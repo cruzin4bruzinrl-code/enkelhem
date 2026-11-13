@@ -357,8 +357,13 @@ public class HomeActivity extends Activity {
             ui.post(() -> {
                 if (earth == null) return;
                 earth.setSlow(slow);
-                earth.setRenderMode(on ? android.opengl.GLSurfaceView.RENDERMODE_CONTINUOUSLY : android.opengl.GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+                earth.setShown(on);
             });
+        }
+
+        @JavascriptInterface
+        public void earthSaver(final boolean on) {
+            ui.post(() -> { if (earth != null) earth.setSaver(on); });
         }
 
         /** Tell the guard (Guard.java) that the next Telia start is ours. */

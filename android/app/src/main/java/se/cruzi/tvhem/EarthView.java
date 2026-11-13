@@ -21,23 +21,28 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
     static final float QUALITY = 0.55f;
-    private int prog, uRes, uRot, uCld;
+    private int prog, uRes, uRot, uCld, uC, uR, uStar;
+    private volatile float target;   // 0 = home (still, cap at the bottom), 1 = screensaver (whole globe, turning)
+    private float prog01;
+    private double rot = 0.18, cld;
+    private long last;
     private int bw, bh;
     private long t0 = SystemClock.uptimeMillis();
     private volatile boolean slow;
 
     private static final String VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
     private static final String FS = "precision highp float;\n"
-        + "uniform vec2 uRes;uniform float uRot,uCld;uniform sampler2D uDay,uAux;\n"
-        + "const float R=1000.;const vec2 C=vec2(960.,1700.);\n"
+        + "uniform vec2 uRes,uC;uniform float uRot,uCld,uR,uStar;uniform sampler2D uDay,uAux;\n"
+        + "float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n"
         + "void main(){\n"
         + " vec2 sp=vec2(gl_FragCoord.x/uRes.x*1920.,(1.-gl_FragCoord.y/uRes.y)*1080.);\n"
-        + " vec3 bg0=vec3(.004,.008,.031);if(sp.y<540.){gl_FragColor=vec4(bg0,1.);return;}\n"
+        + " float R=uR;vec2 C=uC;\n"
+        + " vec3 bg=vec3(.004,.008,.031);vec2 g=floor(sp/5.);float hs=hash(g);\n"
+        + " bg+=vec3(.85,.9,1.)*step(.9965,hs)*fract(hs*977.)*uStar;\n"
         + " vec2 p=(sp-C)/R;p.y=-p.y;float r2=dot(p,p);\n"
-        + " vec3 bg=vec3(.004,.008,.031);\n"
         + " vec3 L=normalize(vec3(-.6,.62,.5));\n"
         + " float lit=clamp(dot(normalize(vec3(p,.25)),L)*.7+.45,.12,1.);\n"
-        + " if(r2>1.){float d=(sqrt(r2)-1.)*R;float a=(exp(-d/22.)*.75+exp(-d/70.)*.28)*lit*smoothstep(560.,700.,sp.y);\n"
+        + " if(r2>1.){float d=(sqrt(r2)-1.)*R;float a=(exp(-d/22.)*.75+exp(-d/70.)*.28)*lit;\n"
         + "   gl_FragColor=vec4(mix(bg,vec3(.36,.62,1.),clamp(a,0.,1.)),1.);return;}\n"
         + " float z=sqrt(1.-r2);vec3 n=vec3(p,z);\n"
         + " float cr=cos(.38),sr=sin(.38);vec3 q=vec3(n.x*cr-n.y*sr,n.x*sr+n.y*cr,n.z);\n"
@@ -60,7 +65,7 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         super(c);
         setEGLContextClientVersion(2);
         setRenderer(this);
-        setRenderMode(RENDERMODE_CONTINUOUSLY);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
     }
 
     /** Called from the page: half the frame rate in performance mode. */
@@ -110,6 +115,9 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         uRes = GLES20.glGetUniformLocation(prog, "uRes");
         uRot = GLES20.glGetUniformLocation(prog, "uRot");
         uCld = GLES20.glGetUniformLocation(prog, "uCld");
+        uC = GLES20.glGetUniformLocation(prog, "uC");
+        uR = GLES20.glGetUniformLocation(prog, "uR");
+        uStar = GLES20.glGetUniformLocation(prog, "uStar");
         texture(0, "day.jpg");
         texture(1, "aux.jpg");
         GLES20.glUniform1i(GLES20.glGetUniformLocation(prog, "uDay"), 0);
@@ -125,10 +133,39 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        double s = (SystemClock.uptimeMillis() - t0) / 1000.0;
-        GLES20.glUniform1f(uRot, (float) ((s / 260.0) % 1.0));
-        GLES20.glUniform1f(uCld, (float) ((s / 2200.0) % 1.0));
+        long now = SystemClock.uptimeMillis();
+        float dt = last == 0 ? 0 : Math.min((now - last) / 1000f, 0.1f);
+        last = now;
+        // glide between the home view and the screensaver view over 2.6 s
+        if (prog01 < target) prog01 = Math.min(target, prog01 + dt / 2.6f);
+        else if (prog01 > target) prog01 = Math.max(target, prog01 - dt / 1.4f);
+        float e = prog01 * prog01 * (3 - 2 * prog01);
+        rot += dt * e / 80.0;          // one turn in 80 s, only in the screensaver
+        cld += dt * e / 900.0;
+        GLES20.glUniform2f(uC, 960f, 1700f + (540f - 1700f) * e);
+        GLES20.glUniform1f(uR, 1000f + (400f - 1000f) * e);
+        GLES20.glUniform1f(uStar, e);
+        GLES20.glUniform1f(uRot, (float) (rot % 1.0));
+        GLES20.glUniform1f(uCld, (float) (cld % 1.0));
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+        if (target == 0 && prog01 == 0) {   // home: the Earth stands still, draw only when asked
+            last = 0;
+            post(() -> { if (target == 0) setRenderMode(RENDERMODE_WHEN_DIRTY); });
+        }
         if (slow) try { Thread.sleep(16); } catch (InterruptedException ignored) {}
+    }
+
+    /** Screensaver on: the globe glides up to the middle and starts turning. Off: back to the still cap. */
+    void setSaver(boolean on) {
+        target = on ? 1f : 0f;
+        last = 0;
+        setRenderMode(RENDERMODE_CONTINUOUSLY);
+    }
+
+    /** Page visible/hidden: when visible draw at least one frame. */
+    void setShown(boolean on) {
+        if (!on) { setRenderMode(RENDERMODE_WHEN_DIRTY); return; }
+        if (target != 0 || prog01 != 0) setRenderMode(RENDERMODE_CONTINUOUSLY);
+        else requestRender();
     }
 }
