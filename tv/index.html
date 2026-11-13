@@ -20,11 +20,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 
 /* planets */
 #halo{position:absolute;left:960px;top:430px;width:0;height:0;will-change:transform,opacity;transition:opacity .35s ease;}
-.hx{position:absolute;left:-300px;top:-300px;width:600px;height:600px;border-radius:50%;opacity:0;transition:opacity .7s ease;}
+.hx{position:absolute;left:-210px;top:-210px;width:420px;height:420px;border-radius:50%;opacity:0;transition:opacity .5s ease;}
 .hx.on{opacity:1;}
 #ring{position:absolute;left:-141px;top:-141px;width:282px;height:282px;border-radius:50%;
-  border:2.5px solid var(--hc,#4da3ff);box-shadow:0 0 18px var(--hc,#4da3ff),0 0 46px var(--hc,#4da3ff),inset 0 0 22px var(--hc,#4da3ff);
-  opacity:.55;transition:border-color .6s ease,box-shadow .6s ease;}
+  border:2px solid var(--hc,#4da3ff);opacity:.6;transition:border-color .5s ease;}
 #planets{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:1;}
 .ov,#qp{z-index:20;}#gfx{z-index:21;}#toast,#fps{z-index:30;}#night{z-index:15;}#saver{z-index:25;}
 .orb{position:absolute;left:0;top:0;width:230px;height:230px;will-change:transform,opacity;}
@@ -190,7 +189,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="30.4";
+const VERSION="30.6";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -347,7 +346,7 @@ function showSel(now){const o=ORB[sel];if(!o)return;lastKey=o.key;
   const hc=o.col;$("ring").style.setProperty("--hc",hc);
   const a=$(hFlip?"hA":"hB"),b=$(hFlip?"hB":"hA");hFlip=!hFlip;
   const rgb=[1,3,5].map(i=>parseInt(hc.slice(i,i+2),16)).join(",");
-  a.style.background=`radial-gradient(circle,rgba(${rgb},0) 36%,rgba(${rgb},.5) 45%,rgba(${rgb},.22) 52%,rgba(${rgb},.07) 62%,rgba(${rgb},0) 74%)`;
+  a.style.background=`radial-gradient(circle closest-side,rgba(${rgb},0) 57%,rgba(${rgb},.85) 64%,rgba(${rgb},.32) 72%,rgba(${rgb},.1) 85%,rgba(${rgb},0) 100%)`;
   a.classList.add("on");b.classList.remove("on");
   const se=$("sel"),put=()=>{$("sname").textContent=o.name;$("sdesc").textContent=o.desc;};
   if(now){put();se.classList.remove("out");}else{se.classList.add("out");clearTimeout(showSel.t);showSel.t=setTimeout(()=>{put();se.classList.remove("out");},200);}
@@ -391,7 +390,7 @@ void main(){
  float fr=pow(1.-z,2.3);col=mix(col,vec3(.36,.62,1.)*(.25+.95*clamp(dif+.35,0.,1.)),fr*.8);
  float edge=clamp((1.-sqrt(r2))*R/1.6,0.,1.);float ga=1.05*lit;
  gl_FragColor=vec4(col*edge+vec3(.36,.62,1.)*ga*(1.-edge),edge+ga*(1.-edge));}`;
-function earthSize(){eQ=LS.get("perf",false)?.5:.7;const w=Math.round(1920*eQ),h=Math.round(520*eQ);
+function earthSize(){eQ=LS.get("perf",false)?.4:.55;const w=Math.round(1920*eQ),h=Math.round(520*eQ);
   if(EC.width!==w){EC.width=w;EC.height=h;}if(gl){gl.viewport(0,0,w,h);gl.uniform2f(eU.res,w,h);}}
 function initEarth(){
   try{gl=EC.getContext("webgl",{alpha:true,premultipliedAlpha:true,antialias:false,depth:false,stencil:false,powerPreference:"low-power"});}catch(e){gl=null;}
@@ -459,7 +458,7 @@ function frame(t){requestAnimationFrame(frame);
   /* the Earth always turns; while the planets glide it is drawn less often (it turns so slowly that the eye can't tell) */
   eClock+=dt;
   if(moving){if(fN%4===0)drawEarth(eClock*1000);return;}
-  if(t-hLast>40){hLast=t;const br=.5+.5*Math.sin(t/1000*Math.PI*2/3.2);
+  if(t-hLast>80){hLast=t;const br=.5+.5*Math.sin(t/1000*Math.PI*2/3.2);
     const h=$("halo");h.style.transform=`scale(${(.97+.05*br).toFixed(4)})`;h.style.opacity=(.55+.45*br).toFixed(3);}
   if(fN%2===0)drawEarth(eClock*1000);
   else if(fxOn&&fN%4===1)drawDust();}
