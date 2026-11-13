@@ -79,6 +79,21 @@ if [ "$ok" != "2" ]; then
 fi
 if [ "$ok" = "2" ]; then JSOK=1; say "OK"; else JSOK=0; say "Svarar inte ($ok) – JS-delarna hoppas över. Vänta 5 min och kör igen."; fi
 
+sec "Korta kommandon"
+cat > $PREFIX/bin/hemtest <<'X'
+#!/data/data/com.termux/files/usr/bin/bash
+curl -fsSL -o ~/stresstest.sh "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/stresstest.sh?v=$RANDOM" && bash ~/stresstest.sh
+X
+cat > $PREFIX/bin/hemvakt <<'X'
+#!/data/data/com.termux/files/usr/bin/bash
+curl -fsSL "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/vakt.sh?v=$RANDOM" | bash
+X
+chmod +x $PREFIX/bin/hemtest $PREFIX/bin/hemvakt
+say "Nu finns kommandona: hemtest och hemvakt"
+
+sec "Vakten (stoppar Telias startsida)"
+curl -fsSL "$RAW/vakt.sh?v=$RANDOM" | bash 2>&1 | while read -r l; do say "$l"; done
+
 sec "Läge i launchern"
 home; sleep 3; shot 01_hem
 [ $JSOK = 1 ] && say "$(js "$SNAP" 6)"
@@ -165,8 +180,18 @@ for app in "am start -a android.settings.SETTINGS" "monkey -p com.android.vendin
   htot=$((htot+1)); [[ "$cur" == $PKG* ]] && hok=$((hok+1))
   say "Från ${before:-?}: $([[ "$cur" == $PKG* ]] && echo "OK på $(( $(ms)-t0 )) ms" || echo "FEL, hamnade i $cur")"
 done
-tl=$(a logcat -d | tr -d '\r' | grep -E "START.*se\.telia\.androidtv\.launcher" | wc -l)
-say "Resultat: $hok av $htot. Telias launcher startades $tl gånger under testet."
+# fler vägar till hemskärmen: systemets hem-intent och Bakåt ur en app
+for way in "hemintent" "bakåt"; do
+  S am start -a android.settings.SETTINGS >/dev/null; sleep 5; t0=$(ms)
+  if [ $way = hemintent ]; then S am start -a android.intent.action.MAIN -c android.intent.category.HOME >/dev/null; else keys 4 4 4 4 4; fi
+  for i in 1 2 3 4 5 6 7 8 9 10; do sleep 0.3; cur=$(top_act); [[ "$cur" == $PKG* ]] && break; done
+  htot=$((htot+1)); [[ "$cur" == $PKG* ]] && hok=$((hok+1))
+  say "Via $way: $([[ "$cur" == $PKG* ]] && echo "OK på $(( $(ms)-t0 )) ms" || echo "FEL, hamnade i $cur")"
+done
+L=$(a logcat -d | tr -d '\r')
+stop=$(printf '%s\n' "$L" | grep -c "stoppade Telias startsida")
+seen=$(printf '%s\n' "$L" | grep -c "dök upp av sig själv")
+say "Resultat: $hok av $htot. Vakten stoppade Telias startsida $stop gånger. Telias startsida syntes $seen gånger."
 
 sec "SVT (inbyggd spelare)"
 curl -fsSL "$RAW/kanaler.txt?t=$RANDOM" | grep -v '^#' > "$DIR/kanaler.txt"

@@ -91,6 +91,18 @@ public class HomeKeyService extends AccessibilityService {
 
     @Override
     protected boolean onKeyEvent(KeyEvent e) {
+        // Back while watching a Telia channel: straight home to Hem instead of into Telia's guide/start page
+        if (e.getKeyCode() == KeyEvent.KEYCODE_BACK && pending == null && teliaAllowed && inTelia()) {
+            if (e.getAction() == KeyEvent.ACTION_UP) {
+                teliaAllowed = false;
+                Log.d(TAG, "Bakåt i Telia, tillbaka till Hem");
+                try {
+                    startActivity(new Intent(this, HomeActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+                } catch (Exception ignored) {}
+            }
+            return true;
+        }
         if (e.getKeyCode() != KeyEvent.KEYCODE_HOME) return false;
         if (e.getAction() == KeyEvent.ACTION_UP) {
             teliaAllowed = false;
@@ -101,6 +113,14 @@ public class HomeKeyService extends AccessibilityService {
             } catch (Exception ignored) {}
         }
         return true;
+    }
+
+    private boolean inTelia() {
+        try {
+            AccessibilityNodeInfo r = getRootInActiveWindow();
+            CharSequence p = r == null ? null : r.getPackageName();
+            return p != null && TELIA.contentEquals(p);
+        } catch (Exception ex) { return false; }
     }
 
     @Override

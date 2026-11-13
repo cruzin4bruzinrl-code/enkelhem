@@ -207,6 +207,7 @@ const COL={"YouTube":"#ff0033","SmartTube":"#c62828","Stremio":"#5b3fd1","SVT Pl
  "Max":"#002be7","VLC":"#ff8800","TV Bro":"#1a73e8","BrowseHere":"#1565c0","Telia Play":"#6a2bd9","Google Play Butik":"#2d3138"};
 let APPS=[];try{const r=call("getApps");if(r)APPS=JSON.parse(r);}catch(e){}
 if(!APPS.length)APPS=MOCK;
+APPS=APPS.filter(a=>a.pkg!=="se.telia.androidtv.launcher");
 const byPkg=p=>APPS.find(a=>a.pkg===p);
 const find=re=>APPS.find(a=>re.test(a.label)||re.test(a.pkg));
 
