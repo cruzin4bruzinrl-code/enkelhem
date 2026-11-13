@@ -211,7 +211,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0c0d0f;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="23.0";
+const VERSION="23.1";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -428,7 +428,7 @@ function openGrid(){fillGrid();gi=0;gOff=0;zone="grid";$("gw").style.transform="
 let pulseT=0;
 function appsTile(){const t=document.querySelector('.tile[data-a="apps"] .sq'),r=stagePos(t);return{x:r.x+r.w/2,y:r.y+r.h/2,el:t};}
 function pulseTile(){const n=performance.now();if(n-pulseT<120)return;pulseT=n;const s=appsTile().el;s.style.transform="scale(1.16)";setTimeout(()=>s.style.transform="",170);}
-function closeGrid(){const d=gridOut()||0;zone="main";setTimeout(()=>$("grid").classList.remove("open"),Math.min(520,d+320));render();}
+function closeGrid(){const d=gridOut()||0;zone="main";setTimeout(()=>{$("grid").classList.remove("open");setTimeout(()=>{if(zone!=="grid")$("gw").innerHTML="";},600);},Math.min(520,d+320));render();}
 
 /* ===== particles: burst out of the Appar tile into the grid, and get sucked back in ===== */
 const gfx=$("gfx"),gg=gfx.getContext("2d");let GP=[],gAnim=false;

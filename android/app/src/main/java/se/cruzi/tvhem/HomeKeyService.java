@@ -32,6 +32,9 @@ public class HomeKeyService extends AccessibilityService {
     private static final String TAG = "HemTv";
     private static HomeKeyService instance;
     private static String pending;
+    /** true while the user is in Telia because we sent them there (a channel, Mitt innehåll …). */
+    static volatile boolean teliaAllowed;
+    private long lastBounce;
     private static String channel;
     private static int scans;
     private static long pendingUntil;
@@ -52,6 +55,7 @@ public class HomeKeyService extends AccessibilityService {
         int c = label.indexOf(':');
         if (c > 0) { channel = label.substring(c + 1).trim(); label = label.substring(0, c); }
         scans = 0;
+        teliaAllowed = true;
         pending = label;
         pendingUntil = SystemClock.uptimeMillis() + 20000;
         presses = 0;
@@ -87,6 +91,7 @@ public class HomeKeyService extends AccessibilityService {
     protected boolean onKeyEvent(KeyEvent e) {
         if (e.getKeyCode() != KeyEvent.KEYCODE_HOME) return false;
         if (e.getAction() == KeyEvent.ACTION_UP) {
+            teliaAllowed = false;
             finish("HOME");
             try {
                 startActivity(new Intent(this, HomeActivity.class)
@@ -98,8 +103,23 @@ public class HomeKeyService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
-        if (pending == null || e == null) return;
+        if (e == null) return;
         CharSequence p = e.getPackageName();
+        // Telia's own HOME handling (or anything else) opened Telia's launcher without us asking: go back to Hem.
+        if (pending == null && !teliaAllowed && p != null && TELIA.contentEquals(p)
+                && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            long now = SystemClock.uptimeMillis();
+            if (now - lastBounce > 1500) {
+                lastBounce = now;
+                Log.d(TAG, "Telias launcher dök upp av sig själv, tillbaka till Hem");
+                try {
+                    startActivity(new Intent(this, HomeActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+                } catch (Exception ignored) {}
+            }
+            return;
+        }
+        if (pending == null) return;
         if (p != null && TELIA.contentEquals(p) && !h.hasCallbacks(tick)) schedule(500);
     }
 

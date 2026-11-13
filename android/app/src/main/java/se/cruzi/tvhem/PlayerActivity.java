@@ -42,6 +42,7 @@ public class PlayerActivity extends Activity {
     private TextView label, msg;
     private String title = "";
     private boolean reported;
+    private int attempt;
     private final Handler h = new Handler(Looper.getMainLooper());
 
     @Override
@@ -75,6 +76,7 @@ public class PlayerActivity extends Activity {
         web.setWebViewClient(new WebViewClient());
         web.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        attempt = 0;
         open();
     }
 
@@ -92,6 +94,7 @@ public class PlayerActivity extends Activity {
     protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
         setIntent(i);
+        attempt = 0;
         open();
     }
 
@@ -176,8 +179,15 @@ public class PlayerActivity extends Activity {
         h.post(new Runnable() {
             @Override public void run() {
                 if (reported) return;
-                reported = true;
                 h.removeCallbacksAndMessages(null);
+                if (!ok && attempt == 0 && !isFinishing()) {
+                    attempt = 1;
+                    Log.d(TAG, "försöker igen " + title + ": " + why);
+                    web.loadUrl("about:blank");
+                    open();
+                    return;
+                }
+                reported = true;
                 if (ok) Log.d(TAG, "spelar " + title);
                 else {
                     Log.d(TAG, "fel " + title + ": " + why);

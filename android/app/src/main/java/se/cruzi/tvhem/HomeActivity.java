@@ -180,6 +180,7 @@ public class HomeActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        HomeKeyService.teliaAllowed = false;
         ensureHomeKey();
         fetchRemote();
         if (web != null) web.evaluateJavascript("window.oceanShown && oceanShown()", null);
