@@ -211,7 +211,13 @@ public class HomeActivity extends Activity {
         super.onResume();
         if (earth != null) earth.onResume();
         // (a channel request that is just starting must not be cancelled by this resume)
-        if (android.os.SystemClock.uptimeMillis() - HomeKeyService.requestAt > 5000) HomeKeyService.teliaAllowed = false;
+        if (android.os.SystemClock.uptimeMillis() - HomeKeyService.requestAt > 5000) {
+            HomeKeyService.teliaAllowed = false;
+            try {
+                if ("1".equals(Settings.Global.getString(getContentResolver(), "hem_telia")))
+                    Settings.Global.putString(getContentResolver(), "hem_telia", "0");
+            } catch (Exception ignored) {}
+        }
         ensureHomeKey();
         fetchRemote();
         if (web != null) web.evaluateJavascript("window.oceanShown && oceanShown()", null);
@@ -385,7 +391,7 @@ public class HomeActivity extends Activity {
 
         /** Tell the guard (Guard.java) that the next Telia start is ours. */
         private void allowTelia() {
-            try { Settings.Global.putString(getContentResolver(), "hem_telia_until", String.valueOf(System.currentTimeMillis() + 15000)); }
+            try { Settings.Global.putString(getContentResolver(), "hem_telia", "1"); }
             catch (Exception ignored) {}
         }
 

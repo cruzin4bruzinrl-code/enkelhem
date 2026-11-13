@@ -88,17 +88,28 @@ public class Guard extends android.app.IActivityController.Stub {
         return true;
     }
 
-    /** Hem writes a short "Telia allowed until" time to global settings just before it opens a channel. */
+    /** Hem sets global setting hem_telia=1 while the user is in Telia because Hem sent them there. */
     private boolean hemAsked() {
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"settings", "get", "global", "hem_telia_until"});
+            Process p = Runtime.getRuntime().exec(new String[]{"settings", "get", "global", "hem_telia"});
             String l = new BufferedReader(new InputStreamReader(p.getInputStream())).readLine();
             p.waitFor();
-            return l != null && l.trim().matches("\\d+") && Long.parseLong(l.trim()) > System.currentTimeMillis();
+            return l != null && l.trim().equals("1");
         } catch (Throwable t) { return false; }
     }
 
-    @Override public boolean activityResuming(String pkg) { return true; }
+    /** Telia's launcher coming back to the front by itself (its old task, without a new start) is refused too. */
+    @Override
+    public boolean activityResuming(String pkg) {
+        try {
+            if (hemEnabled && TELIA.equals(pkg) && !hemAsked()) {
+                Log.d(TAG, "stoppade att Telia kom fram igen");
+                goHome();
+                return false;
+            }
+        } catch (Throwable t) { Log.d(TAG, "fel " + t); }
+        return true;
+    }
     @Override public boolean appCrashed(String processName, int pid, String shortMsg, String longMsg, long timeMillis, String stackTrace) { return true; }
     @Override public int appEarlyNotResponding(String processName, int pid, String annotation) { return 0; }
     @Override public int appNotResponding(String processName, int pid, String processStats) { return 0; }

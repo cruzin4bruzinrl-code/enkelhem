@@ -55,7 +55,7 @@ say "Igång sedan: $(S uptime | sed 's/^ *//')"
 sec "Inställningar"
 say "HOME-roll: $(S cmd role get-role-holders android.app.role.HOME)"
 say "Tillgänglighet: $(S settings get secure enabled_accessibility_services)"
-say "HOME-tjänsten igång: $(S dumpsys accessibility | grep -m1 -E "Bound services" | grep -q tvhem && echo ja || echo NEJ)"
+say "HOME-tjänsten igång: $(S dumpsys activity services se.cruzi.tvhem | grep -q HomeKeyService && echo ja || echo NEJ)"
 say "Notislyssnare: $(S settings get secure enabled_notification_listeners | tr ':' '\n' | grep -c tvhem) av Hem"
 say "HDMI-CEC: control=$(S settings get global hdmi_control_enabled) autoAv=$(S settings get global hdmi_control_auto_device_off_enabled)"
 say "Vila: sleep=$(S settings get secure sleep_timeout) attentive=$(S settings get secure attentive_timeout) skärm=$(S settings get system screen_off_timeout)"
@@ -228,7 +228,7 @@ if [ $JSOK = 1 ]; then
     sleep 12; s1=$(top_act); shot "06_telia_${url}_12s"
     sleep 10; s2=$(top_act); shot "06_telia_${url}_22s"
     say "$name: efter 12 s ${s1:-?}, efter 22 s ${s2:-?}"
-    a logcat -d -s HemTv | tr -d '\r' | grep -v '^-' | tail -40 | sed 's/^/     /' >> "$R"
+    a logcat -d -s HemTv | tr -d '\r' | grep -v '^-' | tail -60 | sed 's/^/     /' >> "$R"
   done < "$DIR/kanaler.txt"
   home; sleep 2
 else say "Hoppas över (testkanalen svarade inte)"; fi

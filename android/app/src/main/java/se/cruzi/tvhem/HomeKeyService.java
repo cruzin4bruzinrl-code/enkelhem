@@ -258,6 +258,14 @@ public class HomeKeyService extends AccessibilityService {
                     if (c.centerY() < f.top) { press(GLOBAL_ACTION_DPAD_UP); return false; }
                     if (c.centerY() > f.bottom) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
                     Log.d(TAG, "rätt kanal: " + channel);
+                } else if (ROWS.containsKey(channel.toLowerCase())) {
+                    // the channel logos have no text: use the channel's row in Telia's guide
+                    if (scans++ == 0) dumpLeft(root, s.width());
+                    int want = ROWS.get(channel.toLowerCase());
+                    int cur = Math.round((f.top - 540) / 76f) + 1;
+                    if (cur < want && scans < 20) { Log.d(TAG, "rad " + cur + " -> " + want); press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+                    if (cur > want && scans < 20) { Log.d(TAG, "rad " + cur + " -> " + want); press(GLOBAL_ACTION_DPAD_UP); return false; }
+                    Log.d(TAG, "rätt rad för " + channel + ": " + cur);
                 } else if (scans++ < 14) {
                     Log.d(TAG, "letar efter " + channel);
                     press(GLOBAL_ACTION_DPAD_DOWN);
@@ -338,6 +346,27 @@ public class HomeKeyService extends AccessibilityService {
     }
 
     /** First small node whose text or description contains the word (channel logos carry a description). */
+    /** Row of each channel in Telia's guide (1 = top row): svt1, svt2, TV4, Kunskapskanalen, Axess, SVT Barn. */
+    private static final java.util.Map<String, Integer> ROWS = new java.util.HashMap<>();
+    static { ROWS.put("tv4", 3); ROWS.put("axess", 5); }
+
+    /** Log what Telia shows in the channel column, so the guide's layout can be checked from adb. */
+    private static void dumpLeft(AccessibilityNodeInfo root, int screenW) {
+        ArrayDeque<AccessibilityNodeInfo> q = new ArrayDeque<>();
+        q.add(root);
+        Rect r = new Rect();
+        int seen = 0;
+        while (!q.isEmpty() && seen < 1500) {
+            AccessibilityNodeInfo n = q.poll();
+            if (n == null) continue;
+            seen++;
+            n.getBoundsInScreen(r);
+            if (r.left < 300 && r.top > 500 && r.width() < 400)
+                Log.d(TAG, "kolumn " + r.toShortString() + " text=" + n.getText() + " beskr=" + n.getContentDescription() + " id=" + n.getViewIdResourceName());
+            for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
+        }
+    }
+
     private static AccessibilityNodeInfo findContains(AccessibilityNodeInfo root, String want, int screenW) {
         String w = want.toLowerCase();
         ArrayDeque<AccessibilityNodeInfo> q = new ArrayDeque<>();
