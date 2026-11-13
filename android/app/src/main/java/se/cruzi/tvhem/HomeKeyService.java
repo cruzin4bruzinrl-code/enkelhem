@@ -46,6 +46,7 @@ public class HomeKeyService extends AccessibilityService {
     private static int retries;
     private static int stuck;
     private static int backs;
+    private static int liveClicks;
     private static String lastFocus = "";
     private final Handler h = new Handler(Looper.getMainLooper());
     private View overlay;
@@ -64,6 +65,7 @@ public class HomeKeyService extends AccessibilityService {
         retries = 0;
         stuck = 0;
         backs = 0;
+        liveClicks = 0;
         lastFocus = "";
         HomeKeyService s = instance;
         Log.d(TAG, "öppnar " + label + ", tjänst " + (s == null ? "SAKNAS" : "igång"));
@@ -163,6 +165,19 @@ public class HomeKeyService extends AccessibilityService {
         if (focus != null) focus.getBoundsInScreen(f);
 
         if (phase == 2) {
+            // Telia asks "Titta live / Se från början / Mer info / Avbryt" after a channel is chosen: pick "Titta live".
+            AccessibilityNodeInfo live = findLabel(root, "Titta live");
+            if (live != null && live.isVisibleToUser() && liveClicks < 3) {
+                liveClicks++;
+                live.getBoundsInScreen(t);
+                Log.d(TAG, "väljer Titta live");
+                if (focus != null && f.contains(t.centerX(), t.centerY())) press(GLOBAL_ACTION_DPAD_CENTER);
+                else click(live);
+                phaseStart = 0;
+                phaseUntil = SystemClock.uptimeMillis() + 6000;
+                return false;
+            }
+            if (live != null) return SystemClock.uptimeMillis() > phaseUntil;
             boolean guide = findLabel(root, "Favoritkanaler") != null || findLabel(root, "Tv-guide") != null;
             if (!guide && phaseStart == 0) phaseStart = SystemClock.uptimeMillis();
             if (guide) phaseStart = 0;
