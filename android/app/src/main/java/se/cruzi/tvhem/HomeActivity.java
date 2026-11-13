@@ -193,7 +193,8 @@ public class HomeActivity extends Activity {
     protected void onResume() {
         super.onResume();
         if (earth != null) earth.onResume();
-        HomeKeyService.teliaAllowed = false;
+        // (a channel request that is just starting must not be cancelled by this resume)
+        if (android.os.SystemClock.uptimeMillis() - HomeKeyService.requestAt > 5000) HomeKeyService.teliaAllowed = false;
         ensureHomeKey();
         fetchRemote();
         if (web != null) web.evaluateJavascript("window.oceanShown && oceanShown()", null);

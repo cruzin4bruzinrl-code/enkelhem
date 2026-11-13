@@ -48,6 +48,8 @@ public class HomeKeyService extends AccessibilityService {
     private static int backs;
     private static int liveClicks;
     private static boolean liveDone;
+    private static int rights;
+    static volatile long requestAt;
     private static String lastFocus = "";
     private final Handler h = new Handler(Looper.getMainLooper());
     private View overlay;
@@ -68,6 +70,8 @@ public class HomeKeyService extends AccessibilityService {
         backs = 0;
         liveClicks = 0;
         liveDone = false;
+        rights = 0;
+        requestAt = SystemClock.uptimeMillis();
         lastFocus = "";
         HomeKeyService s = instance;
         Log.d(TAG, "öppnar " + label + ", tjänst " + (s == null ? "SAKNAS" : "igång"));
@@ -242,7 +246,7 @@ public class HomeKeyService extends AccessibilityService {
             }
             Log.d(TAG, "guide fokus=" + (focus == null ? "inget" : f.toShortString()));
             if (focus == null) return false;
-            if (f.left < s.width() * 0.2f) { press(GLOBAL_ACTION_DPAD_RIGHT); return false; }
+            if (f.left < s.width() * 0.2f && rights < 2) { rights++; press(GLOBAL_ACTION_DPAD_RIGHT); return false; }
             if (f.centerY() < s.height() * 0.47f) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
             if (channel != null) {
                 AccessibilityNodeInfo ch = findContains(root, channel, s.width());
