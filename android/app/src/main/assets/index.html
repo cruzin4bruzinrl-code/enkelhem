@@ -154,8 +154,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
       <stop offset="0" stop-color="#9cc4ff" stop-opacity="0"/><stop offset=".22" stop-color="#9cc4ff" stop-opacity=".28"/>
       <stop offset=".5" stop-color="#cfe2ff" stop-opacity=".42"/><stop offset=".78" stop-color="#9cc4ff" stop-opacity=".28"/>
       <stop offset="1" stop-color="#9cc4ff" stop-opacity="0"/></linearGradient></defs>
-    <ellipse cx="960" cy="1080" rx="1000" ry="650" fill="none" stroke="url(#og)" stroke-width="2"/>
-    <ellipse cx="960" cy="1080" rx="1130" ry="770" fill="none" stroke="url(#og)" stroke-width="1.2" stroke-dasharray="2 14" opacity=".55"/>
+    <filter id="ob" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="3"/></filter>
+    <ellipse cx="960" cy="1080" rx="1000" ry="650" fill="none" stroke="url(#og)" stroke-width="7" opacity=".35" filter="url(#ob)"/>
+    <ellipse cx="960" cy="1080" rx="1000" ry="650" fill="none" stroke="url(#og)" stroke-width="1.2" opacity=".45"/>
   </svg>
   <div id="halo"><div class="hx" id="hA"></div><div class="hx" id="hB"></div><div id="ring"></div></div>
   <div id="planets"></div>
@@ -189,7 +190,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="30.1";
+const VERSION="30.2";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -372,7 +373,7 @@ void main(){
  vec3 L=normalize(vec3(-.6,.62,.5));
  float lit=clamp(dot(normalize(vec3(p,.25)),L)*.7+.45,.12,1.);
  if(r2>1.){float d=(sqrt(r2)-1.)*R;
-   float a=(exp(-d/22.)*.75+exp(-d/85.)*.3)*lit;gl_FragColor=vec4(vec3(.36,.62,1.)*a,a);return;}
+   float a=(exp(-d/22.)*.75+exp(-d/70.)*.28)*lit*smoothstep(560.,700.,sp.y);gl_FragColor=vec4(vec3(.36,.62,1.)*a,a);return;}
  float z=sqrt(1.-r2);vec3 n=vec3(p,z);
  float cr=cos(.38),sr=sin(.38);vec3 q=vec3(n.x*cr-n.y*sr,n.x*sr+n.y*cr,n.z);
  float ct=cos(.12),st=sin(.12);vec3 b=vec3(q.x,q.y*ct+q.z*st,-q.y*st+q.z*ct);
