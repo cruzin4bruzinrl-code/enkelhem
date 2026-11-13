@@ -194,7 +194,7 @@ body.saving #saver{background:transparent;}
 
 <script>
 "use strict";
-const VERSION="32.0";
+const VERSION="32.1";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -401,7 +401,7 @@ const NATIVE_EARTH=!!(B&&B.earth);
 function earthState(){if(!NATIVE_EARTH)return;const on=!document.hidden&&zone!=="grid"&&zone!=="live"&&zone!=="places";
   const k=on+"/"+!fxOn;if(k!==earthState.k){earthState.k=k;try{B.earth(on,!fxOn);}catch(e){}}}
 function initEarth(){
-  if(NATIVE_EARTH){EC.style.display="none";document.documentElement.style.background=document.body.style.background="transparent";return;}
+  if(NATIVE_EARTH){EC.style.display="none";document.documentElement.style.background=document.body.style.background=$("stage").style.background="transparent";return;}
   try{gl=EC.getContext("webgl",{alpha:true,premultipliedAlpha:true,antialias:false,depth:false,stencil:false,powerPreference:"low-power"});}catch(e){gl=null;}
   if(!gl){earth2D();return;}
   const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.log("jordfel "+gl.getShaderInfoLog(o));return o;};
