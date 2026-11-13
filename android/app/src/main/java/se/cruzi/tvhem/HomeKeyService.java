@@ -47,6 +47,7 @@ public class HomeKeyService extends AccessibilityService {
     private static int stuck;
     private static int backs;
     private static int liveClicks;
+    private static boolean liveDone;
     private static String lastFocus = "";
     private final Handler h = new Handler(Looper.getMainLooper());
     private View overlay;
@@ -66,6 +67,7 @@ public class HomeKeyService extends AccessibilityService {
         stuck = 0;
         backs = 0;
         liveClicks = 0;
+        liveDone = false;
         lastFocus = "";
         HomeKeyService s = instance;
         Log.d(TAG, "öppnar " + label + ", tjänst " + (s == null ? "SAKNAS" : "igång"));
@@ -185,21 +187,32 @@ public class HomeKeyService extends AccessibilityService {
         if (focus != null) focus.getBoundsInScreen(f);
 
         if (phase == 2) {
-            // Telia asks "Titta live / Se från början / Mer info / Avbryt" after a channel is chosen: pick "Titta live".
+            // After a channel is chosen Telia asks what to do ("Titta live" or "Titta på kanalen", sometimes below
+            // "Starta"/"Se från början"): move the focus to the live choice and press OK.
             AccessibilityNodeInfo live = findLabel(root, "Titta live");
-            if (live != null && live.isVisibleToUser() && liveClicks < 3) {
+            if (live == null) live = findLabel(root, "Titta på kanalen");
+            if (live != null && live.isVisibleToUser() && !liveDone && liveClicks < 8) {
                 liveClicks++;
                 live.getBoundsInScreen(t);
-                Log.d(TAG, "väljer Titta live");
-                if (focus != null && f.contains(t.centerX(), t.centerY())) press(GLOBAL_ACTION_DPAD_CENTER);
-                else click(live);
-                phaseStart = 0;
-                phaseUntil = SystemClock.uptimeMillis() + 6000;
+                if (focus != null && f.contains(t.centerX(), t.centerY())) {
+                    Log.d(TAG, "väljer " + live.getText());
+                    press(GLOBAL_ACTION_DPAD_CENTER);
+                    liveDone = true;
+                    phaseStart = 0;
+                    phaseUntil = SystemClock.uptimeMillis() + 6000;
+                } else if (focus != null && t.centerY() > f.centerY()) {
+                    press(GLOBAL_ACTION_DPAD_DOWN);
+                } else if (focus != null && t.centerY() < f.centerY()) {
+                    press(GLOBAL_ACTION_DPAD_UP);
+                } else {
+                    click(live);
+                    liveDone = true;
+                }
                 return false;
             }
             if (live != null) return SystemClock.uptimeMillis() > phaseUntil;
-            // a channel was chosen: Telia's "Titta live" box comes a moment later, wait for it before letting go
-            if (channel != null && liveClicks == 0 && SystemClock.uptimeMillis() < phaseUntil) return false;
+            // a channel was chosen: Telia's question box comes a moment later, wait for it before letting go
+            if (channel != null && !liveDone && SystemClock.uptimeMillis() < phaseUntil) return false;
             boolean guide = findLabel(root, "Favoritkanaler") != null || findLabel(root, "Tv-guide") != null;
             if (!guide && phaseStart == 0) phaseStart = SystemClock.uptimeMillis();
             if (guide) phaseStart = 0;
@@ -351,15 +364,17 @@ public class HomeKeyService extends AccessibilityService {
                     LinearLayout box = new LinearLayout(HomeKeyService.this);
                     box.setOrientation(LinearLayout.VERTICAL);
                     box.setGravity(Gravity.CENTER);
-                    box.setBackgroundColor(0xFF0C0D0F);
+                    box.setBackgroundColor(0xFF010208);
                     ProgressBar pb = new ProgressBar(HomeKeyService.this);
                     TextView tv = new TextView(HomeKeyService.this);
                     tv.setText("Tv".equalsIgnoreCase(label) ? "Startar tv…" : "Öppnar " + label + "…");
                     tv.setTextColor(0xFFFFFFFF);
                     tv.setTextSize(26);
                     tv.setPadding(0, 36, 0, 0);
+                    tv.setGravity(Gravity.CENTER);
+                    tv.setAlpha(0.8f);
                     box.addView(pb);
-                    box.addView(tv);
+                    box.addView(tv, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                     WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                         WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
                         WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,

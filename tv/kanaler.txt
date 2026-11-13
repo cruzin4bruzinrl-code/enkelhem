@@ -9,7 +9,6 @@ svt|Kunskapskanalen|ch-kunskapskanalen|Kanaler|Fakta och samhälle|#7a3fa0
 telia|Axess TV|Axess|Kanaler|Via ditt Telia-paket|#8a1f3d
 svt|SVT Barn|ch-barnkanalen|Kanaler|Barnprogram|#d9831f
 # pluto = öppnas direkt i Pluto TV på kanalen (adress = kanalens namn hos Pluto)
-pluto|Paradise Hotel|paradise-hotel-se|Film och serier|Svensk reality|#c2185b
 pluto|Lyxfällan|lyxfallan-se|Film och serier|Svensk reality|#7a5a1a
 pluto|Svenska truckers|svenska-truckers-se|Film och serier|Svensk dokusåpa|#5a4a2a
 pluto|Svenska Hollywoodfruar|svenska-hollywoodfruar-se|Film och serier|Svensk reality|#8a3a6a

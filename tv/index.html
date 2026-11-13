@@ -19,7 +19,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 #orbit{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;}
 
 /* planets */
-#halo{position:absolute;left:960px;top:430px;width:0;height:0;will-change:transform,opacity;}
+#halo{position:absolute;left:960px;top:430px;width:0;height:0;will-change:transform,opacity;transition:opacity .35s ease;}
 .hx{position:absolute;left:-300px;top:-300px;width:600px;height:600px;border-radius:50%;opacity:0;transition:opacity .7s ease;}
 .hx.on{opacity:1;}
 #ring{position:absolute;left:-141px;top:-141px;width:282px;height:282px;border-radius:50%;
@@ -29,7 +29,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 .ov,#qp{z-index:20;}#gfx{z-index:21;}#toast,#fps{z-index:30;}#night{z-index:15;}#saver{z-index:25;}
 .orb{position:absolute;left:0;top:0;width:230px;height:230px;will-change:transform,opacity;}
 .ball{position:absolute;inset:0;border-radius:50%;overflow:hidden;display:grid;place-items:center;
-  box-shadow:inset -28px -36px 64px rgba(0,0,0,.62),inset 10px 12px 28px rgba(255,255,255,.2),0 26px 50px rgba(0,0,0,.55);}
+  box-shadow:inset -28px -36px 64px rgba(0,0,0,.62),inset 10px 12px 28px rgba(255,255,255,.2),0 18px 30px rgba(0,0,0,.5);}
 .ball img{width:58%;height:58%;border-radius:50%;object-fit:cover;box-shadow:0 6px 18px rgba(0,0,0,.35);}
 .ball svg{width:46%;height:46%;color:#fff;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
 .ball .wm{font-size:34px;font-weight:800;text-align:center;padding:0 22px;line-height:1.05;text-shadow:0 3px 12px rgba(0,0,0,.4);}
@@ -190,7 +190,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="30.2";
+const VERSION="30.3";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -352,7 +352,7 @@ function showSel(now){const o=ORB[sel];if(!o)return;lastKey=o.key;
   const se=$("sel"),put=()=>{$("sname").textContent=o.name;$("sdesc").textContent=o.desc;};
   if(now){put();se.classList.remove("out");}else{se.classList.add("out");clearTimeout(showSel.t);showSel.t=setTimeout(()=>{put();se.classList.remove("out");},200);}
   [...$("dots").children].forEach((d,i)=>d.classList.toggle("on",i===sel));}
-function setSel(i){i=Math.max(0,Math.min(ORB.length-1,i));if(i===sel){pulse[ORB[sel].key]=performance.now();return;}sel=i;showSel(false);}
+function setSel(i){i=Math.max(0,Math.min(ORB.length-1,i));if(i===sel){pulse[ORB[sel].key]=performance.now();return;}sel=i;$("halo").style.opacity=0;showSel(false);}
 function activate(){const o=ORB[sel];if(!o)return;pulse[o.key]=performance.now();try{o.run();}catch(e){toast(o.name+" gick inte att öppna");}}
 function mainKey(k){
   if(k==="left")setSel(sel-1);else if(k==="right")setSel(sel+1);
@@ -448,17 +448,21 @@ function applyPerf(){const on=LS.get("perf",false);fxOn=!on;document.body.classL
 
 /* ===== one animation loop for everything on the home screen ===== */
 let fLast=0,fN=0,hLast=0;
+let eClock=0;
 function frame(t){requestAnimationFrame(frame);
   const dt=Math.min((t-(fLast||t))/1000,1/20);fLast=t;
   if(document.hidden||saverOn||zone==="grid"||zone==="live"||zone==="places")return;
   fN++;
-  const d=sel-op;let moving=Math.abs(d)>.0005||Math.abs(ov)>.001;
-  if(moving){ov+=(150*d-24*ov)*dt;op+=ov*dt;if(Math.abs(sel-op)<.0005&&Math.abs(ov)<.001){op=sel;ov=0;}}
+  const d=sel-op;const moving=Math.abs(d)>.003||Math.abs(ov)>.03;
+  if(moving){ov+=(170*d-26*ov)*dt;op+=ov*dt;}else if(op!==sel){op=sel;ov=0;layout(false);}
   if(moving||Object.keys(pulse).length)layout(false);
-  if(t-hLast>33){hLast=t;const br=.5+.5*Math.sin(t/1000*Math.PI*2/3.2),near=Math.max(0,1-Math.abs(sel-op)*1.6);
-    const h=$("halo");h.style.transform=`scale(${(.97+.05*br).toFixed(4)})`;h.style.opacity=((.55+.45*br)*near*near).toFixed(3);}
-  if(fN%2===0)drawEarth(t);
-  else if(fxOn&&!moving)drawDust();}
+  /* while the planets move, all GPU time goes to them: the Earth and the dust wait (the Earth's own clock pauses too, so it never jumps) */
+  if(moving)return;
+  eClock+=dt;
+  if(t-hLast>40){hLast=t;const br=.5+.5*Math.sin(t/1000*Math.PI*2/3.2);
+    const h=$("halo");h.style.transform=`scale(${(.97+.05*br).toFixed(4)})`;h.style.opacity=(.55+.45*br).toFixed(3);}
+  if(fN%2===0)drawEarth(eClock*1000);
+  else if(fxOn&&fN%4===1)drawDust();}
 
 /* ===== favourites + number keys ===== */
 function toggleFav(pkg){let f=getFav();const a=byPkg(pkg);
