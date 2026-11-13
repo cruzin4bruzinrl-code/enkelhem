@@ -109,10 +109,38 @@ nav(){ # namn, js för att öppna, tangentsekvens, stäng-js
   [ $JSOK = 1 ] && [ -n "$close" ] && { js "$close" 4 >/dev/null; sleep 1; }
 }
 R6="22 22 22 22 22 22 21 21 21 21 21 21"
-nav startsida "" "$R6 20 22 22 22 21 21 21 19 21 21 20" 'zone=="panel"&&closePanel()'
+nav startsida "toMain()" "$R6 $R6" ""
 nav snabbpanel "openPanel()" "20 20 20 20 20 20 20 20 19 19 19 19 19 19 19 19" "closePanel()"
 nav allaappar "openGrid()" "22 22 22 22 20 20 21 21 21 21 20 22 22 22 19 19 19" "closeGrid()"
 nav livetv "openLive()" "22 22 22 22 22 22 21 21 21 21 21 21 19 22 20 22 22 22" "closeLive()"
+
+sec "Jorden och omloppsbanan"
+if [ $JSOK = 1 ]; then
+  say "Planeter: $(js 'ORB.map(o=>o.name).join(", ")' 5)"
+  say "Jord: $(js 'new Promise(r=>{const f=eFrames;setTimeout(()=>r({webgl:!!gl,texturer:eTex,kvalitet:eQ,bilder_per_s:+((eFrames-f)/5).toFixed(1)}),5000)})' 10)"
+fi
+
+sec "Fjärrknappar"
+if [ $JSOK = 1 ]; then
+  js 'toMain(),setSel(ORB.findIndex(o=>o.key=="tv")),1' 4 >/dev/null; sleep 1
+  fk(){ # namn keycode förväntad-zon
+    keys $2; sleep 1.3; local z; z=$(js 'zone+" "+(ORB[sel]?ORB[sel].name:"")' 4 | tr -d '"')
+    local okk=FEL; [[ "$z" == $3* ]] && okk=OK; [ $okk = OK ] && FK_OK=$((FK_OK+1)); FK_N=$((FK_N+1))
+    say "$1: $okk ($z)"; }
+  FK_OK=0; FK_N=0
+  fk "Höger" 22 main; fk "Vänster" 21 main; fk "Ner = Alla appar" 20 grid; fk "Bakåt" 4 main
+  fk "Upp = Snabbpanel" 19 panel; fk "Bakåt" 4 main
+  fk "Guide" 172 live; fk "Bakåt" 4 main
+  fk "Kanal upp" 166 live; fk "Bakåt" 4 main
+  fk "Meny" 82 panel; fk "Bakåt" 4 main
+  fk "Röd/inspelning" 183 panel; fk "Samma igen stänger" 183 main
+  fk "Alla appar-knapp" 284 grid; fk "Bakåt" 4 main
+  js 'setSel(ORB.findIndex(o=>o.key=="tv")),1' 4 >/dev/null; sleep 1
+  fk "OK på Live-tv" 23 live; fk "Bakåt" 4 main
+  fk "Bakåt på startsidan" 4 "main Live-tv"
+  fk "Siffra 0 (FPS-mätare)" 7 main; fk "Siffra 0 igen" 7 main
+  say "Resultat: $FK_OK av $FK_N"
+fi
 
 sec "Hamring (300 snabba tangenter)"
 pid1=$(S pidof $PKG); m1=$(mem)

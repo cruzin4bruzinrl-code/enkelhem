@@ -227,8 +227,15 @@ public class HomeActivity extends Activity {
             case KeyEvent.KEYCODE_MEDIA_RECORD: case KeyEvent.KEYCODE_PROG_RED: k = "rec"; break;
             case KeyEvent.KEYCODE_LAST_CHANNEL: k = "last"; break;
             case KeyEvent.KEYCODE_ALL_APPS: k = "allapps"; break;
+            case KeyEvent.KEYCODE_GUIDE: case KeyEvent.KEYCODE_TV: case KeyEvent.KEYCODE_DVR: k = "guide"; break;
+            case KeyEvent.KEYCODE_CHANNEL_UP: k = "chup"; break;
+            case KeyEvent.KEYCODE_CHANNEL_DOWN: k = "chdown"; break;
+            case KeyEvent.KEYCODE_MENU: case KeyEvent.KEYCODE_SETTINGS: case KeyEvent.KEYCODE_INFO: k = "menu"; break;
+            case KeyEvent.KEYCODE_ESCAPE: k = "back"; break;
+            case KeyEvent.KEYCODE_PROG_GREEN: case KeyEvent.KEYCODE_PROG_YELLOW: case KeyEvent.KEYCODE_PROG_BLUE:
+            case KeyEvent.KEYCODE_BOOKMARK: case KeyEvent.KEYCODE_CAPTIONS: k = "none"; break;
         }
-        if (k != null) { send(k); return true; }
+        if (k != null) { if (!"none".equals(k)) send(k); return true; }
         return super.onKeyDown(code, e);
     }
 
