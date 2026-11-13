@@ -54,6 +54,8 @@ public class HomeKeyService extends AccessibilityService {
     private final Handler h = new Handler(Looper.getMainLooper());
     private View overlay;
 
+    static boolean running() { return instance != null; }
+
     static void request(String label) {
         channel = null;
         int c = label.indexOf(':');

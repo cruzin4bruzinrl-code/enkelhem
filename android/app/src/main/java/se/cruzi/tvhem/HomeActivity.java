@@ -109,12 +109,29 @@ public class HomeActivity extends Activity {
     }
 
     /** Re-enable our accessibility service if Android switched it off (needs WRITE_SECURE_SETTINGS, granted once via adb). */
+    private static long lastRebind;
+
     private void ensureHomeKey() {
         try {
             if (checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED) return;
             String me = getPackageName() + "/" + HomeKeyService.class.getName();
             String cur = Settings.Secure.getString(getContentResolver(), "enabled_accessibility_services");
-            if (cur != null && cur.contains(HomeKeyService.class.getName())) return;
+            if (cur != null && cur.contains(HomeKeyService.class.getName())) {
+                if (HomeKeyService.running() || System.currentTimeMillis() - lastRebind < 15000) return;
+                lastRebind = System.currentTimeMillis();
+                // listed but not running (happens after an app update): switch it off and on so Android binds it again
+                String without = cur.replace(":" + me, "").replace(me + ":", "").replace(me, "")
+                    .replace(":" + getPackageName() + "/.HomeKeyService", "").replace(getPackageName() + "/.HomeKeyService:", "").replace(getPackageName() + "/.HomeKeyService", "");
+                Settings.Secure.putString(getContentResolver(), "enabled_accessibility_services", without);
+                final String back = without.isEmpty() ? me : without + ":" + me;
+                ui.postDelayed(() -> {
+                    try {
+                        Settings.Secure.putString(getContentResolver(), "enabled_accessibility_services", back);
+                        Settings.Secure.putString(getContentResolver(), "accessibility_enabled", "1");
+                    } catch (Exception ignored) {}
+                }, 400);
+                return;
+            }
             String next = (cur == null || cur.isEmpty()) ? me : cur + ":" + me;
             Settings.Secure.putString(getContentResolver(), "enabled_accessibility_services", next);
             Settings.Secure.putString(getContentResolver(), "accessibility_enabled", "1");
