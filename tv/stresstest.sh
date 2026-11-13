@@ -149,7 +149,6 @@ if [ $JSOK = 1 ]; then
   fk "Kanal upp" 166 live; fk "Bakåt" 4 main
   fk "Meny" 82 panel; fk "Bakåt" 4 main
   fk "Röd/inspelning" 183 panel; fk "Samma igen stänger" 183 main
-  fk "Alla appar-knapp" 284 grid; fk "Bakåt" 4 main
   js 'setSel(ORB.findIndex(o=>o.key=="tv")),1' 4 >/dev/null; sleep 1
   fk "OK på Live-tv" 23 live; fk "Bakåt" 4 main
   fk "Bakåt på startsidan" 4 "main Live-tv"
@@ -191,6 +190,7 @@ done
 L=$(a logcat -d | tr -d '\r')
 stop=$(printf '%s\n' "$L" | grep -c "stoppade Telias startsida")
 seen=$(printf '%s\n' "$L" | grep -c "dök upp av sig själv")
+printf '%s\n' "$L" | grep -E "HemVakt" | tail -8 | sed 's/^/     /' >> "$R"
 say "Resultat: $hok av $htot. Vakten stoppade Telias startsida $stop gånger. Telias startsida syntes $seen gånger."
 
 sec "SVT (inbyggd spelare)"

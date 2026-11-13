@@ -198,6 +198,8 @@ public class HomeKeyService extends AccessibilityService {
                 return false;
             }
             if (live != null) return SystemClock.uptimeMillis() > phaseUntil;
+            // a channel was chosen: Telia's "Titta live" box comes a moment later, wait for it before letting go
+            if (channel != null && liveClicks == 0 && SystemClock.uptimeMillis() < phaseUntil) return false;
             boolean guide = findLabel(root, "Favoritkanaler") != null || findLabel(root, "Tv-guide") != null;
             if (!guide && phaseStart == 0) phaseStart = SystemClock.uptimeMillis();
             if (guide) phaseStart = 0;

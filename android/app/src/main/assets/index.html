@@ -13,8 +13,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 :root{--ease:cubic-bezier(.32,.72,0,1);}
 
 /* space */
-#space{position:absolute;left:-40px;top:0;width:2000px;height:1080px;will-change:transform;}
-#fx{position:absolute;left:-40px;top:0;width:2000px;height:1080px;pointer-events:none;will-change:transform;}
+#space{display:none;}
+#fx{position:absolute;left:-40px;top:0;width:2000px;height:1080px;pointer-events:none;}
 #earth{position:absolute;left:0;top:560px;width:1920px;height:520px;}
 #orbit{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;}
 
@@ -189,7 +189,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="30.0";
+const VERSION="30.1";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -339,8 +339,8 @@ function layout(force){
     const pu=pulse[o.key];if(pu){const k=(now-pu)/360;if(k<1)s*=1+.09*Math.sin(k*Math.PI);else delete pulse[o.key];}
     const al=a<.85?1:Math.max(0,1-(a-.85)/.5);
     o.el.style.transform=`translate3d(${(x-115).toFixed(1)}px,${(y-115).toFixed(1)}px,0) scale(${s.toFixed(4)})`;
-    o.el.style.opacity=al.toFixed(3);o.el.style.zIndex=Math.round(100-a*40);});
-  const px=(-op*7).toFixed(1);$("space").style.transform=`translate3d(${px}px,0,0)`;$("fx").style.transform=`translate3d(${(-op*12).toFixed(1)}px,0,0)`;}
+    o.el.style.opacity=al.toFixed(3);const z=Math.round(100-a*40);if(o.z!==z){o.z=z;o.el.style.zIndex=z;}});
+}
 let hFlip=false;
 function showSel(now){const o=ORB[sel];if(!o)return;lastKey=o.key;
   const hc=o.col;$("ring").style.setProperty("--hc",hc);
@@ -390,7 +390,7 @@ void main(){
  float fr=pow(1.-z,2.3);col=mix(col,vec3(.36,.62,1.)*(.25+.95*clamp(dif+.35,0.,1.)),fr*.8);
  float edge=clamp((1.-sqrt(r2))*R/1.6,0.,1.);float ga=1.05*lit;
  gl_FragColor=vec4(col*edge+vec3(.36,.62,1.)*ga*(1.-edge),edge+ga*(1.-edge));}`;
-function earthSize(){eQ=LS.get("perf",false)?.45:.7;const w=Math.round(1920*eQ),h=Math.round(520*eQ);
+function earthSize(){eQ=LS.get("perf",false)?.5:.7;const w=Math.round(1920*eQ),h=Math.round(520*eQ);
   if(EC.width!==w){EC.width=w;EC.height=h;}if(gl){gl.viewport(0,0,w,h);gl.uniform2f(eU.res,w,h);}}
 function initEarth(){
   try{gl=EC.getContext("webgl",{alpha:true,premultipliedAlpha:true,antialias:false,depth:false,stencil:false,powerPreference:"low-power"});}catch(e){gl=null;}
@@ -428,7 +428,8 @@ function paintSpace(){const c=$("space").getContext("2d"),W=1250,H=675;c.fillSty
   let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
   for(let i=0;i<520;i++){const x=rnd()*W,y=rnd()*H*.86,m=rnd(),r=m>.985?1.5:m>.9?.95:.55,a=.25+rnd()*.7,blue=rnd()<.3;
     c.fillStyle=blue?`rgba(190,215,255,${a})`:`rgba(255,250,240,${a})`;c.beginPath();c.arc(x,y,r,0,7);c.fill();
-    if(m>.985){const g=c.createRadialGradient(x,y,0,x,y,7);g.addColorStop(0,"rgba(200,220,255,.35)");g.addColorStop(1,"rgba(200,220,255,0)");c.fillStyle=g;c.fillRect(x-7,y-7,14,14);}}}
+    if(m>.985){const g=c.createRadialGradient(x,y,0,x,y,7);g.addColorStop(0,"rgba(200,220,255,.35)");g.addColorStop(1,"rgba(200,220,255,0)");c.fillStyle=g;c.fillRect(x-7,y-7,14,14);}}
+  try{const st=$("stage");st.style.background=`#010208 url(${$("space").toDataURL("image/jpeg",.92)}) -40px 0/2000px 1080px no-repeat`;}catch(e){$("space").style.display="block";}}
 const fx=$("fx"),g=fx.getContext("2d");
 function sprite(rgb){const s=document.createElement("canvas");s.width=s.height=32;const c=s.getContext("2d");
   const gr=c.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,`rgba(${rgb},1)`);gr.addColorStop(.35,`rgba(${rgb},.35)`);gr.addColorStop(1,`rgba(${rgb},0)`);
@@ -455,9 +456,8 @@ function frame(t){requestAnimationFrame(frame);
   if(moving||Object.keys(pulse).length)layout(false);
   if(t-hLast>33){hLast=t;const br=.5+.5*Math.sin(t/1000*Math.PI*2/3.2),near=Math.max(0,1-Math.abs(sel-op)*1.6);
     const h=$("halo");h.style.transform=`scale(${(.97+.05*br).toFixed(4)})`;h.style.opacity=((.55+.45*br)*near*near).toFixed(3);}
-  const perf=!fxOn;
-  if(fN%(perf?4:2)===0)drawEarth(t);
-  if(!perf&&fN%2===1)drawDust();}
+  if(fN%2===0)drawEarth(t);
+  else if(fxOn&&!moving)drawDust();}
 
 /* ===== favourites + number keys ===== */
 function toggleFav(pkg){let f=getFav();const a=byPkg(pkg);
@@ -514,7 +514,7 @@ function liveKey(k){const n=LIVE[lt].ch.length;
     lOff=-Math.max(0,row-2)*rh;$("lgrid").style.transform=`translateY(${lOff}px)`;}}
 function playLive(c){
   if(c.k==="telia"){if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Tv"+(c.tg?":"+c.tg:""));}else toast("Tryck HOME för att komma till Telia");return;}
-  if(c.k==="pluto"){if(B&&B.openUri){remember("tv.pluto.android");leftForApp=true;B.openUri("https://pluto.tv/live-tv/"+c.u,"tv.pluto.android");}else toast("Spelas upp på TV:n");return;}
+  if(c.k==="pluto"){if(B&&B.openUri){const u="https://pluto.tv/live-tv/"+c.u,cold=Date.now()-LS.get("plutoT",0)>6e5;LS.set("plutoT",Date.now());remember("tv.pluto.android");leftForApp=true;B.openUri(u,"tv.pluto.android");if(cold)setTimeout(()=>{if(leftForApp)B.openUri(u,"tv.pluto.android");},4000);}else toast("Spelas upp på TV:n");return;}
   if(!(B&&B.play)){toast(B?"Kräver nya appversionen: skriv tv uppdatera":"Spelas upp på TV:n");return;}
   leftForApp=true;B.play(c.k,c.u,c.n);}
 
