@@ -59,6 +59,7 @@ public class HomeActivity extends Activity {
 
     static final String DEFAULT_URL = "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/index.html";
     private WebView web;
+    private EarthView earth;
     private SharedPreferences prefs;
     private File cache;
     private final Handler ui = new Handler(Looper.getMainLooper());
@@ -74,14 +75,19 @@ public class HomeActivity extends Activity {
         cache = new File(getFilesDir(), "remote.html");
         saveUrl(getIntent());
 
+        getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xFF010208));
+        earth = new EarthView(this);
         web = new WebView(this);
-        setContentView(web);
+        android.widget.FrameLayout root = new android.widget.FrameLayout(this);
+        root.addView(earth, new android.widget.FrameLayout.LayoutParams(-1, -1));
+        root.addView(web, new android.widget.FrameLayout.LayoutParams(-1, -1));
+        setContentView(root);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
         s.setMediaPlaybackRequiresUserGesture(false);
-        web.setBackgroundColor(0xFF0c0d0f);
+        web.setBackgroundColor(0x00000000);
         web.addJavascriptInterface(new Bridge(), "OceanBridge");
         web.setWebChromeClient(new android.webkit.WebChromeClient() {
             @Override
@@ -178,8 +184,15 @@ public class HomeActivity extends Activity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (earth != null) earth.onPause();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        if (earth != null) earth.onResume();
         HomeKeyService.teliaAllowed = false;
         ensureHomeKey();
         fetchRemote();
@@ -335,6 +348,16 @@ public class HomeActivity extends Activity {
             } catch (Exception e) {
                 launch(HomeKeyService.TELIA);
             }
+        }
+
+        /** The page says whether the native Earth behind it is visible (paused under full-screen overlays). */
+        @JavascriptInterface
+        public void earth(final boolean on, final boolean slow) {
+            ui.post(() -> {
+                if (earth == null) return;
+                earth.setSlow(slow);
+                earth.setRenderMode(on ? android.opengl.GLSurfaceView.RENDERMODE_CONTINUOUSLY : android.opengl.GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+            });
         }
 
         /** Tell the guard (Guard.java) that the next Telia start is ours. */
