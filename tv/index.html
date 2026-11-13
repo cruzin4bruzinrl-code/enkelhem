@@ -190,7 +190,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 
 <script>
 "use strict";
-const VERSION="30.3";
+const VERSION="30.4";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -456,9 +456,9 @@ function frame(t){requestAnimationFrame(frame);
   const d=sel-op;const moving=Math.abs(d)>.003||Math.abs(ov)>.03;
   if(moving){ov+=(170*d-26*ov)*dt;op+=ov*dt;}else if(op!==sel){op=sel;ov=0;layout(false);}
   if(moving||Object.keys(pulse).length)layout(false);
-  /* while the planets move, all GPU time goes to them: the Earth and the dust wait (the Earth's own clock pauses too, so it never jumps) */
-  if(moving)return;
+  /* the Earth always turns; while the planets glide it is drawn less often (it turns so slowly that the eye can't tell) */
   eClock+=dt;
+  if(moving){if(fN%4===0)drawEarth(eClock*1000);return;}
   if(t-hLast>40){hLast=t;const br=.5+.5*Math.sin(t/1000*Math.PI*2/3.2);
     const h=$("halo");h.style.transform=`scale(${(.97+.05*br).toFixed(4)})`;h.style.opacity=(.55+.45*br).toFixed(3);}
   if(fN%2===0)drawEarth(eClock*1000);
