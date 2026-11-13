@@ -83,6 +83,13 @@ public class HomeActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(false);
         web.setBackgroundColor(0xFF0c0d0f);
         web.addJavascriptInterface(new Bridge(), "OceanBridge");
+        web.setWebChromeClient(new android.webkit.WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(android.webkit.ConsoleMessage m) {
+                android.util.Log.i("HemJs", m.messageLevel() + " " + m.message() + " @" + m.lineNumber());
+                return true;
+            }
+        });
 
         loadLocal();
         initBluetooth();
@@ -151,11 +158,23 @@ public class HomeActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        runTestJs(intent);
         if (intent.getStringExtra("url") != null) {
             saveUrl(intent);
             loadLocal();
             fetchRemote();
         }
+    }
+
+    /** Stresstest: adb kan skicka JavaScript (base64 i extra "js64") som körs i launchern; svaret loggas som HemJs. */
+    private void runTestJs(Intent i) {
+        if (i == null || web == null) return;
+        String b = i.getStringExtra("js64");
+        if (b == null) return;
+        try {
+            String js = new String(android.util.Base64.decode(b, android.util.Base64.DEFAULT), "UTF-8");
+            web.evaluateJavascript(js, r -> android.util.Log.i("HemJs", "RESULT " + r));
+        } catch (Exception e) { android.util.Log.i("HemJs", "RESULT fel " + e); }
     }
 
     @Override
