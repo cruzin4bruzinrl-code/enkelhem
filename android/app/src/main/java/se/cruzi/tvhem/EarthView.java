@@ -65,7 +65,7 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         super(c);
         setEGLContextClientVersion(2);
         setRenderer(this);
-        setRenderMode(RENDERMODE_WHEN_DIRTY);
+        setRenderMode(RENDERMODE_CONTINUOUSLY);
     }
 
     /** Called from the page: half the frame rate in performance mode. */
@@ -148,11 +148,10 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         GLES20.glUniform1f(uRot, (float) (rot % 1.0));
         GLES20.glUniform1f(uCld, (float) (cld % 1.0));
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-        if (target == 0 && prog01 == 0) {   // home: the Earth stands still, draw only when asked
+        if (target == 0 && prog01 == 0) {   // home: the Earth stands still, so a couple of frames a second is plenty
             last = 0;
-            post(() -> { if (target == 0) setRenderMode(RENDERMODE_WHEN_DIRTY); });
-        }
-        if (slow) try { Thread.sleep(16); } catch (InterruptedException ignored) {}
+            try { Thread.sleep(400); } catch (InterruptedException ignored) {}
+        } else if (slow) try { Thread.sleep(16); } catch (InterruptedException ignored) {}
     }
 
     /** Screensaver on: the globe glides up to the middle and starts turning. Off: back to the still cap. */
@@ -164,8 +163,6 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
 
     /** Page visible/hidden: when visible draw at least one frame. */
     void setShown(boolean on) {
-        if (!on) { setRenderMode(RENDERMODE_WHEN_DIRTY); return; }
-        if (target != 0 || prog01 != 0) setRenderMode(RENDERMODE_CONTINUOUSLY);
-        else requestRender();
+        setRenderMode(on ? RENDERMODE_CONTINUOUSLY : RENDERMODE_WHEN_DIRTY);
     }
 }
