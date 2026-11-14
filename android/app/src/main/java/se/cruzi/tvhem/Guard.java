@@ -73,9 +73,17 @@ public class Guard extends android.app.IActivityController.Stub {
     public boolean activityStarting(Intent intent, String pkg) {
         try {
             if (!hemEnabled || !TELIA.equals(pkg) || intent == null) return true;
-            if (ALLOW.equals(intent.getIdentifier()) || hemAsked()) return true;
+            if (ALLOW.equals(intent.getIdentifier())) return true;
             ComponentName c = intent.getComponent();
             boolean home = intent.hasCategory(Intent.CATEGORY_HOME);
+            // HOME is never Telia's, not even right after a TV4/Axess session.
+            if (home) {
+                Log.d(TAG, "stoppade Telias startsida via HOME (" + intent + ")");
+                clearAsked();
+                goHome();
+                return false;
+            }
+            if (hemAsked()) return true;
             boolean startPage = Intent.ACTION_MAIN.equals(intent.getAction()) && c != null && c.getClassName().endsWith(".MainActivity");
             if (home || startPage) {
                 Log.d(TAG, "stoppade Telias startsida (" + intent + ")");
@@ -86,6 +94,10 @@ public class Guard extends android.app.IActivityController.Stub {
             Log.d(TAG, "fel " + t);
         }
         return true;
+    }
+
+    private void clearAsked() {
+        try { Runtime.getRuntime().exec(new String[]{"settings", "put", "global", "hem_telia", "0"}); } catch (Throwable t) { }
     }
 
     /** Hem sets global setting hem_telia=1 while the user is in Telia because Hem sent them there. */

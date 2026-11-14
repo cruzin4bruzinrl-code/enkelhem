@@ -16,7 +16,7 @@ com.google.android.feedback com.google.android.tv.remote.service com.google.andr
 com.google.android.partnersetup com.google.android.marvin.talkback com.google.android.apps.tv.dreamx
 com.google.android.speech.pumpkin com.google.android.tts com.google.android.gms.location.history
 com.google.android.apps.mediahome.launcher com.google.android.leanbacklauncher.recommendations
-com.android.providers.partnerbookmarks com.netflix.ninja com.amazon.amazonvideo.livingroom flix.com.vision"
+com.android.providers.partnerbookmarks com.google.android.backdrop com.netflix.ninja com.amazon.amazonvideo.livingroom flix.com.vision"
 
 if [ "$1" = "av" ]; then
   echo "Ångrar integritetsskyddet…"
