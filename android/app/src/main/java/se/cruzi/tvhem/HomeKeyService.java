@@ -128,11 +128,12 @@ public class HomeKeyService extends AccessibilityService {
 
     /** Telia really is on screen without us asking: bounce to Hem, and look again shortly in case it comes back. */
     private int watchTries;
+    private String lastCls = "";
     private final Runnable watch = new Runnable() {
         @Override public void run() {
             if (pending != null || teliaAllowed) { watchTries = 0; return; }
             if (!inTelia()) { watchTries = 0; return; }
-            Log.d(TAG, "Telias launcher dök upp av sig själv, tillbaka till Hem");
+            Log.d(TAG, "Telias launcher dök upp av sig själv (" + lastCls + "), tillbaka till Hem");
             goHem();
             if (++watchTries < 6) h.postDelayed(this, 400); else watchTries = 0;
         }
@@ -164,6 +165,7 @@ public class HomeKeyService extends AccessibilityService {
         }
         if (pending == null && !teliaAllowed && p != null && TELIA.contentEquals(p)
                 && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            lastCls = String.valueOf(e.getClassName());
             h.removeCallbacks(watch);
             h.post(watch);
             return;

@@ -122,8 +122,11 @@ public class Guard extends android.app.IActivityController.Stub {
     @Override
     public boolean activityResuming(String pkg) {
         try {
-            if (hemEnabled && TELIA.equals(pkg) && !hemAsked()) {
+            // Only while Hem is steering to a channel may Telia come (back) to the front. Once the channel plays,
+            // Telia coming back means its start page under the player (e.g. after HOME): straight to Hem instead.
+            if (hemEnabled && TELIA.equals(pkg) && !hemRecent()) {
                 Log.d(TAG, "stoppade att Telia kom fram igen");
+                clearAsked();
                 goHome();
                 return false;
             }
