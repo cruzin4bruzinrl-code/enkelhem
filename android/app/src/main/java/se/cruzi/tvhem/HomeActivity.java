@@ -214,7 +214,7 @@ public class HomeActivity extends Activity {
         if (android.os.SystemClock.uptimeMillis() - HomeKeyService.requestAt > 5000) {
             HomeKeyService.teliaAllowed = false;
             try {
-                if ("1".equals(Settings.Global.getString(getContentResolver(), "hem_telia")))
+                if (!"0".equals(Settings.Global.getString(getContentResolver(), "hem_telia")))
                     Settings.Global.putString(getContentResolver(), "hem_telia", "0");
             } catch (Exception ignored) {}
         }
@@ -391,7 +391,7 @@ public class HomeActivity extends Activity {
 
         /** Tell the guard (Guard.java) that the next Telia start is ours. */
         private void allowTelia() {
-            try { Settings.Global.putString(getContentResolver(), "hem_telia", "1"); }
+            try { Settings.Global.putString(getContentResolver(), "hem_telia", String.valueOf(System.currentTimeMillis())); }
             catch (Exception ignored) {}
         }
 

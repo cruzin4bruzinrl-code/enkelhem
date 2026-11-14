@@ -83,10 +83,12 @@ public class Guard extends android.app.IActivityController.Stub {
                 goHome();
                 return false;
             }
-            if (hemAsked()) return true;
-            boolean startPage = Intent.ACTION_MAIN.equals(intent.getAction()) && c != null && c.getClassName().endsWith(".MainActivity");
-            if (home || startPage) {
+            // Telia's start page (however it is opened, also from inside Telia's own player) is only allowed
+            // in the first seconds after Hem asked for a channel, while Hem steers through Telia's guide.
+            boolean startPage = c != null && c.getClassName().endsWith(".MainActivity");
+            if (startPage && !hemRecent()) {
                 Log.d(TAG, "stoppade Telias startsida (" + intent + ")");
+                clearAsked();
                 goHome();
                 return false;
             }
@@ -100,15 +102,21 @@ public class Guard extends android.app.IActivityController.Stub {
         try { Runtime.getRuntime().exec(new String[]{"settings", "put", "global", "hem_telia", "0"}); } catch (Throwable t) { }
     }
 
-    /** Hem sets global setting hem_telia=1 while the user is in Telia because Hem sent them there. */
-    private boolean hemAsked() {
+    /** Hem sets global setting hem_telia to the time (ms) it sent the user into Telia; 0 when back in Hem. */
+    private long askedAt() {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"settings", "get", "global", "hem_telia"});
             String l = new BufferedReader(new InputStreamReader(p.getInputStream())).readLine();
             p.waitFor();
-            return l != null && l.trim().equals("1");
-        } catch (Throwable t) { return false; }
+            if (l == null) return 0;
+            l = l.trim();
+            if (l.equals("1")) return System.currentTimeMillis();
+            if (l.equals("2")) return 1;   // watching a Telia channel: allowed, but not its start page
+            return Long.parseLong(l);
+        } catch (Throwable t) { return 0; }
     }
+    private boolean hemAsked() { return askedAt() > 0; }
+    private boolean hemRecent() { long a = askedAt(); return a > 0 && System.currentTimeMillis() - a < 30000; }
 
     /** Telia's launcher coming back to the front by itself (its old task, without a new start) is refused too. */
     @Override

@@ -109,6 +109,7 @@ public class HomeKeyService extends AccessibilityService {
         }
         if (e.getKeyCode() != KeyEvent.KEYCODE_HOME) return false;
         if (e.getAction() == KeyEvent.ACTION_UP) {
+            Log.d(TAG, "HOME-knappen" + (inTelia() ? " i Telia" : ""));
             finish("HOME");
             goHem();
         }
@@ -150,6 +151,17 @@ public class HomeKeyService extends AccessibilityService {
         if (e == null) return;
         CharSequence p = e.getPackageName();
         // Telia's own HOME handling (or anything else) opened Telia's launcher without us asking: go back to Hem.
+        // Telia's start page showing when we are not steering a fresh channel request (e.g. Telia's player
+        // went back to it by itself after HOME): bounce too, even while a Telia channel is allowed.
+        if (pending == null && p != null && TELIA.contentEquals(p)
+                && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            CharSequence cls = e.getClassName();
+            boolean startPage = cls != null && cls.toString().endsWith(".MainActivity");
+            if (startPage && SystemClock.uptimeMillis() - finishedAt > 2000) {
+                Log.d(TAG, "Telias startsida visades efter kanalen, tillbaka till Hem");
+                teliaAllowed = false;
+            }
+        }
         if (pending == null && !teliaAllowed && p != null && TELIA.contentEquals(p)
                 && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             h.removeCallbacks(watch);
@@ -168,8 +180,15 @@ public class HomeKeyService extends AccessibilityService {
         h.postDelayed(tick, ms);
     }
 
+    private long finishedAt;
+
     private void finish(String why) {
-        if (pending != null) Log.d(TAG, "klar: " + why);
+        if (pending != null) {
+            Log.d(TAG, "klar: " + why);
+            finishedAt = SystemClock.uptimeMillis();
+            // the channel is chosen: Telia may keep playing, but its start page is no longer allowed
+            if (teliaAllowed) try { android.provider.Settings.Global.putString(getContentResolver(), "hem_telia", "2"); } catch (Exception ignored) {}
+        }
         pending = null;
         h.removeCallbacks(tick);
         hideOverlay();
