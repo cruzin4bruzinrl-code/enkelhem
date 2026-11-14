@@ -96,8 +96,12 @@ cat > $PREFIX/bin/hemvakt <<'X'
 #!/data/data/com.termux/files/usr/bin/bash
 curl -fsSL "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/vakt.sh?v=$RANDOM" | bash
 X
-chmod +x $PREFIX/bin/hemtest $PREFIX/bin/hemvakt
-say "Nu finns kommandona: hemtest och hemvakt"
+cat > $PREFIX/bin/hemintegritet <<'X'
+#!/data/data/com.termux/files/usr/bin/bash
+curl -fsSL "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/integritet.sh?v=$RANDOM" | bash -s "$@"
+X
+chmod +x $PREFIX/bin/hemtest $PREFIX/bin/hemvakt $PREFIX/bin/hemintegritet
+say "Nu finns kommandona: hemtest, hemvakt och hemintegritet"
 
 sec "Vakten (stoppar Telias startsida)"
 curl -fsSL "$RAW/vakt.sh?v=$RANDOM" | bash 2>&1 | while read -r l; do say "$l"; done
