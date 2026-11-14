@@ -235,6 +235,7 @@ public class HomeActivity extends Activity {
                     Settings.Global.putString(getContentResolver(), "hem_telia", "0");
             } catch (Exception ignored) {}
         }
+        HomeKeyService.uncover();
         ensureHomeKey();
         checkGuard();
         fetchRemote();

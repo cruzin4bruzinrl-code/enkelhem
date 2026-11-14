@@ -34,6 +34,7 @@ public class HomeKeyService extends AccessibilityService {
     private static String pending;
     /** true while the user is in Telia because we sent them there (a channel, Mitt innehåll …). */
     static volatile boolean teliaAllowed;
+    static volatile boolean teliaPage;
     private long lastBounce;
     private static String channel;
     private static int scans;
@@ -62,6 +63,7 @@ public class HomeKeyService extends AccessibilityService {
         if (c > 0) { channel = label.substring(c + 1).trim(); label = label.substring(0, c); }
         scans = 0;
         teliaAllowed = true;
+        teliaPage = channel == null;   // Telia's own pages (recordings, account, guide) asked for by the user
         pending = label;
         pendingUntil = SystemClock.uptimeMillis() + 20000;
         presses = 0;
@@ -134,10 +136,45 @@ public class HomeKeyService extends AccessibilityService {
             if (pending != null || teliaAllowed) { watchTries = 0; return; }
             if (!inTelia()) { watchTries = 0; return; }
             Log.d(TAG, "Telias launcher dök upp av sig själv (" + lastCls + "), tillbaka till Hem");
+            coverNow();
             goHem();
             if (++watchTries < 6) h.postDelayed(this, 400); else watchTries = 0;
         }
     };
+
+    /** A plain dark screen over everything (same colour as Hem), so Telia's start page is never seen. */
+    private View cover;
+    private final Runnable uncoverR = new Runnable() {
+        @Override public void run() {
+            View v = cover;
+            cover = null;
+            if (v != null) try { ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(v); } catch (Exception ignored) {}
+        }
+    };
+
+    private void coverNow() {
+        h.removeCallbacks(uncoverR);
+        h.postDelayed(uncoverR, 3000);   // never stays longer than this
+        if (cover != null) return;
+        try {
+            View v = new View(this);
+            v.setBackgroundColor(0xFF010208);
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.OPAQUE);
+            ((WindowManager) getSystemService(WINDOW_SERVICE)).addView(v, lp);
+            cover = v;
+        } catch (Exception ex) { Log.d(TAG, "täcke: " + ex); }
+    }
+
+    /** Hem is on screen again: lift the cover once it has drawn. */
+    static void uncover() {
+        HomeKeyService s = instance;
+        if (s != null) { s.h.removeCallbacks(s.uncoverR); s.h.postDelayed(s.uncoverR, 250); }
+    }
 
     private boolean inTelia() {
         try {
@@ -162,8 +199,10 @@ public class HomeKeyService extends AccessibilityService {
             // Anything of Telia's own except its player (start page, guide, menus) is only allowed while Hem
             // steers to a channel. Telia's player itself may stay (TV4/Axess); its dialogs (android.*) too.
             boolean teliaScreen = (c.startsWith("se.telia") || c.startsWith("se.tv4")) && !c.toLowerCase().contains("player");
-            if (teliaScreen && SystemClock.uptimeMillis() - finishedAt > 2000) {
-                if (teliaAllowed) Log.d(TAG, "Telias startsida visades efter kanalen, tillbaka till Hem");
+            if (teliaScreen && !(teliaAllowed && teliaPage) && SystemClock.uptimeMillis() - finishedAt > 2000) {
+                // cover it at once (before Telia has drawn anything) and go home; the cover lifts when Hem is back
+                coverNow();
+                Log.d(TAG, "Telias sida utan att Hem bett om den, tillbaka till Hem");
                 teliaAllowed = false;
             }
         }
