@@ -78,6 +78,7 @@ public class HomeActivity extends Activity {
         getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0xFF010208));
         earth = new EarthView(this);
         web = new WebView(this);
+        try { web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false); } catch (Throwable ignored) {}
         android.widget.FrameLayout root = new android.widget.FrameLayout(this);
         root.addView(earth, new android.widget.FrameLayout.LayoutParams(-1, -1));
         root.addView(new LabelView(this, earth), new android.widget.FrameLayout.LayoutParams(-1, -1));
@@ -207,7 +208,40 @@ public class HomeActivity extends Activity {
         if (earth != null) earth.onPause();
     }
 
-    private long guardWarned;
+    private long guardWarned, lastTrim;
+
+    /** Back on Hem: close apps left running in the background (Pluto, YouTube, Telia…) so the box has its
+     *  memory and processor for the home screen. Music that is playing (e.g. Spotify) is left alone. */
+    private void autoTrim() {
+        long now = android.os.SystemClock.uptimeMillis();
+        if (now - lastTrim < 60000 || now - HomeKeyService.requestAt < 30000) return;
+        lastTrim = now;
+        new Thread(() -> {
+            try {
+                Thread.sleep(3000);
+                java.util.Set<String> playing = new java.util.HashSet<>();
+                try {
+                    android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+                    for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(this, MediaListener.class))) {
+                        android.media.session.PlaybackState st = mc.getPlaybackState();
+                        if (st != null && st.getState() == android.media.session.PlaybackState.STATE_PLAYING) playing.add(mc.getPackageName());
+                    }
+                } catch (Exception ignored) {}
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                int n = 0;
+                for (ApplicationInfo ai : getPackageManager().getInstalledApplications(0)) {
+                    String pk = ai.packageName;
+                    boolean user = (ai.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
+                    boolean telia = pk.equals(HomeKeyService.TELIA) || pk.equals("com.teliacompany.tv.teletext");
+                    if (pk.equals(getPackageName()) || playing.contains(pk) || !(user || telia)) continue;
+                    if (telia && HomeKeyService.teliaAllowed) continue;
+                    am.killBackgroundProcesses(pk);
+                    n++;
+                }
+                android.util.Log.d("HemTv", "städade bakgrunden (" + n + " appar, spelar: " + playing + ")");
+            } catch (Exception ignored) {}
+        }).start();
+    }
 
     /** The guard (started with 'hemvakt' from the phone) stops when the box restarts: say so on the TV. */
     private void checkGuard() {
@@ -236,6 +270,7 @@ public class HomeActivity extends Activity {
             } catch (Exception ignored) {}
         }
         HomeKeyService.uncover();
+        autoTrim();
         ensureHomeKey();
         checkGuard();
         fetchRemote();
