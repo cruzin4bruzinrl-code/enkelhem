@@ -21,7 +21,7 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
     static final float QUALITY = 0.55f;
-    private int prog, uRes, uRot, uCld, uC, uR, uE, uT, uEB, uL;
+    private int prog, uRes, uRot, uCld, uC, uR, uE, uT, uEB, uL, uM;
     private volatile float target;   // 0 = home (still, cap at the bottom), 1 = screensaver (whole globe, turning)
     private float prog01;
     private double rot = 0.18, cld, simT;
@@ -29,29 +29,53 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
     private int bw, bh;
     private long t0 = SystemClock.uptimeMillis();
     private volatile boolean slow;
+    volatile float shownE;
+    volatile double shownT;
 
     private static final String VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
     private static final String FS = "precision highp float;\n" +
-        "uniform vec2 uRes,uC;uniform float uRot,uCld,uR,uE,uT,uEB;uniform vec3 uL;uniform sampler2D uDay,uAux;\n" +
+        "uniform vec2 uRes,uC;uniform float uRot,uCld,uR,uE,uT,uEB;uniform vec3 uL,uM;uniform sampler2D uDay,uAux;\n" +
         "const vec2 S=vec2(960.,560.);const float K=.34;\n" +
         "float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n" +
+        "float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);\n" +
+        " return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}\n" +
+        "float fbm(vec2 p){return noise(p)*.55+noise(p*2.1)*.3+noise(p*4.3)*.15;}\n" +
         "vec2 orb(float a,float T,float ph){float t=uT*6.2831853/T+ph;return vec2(cos(t),sin(t));}\n" +
         "vec3 orbit(vec3 col,vec2 sp,float a,float A){vec2 q=(sp-S)/vec2(a,a*K);float l=max(length(q),1e-3);\n" +
-        " float g=length((q/l)/vec2(a,a*K));float dd=abs(l-1.)/g;return col+vec3(.45,.6,1.)*(1.-smoothstep(.4,1.6,dd))*.13*A;}\n" +
-        "vec3 planet(vec3 col,vec2 sp,float a,float T,float ph,float sz,vec3 c1,vec3 c2,float kind,float pass,float A){\n" +
+        " float g=length((q/l)/vec2(a,a*K));float dd=abs(l-1.)/g;return col+vec3(.45,.6,1.)*(1.-smoothstep(.4,1.6,dd))*.11*A;}\n" +
+        "vec3 surface(vec3 n,float kind,float spin){\n" +
+        " float lon=atan(n.x,n.z)+spin,lat=n.y;vec2 uv=vec2(lon*1.6,lat*3.);\n" +
+        " if(kind<.5){float c=fbm(uv*3.);float cr=smoothstep(.62,.7,noise(uv*6.))*.25;return vec3(.42,.4,.38)+vec3(.3)*c-cr;}\n" +
+        " if(kind<1.5){float sw=fbm(uv*2.+vec2(spin*.3,0.));return mix(vec3(.88,.74,.48),vec3(.98,.92,.75),sw);}\n" +
+        " if(kind<2.5){float c=fbm(uv*2.5);vec3 m=mix(vec3(.62,.27,.14),vec3(.86,.5,.3),c);m=mix(m,vec3(.35,.17,.1),smoothstep(.55,.75,fbm(uv*4.+3.)));\n" +
+        "  return mix(m,vec3(.95,.95,.98),smoothstep(.82,.9,abs(lat)));}\n" +
+        " if(kind<3.5){float w=fbm(vec2(lon*3.,lat*2.))*.6;float b=.5+.5*sin(lat*18.+w*3.+sin(lat*5.)*1.5);\n" +
+        "  vec3 c=mix(vec3(.66,.48,.33),vec3(.96,.9,.8),b);\n" +
+        "  vec2 d=vec2(mod(lon+1.,6.2831853)-3.1416,lat+.33)*vec2(1.,2.4);float spot=1.-smoothstep(.12,.2,length(d));\n" +
+        "  return mix(c,vec3(.78,.32,.2),spot*.85);}\n" +
+        " if(kind<4.5){float b=.5+.5*sin(lat*14.+fbm(vec2(lon*2.,lat*3.))*1.2);return mix(vec3(.82,.72,.5),vec3(.96,.9,.72),b);}\n" +
+        " if(kind<5.5){return mix(vec3(.58,.84,.88),vec3(.72,.92,.94),.5+.5*sin(lat*9.));}\n" +
+        " float b=.5+.5*sin(lat*12.+fbm(vec2(lon*2.,lat*3.)));vec3 c=mix(vec3(.16,.3,.78),vec3(.3,.48,.92),b);\n" +
+        " vec2 d=vec2(mod(lon+2.,6.2831853)-3.1416,lat-.25)*vec2(1.,2.2);return mix(c,vec3(.08,.12,.35),(1.-smoothstep(.1,.18,length(d)))*.8);}\n" +
+        "vec3 planet(vec3 col,vec2 sp,float a,float T,float ph,float sz,float kind,float pass,float A){\n" +
         " vec2 o=orb(a,T,ph);if(step(0.,o.y)!=pass)return col;\n" +
         " vec2 P=S+vec2(o.x*a,o.y*a*K);float r=sz*(1.+.12*o.y);\n" +
-        " vec2 p=(sp-P)/r;if(dot(p,p)>6.)return col;float r2=dot(p,p);\n" +
+        " vec2 p=(sp-P)/r;float r2=dot(p,p);if(r2>6.)return col;\n" +
         " vec2 tl=S-P;vec3 L=normalize(vec3(tl.x,-tl.y,length(tl)*.9+1.));\n" +
+        " bool ringed=kind>3.5&&kind<5.5;\n" +
+        " vec2 rq=vec2(p.x*.92+p.y*.39,(p.y*.92-p.x*.39)/.36);if(kind>4.5)rq=vec2(p.y*.97-p.x*.24,(p.x*.97+p.y*.24)/.3);float rr=length(rq);\n" +
         " if(r2<1.){vec3 n=vec3(p.x,-p.y,sqrt(1.-r2));\n" +
-        "  float band=kind>.5?.5+.5*sin(n.y*16.+sin(n.y*6.+n.x*2.)*1.4):.5+.5*sin(n.x*7.+n.y*11.)*sin(n.y*5.);\n" +
-        "  vec3 base=mix(c1,c2,band);float dif=clamp(dot(n,L),0.,1.);\n" +
-        "  vec3 pc=base*(.03+1.15*dif)+vec3(.5,.6,.8)*pow(1.-n.z,3.)*.25*dif;\n" +
+        "  vec3 base=surface(n,kind,uT*6.2831853/(kind>2.5?9.:20.));\n" +
+        "  float dif=clamp(dot(n,L),0.,1.);\n" +
+        "  vec3 pc=base*(.03+1.15*dif)+vec3(.55,.65,.9)*pow(1.-n.z,3.)*.22*dif;\n" +
+        "  if(kind>4.5&&kind<5.5)pc*=1.;\n" +
+        "  if(kind>3.5&&kind<4.5){float sh=smoothstep(.04,.0,abs(rq.y+.08))*step(rr,2.2)*step(1.,rr);pc*=1.-sh*.0;}\n" +
         "  col=mix(col,pc,clamp((1.-sqrt(r2))*r*1.5,0.,1.)*A);}\n" +
-        " if(kind>1.5){vec2 q=vec2(p.x*.92+p.y*.39,(p.y*.92-p.x*.39)/.36);float rr=length(q);\n" +
-        "  float ring=smoothstep(1.3,1.42,rr)*(1.-smoothstep(2.05,2.25,rr))*(.55+.3*sin(rr*38.));\n" +
-        "  if(ring>0.&&(r2>1.||q.y>0.)){float sh=r2<1.?1.:clamp(.35+.65*smoothstep(-.2,.6,dot(normalize(p),normalize(vec2(tl.x,tl.y)))+.4),0.,1.);\n" +
-        "   col=mix(col,vec3(.86,.78,.6)*sh,ring*.8*A);}}\n" +
+        " if(ringed){float ring;\n" +
+        "  if(kind<4.5)ring=smoothstep(1.28,1.38,rr)*(1.-smoothstep(2.15,2.3,rr))*(.6+.25*sin(rr*42.))*(1.-.85*smoothstep(1.86,1.9,rr)*(1.-smoothstep(1.95,1.99,rr)))*(rr<1.55?.55:1.);\n" +
+        "  else ring=smoothstep(1.55,1.6,rr)*(1.-smoothstep(1.66,1.72,rr))*.35;\n" +
+        "  if(ring>0.&&(r2>1.||rq.y>0.)){\n" +
+        "   col=mix(col,(kind<4.5?vec3(.88,.8,.62):vec3(.7,.85,.9))*(.35+.65*clamp(dot(normalize(vec3(p.x,-p.y,.8)),L)+.3,0.,1.)),ring*.85*A);}}\n" +
         " return col;}\n" +
         "vec3 earth(vec3 col,vec2 sp){float R=uR;vec2 C=uC;vec2 p=(sp-C)/R;p.y=-p.y;float r2=dot(p,p);vec3 L=uL;\n" +
         " float lit=clamp(dot(normalize(vec3(p,.25)),L)*.7+.45,.12,1.);\n" +
@@ -73,31 +97,39 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         " float fr=pow(1.-z,2.3);c=mix(c,vec3(.36,.62,1.)*(.25+.95*clamp(dif+.35,0.,1.)),fr*.8);\n" +
         " float edge=clamp((1.-sqrt(r2))*R/1.6,0.,1.);\n" +
         " return mix(mix(col,vec3(.36,.62,1.),clamp(1.05*lit,0.,1.)),c,edge);}\n" +
+        "vec3 moon(vec3 col,vec2 sp,float A){if(uM.z<=0.)return col;vec2 p=(sp-uM.xy)/uM.z;float r2=dot(p,p);if(r2>1.)return col;\n" +
+        " vec3 n=vec3(p.x,-p.y,sqrt(1.-r2));vec2 tl=S-uM.xy;vec3 L=normalize(vec3(tl.x,-tl.y,length(tl)*.9+1.));\n" +
+        " vec3 c=surface(n,0.,0.)*1.2*(.04+1.1*clamp(dot(n,L),0.,1.));return mix(col,c,clamp((1.-sqrt(r2))*uM.z*1.5,0.,1.)*A);}\n" +
         "void main(){\n" +
         " vec2 sp=vec2(gl_FragCoord.x/uRes.x*1920.,(1.-gl_FragCoord.y/uRes.y)*1080.);\n" +
         " vec3 col=vec3(.004,.008,.031);vec2 g=floor(sp/5.);float hs=hash(g);\n" +
         " col+=vec3(.85,.9,1.)*step(.9965,hs)*fract(hs*977.)*uE;\n" +
         " float A=smoothstep(.3,1.,uE);\n" +
         " if(A>0.){\n" +
-        "  col+=vec3(.25,.18,.4)*exp(-length((sp-vec2(1500.,250.))/vec2(700.,300.)))*.12*A;\n" +
+        "  float n1=length((sp-vec2(1450.,230.))/vec2(800.,330.));if(n1<4.)col+=vec3(.3,.18,.45)*fbm(sp/260.+3.)*exp(-n1)*.22*A;\n" +
+        "  float n2=length((sp-vec2(330.,900.))/vec2(700.,280.));if(n2<4.)col+=vec3(.12,.2,.4)*fbm(sp/300.+9.)*exp(-n2)*.16*A;\n" +
         "  col=orbit(col,sp,115.,A);col=orbit(col,sp,165.,A);col=orbit(col,sp,225.,A);col=orbit(col,sp,290.,A);\n" +
-        "  col=orbit(col,sp,400.,A);col=orbit(col,sp,530.,A);col=orbit(col,sp,660.,A);col=orbit(col,sp,780.,A);\n" +
+        "  col=orbit(col,sp,405.,A);col=orbit(col,sp,535.,A);col=orbit(col,sp,665.,A);col=orbit(col,sp,785.,A);\n" +
+        "  vec2 bq=(sp-S)/vec2(1.,K);float br=length(bq);\n" +
+        "  if(abs(br-347.)<20.){float ba=atan(bq.y,bq.x)-uT*.025;vec2 cell=vec2(floor(ba*140.),floor(br/4.));float h=hash(cell);\n" +
+        "   col+=vec3(.75,.7,.62)*step(.9,h)*(.3+.7*fract(h*91.))*(1.-smoothstep(10.,20.,abs(br-347.)))*.4*A;}\n" +
         "  for(int i=0;i<2;i++){float pass=float(i);\n" +
-        "   if(i==1){if(uEB>.5)col=earth(col,sp);\n" +
-        "    float d=length(sp-S);float R=52.;float disc=smoothstep(R+1.,R-1.,d);\n" +
-        "    vec3 core=mix(vec3(1.,.97,.86),vec3(1.,.6,.16),pow(clamp(d/R,0.,1.),2.2));\n" +
-        "    \n" +
-        "    col+=vec3(1.,.66,.3)*(exp(-max(d-R,0.)/28.)*.85+exp(-d/240.)*.3)*(1.-disc)*A;\n" +
+        "   if(i==1){if(uEB>.5){col=earth(col,sp);col=moon(col,sp,A);}\n" +
+        "    float d=length(sp-S);float R=54.;float disc=smoothstep(R+1.,R-1.,d);\n" +
+        "    float gr=d<R+1.?fbm((sp-S)/7.+vec2(uT*.15,-uT*.1)):.5;\n" +
+        "    vec3 core=mix(vec3(1.,.96,.82),vec3(1.,.55,.12),pow(clamp(d/R,0.,1.),2.2))*(.9+.18*gr);\n" +
+        "    float ang=atan(sp.y-S.y,sp.x-S.x);float cor=d<R+260.?exp(-max(d-R,0.)/(26.+10.*fbm(vec2(ang*3.,uT*.2)))):0.;\n" +
+        "    col+=vec3(1.,.66,.3)*(cor*.85+exp(-d/240.)*.3)*(1.-disc)*A;\n" +
         "    col=mix(col,core,disc*A);}\n" +
-        "   col=planet(col,sp,115.,18.,1.0,6.,vec3(.55,.52,.5),vec3(.75,.72,.68),0.,pass,A);\n" +
-        "   col=planet(col,sp,165.,31.,2.6,10.,vec3(.85,.7,.45),vec3(.95,.85,.62),0.,pass,A);\n" +
-        "   col=planet(col,sp,290.,57.,4.4,8.,vec3(.7,.32,.18),vec3(.85,.5,.3),0.,pass,A);\n" +
-        "   col=planet(col,sp,400.,156.,.4,30.,vec3(.72,.55,.4),vec3(.95,.88,.76),1.,pass,A);\n" +
-        "   col=planet(col,sp,530.,257.,5.5,25.,vec3(.8,.7,.5),vec3(.95,.88,.68),2.,pass,A);\n" +
-        "   col=planet(col,sp,660.,457.,3.2,16.,vec3(.55,.82,.86),vec3(.7,.9,.92),1.,pass,A);\n" +
-        "   col=planet(col,sp,780.,665.,2.1,15.,vec3(.22,.38,.85),vec3(.35,.52,.95),1.,pass,A);}\n" +
+        "   col=planet(col,sp,115.,18.,1.0,7.,0.,pass,A);\n" +
+        "   col=planet(col,sp,165.,31.,2.6,11.,1.,pass,A);\n" +
+        "   col=planet(col,sp,290.,57.,4.4,9.,2.,pass,A);\n" +
+        "   col=planet(col,sp,405.,156.,.4,34.,3.,pass,A);\n" +
+        "   col=planet(col,sp,535.,257.,5.5,28.,4.,pass,A);\n" +
+        "   col=planet(col,sp,665.,457.,3.2,17.,5.,pass,A);\n" +
+        "   col=planet(col,sp,785.,665.,2.1,16.,6.,pass,A);}\n" +
         " }\n" +
-        " if(uEB<.5)col=earth(col,sp);\n" +
+        " if(uEB<.5){col=earth(col,sp);col=moon(col,sp,A);}\n" +
         " gl_FragColor=vec4(col,1.);}\n";
 
     public EarthView(Context c) {
@@ -106,6 +138,12 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         setRenderer(this);
         setRenderMode(RENDERMODE_CONTINUOUSLY);
     }
+
+    /** Orbit table shared with the labels (same numbers as in the shader): a, period s, start angle, size. */
+    static final float[][] PLANETS = {
+        {115, 18, 1.0f, 7}, {165, 31, 2.6f, 11}, {225, 40, 0.9f, 12}, {290, 57, 4.4f, 9},
+        {405, 156, 0.4f, 34}, {535, 257, 5.5f, 28}, {665, 457, 3.2f, 17}, {785, 665, 2.1f, 16}};
+    static final String[] NAMES = {"Merkurius", "Venus", "Jorden", "Mars", "Jupiter", "Saturnus", "Uranus", "Neptunus"};
 
     /** Called from the page: half the frame rate in performance mode. */
     void setSlow(boolean s) { slow = s; }
@@ -160,6 +198,7 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         uT = GLES20.glGetUniformLocation(prog, "uT");
         uEB = GLES20.glGetUniformLocation(prog, "uEB");
         uL = GLES20.glGetUniformLocation(prog, "uL");
+        uM = GLES20.glGetUniformLocation(prog, "uM");
         texture(0, "day.jpg");
         texture(1, "aux.jpg");
         GLES20.glUniform1i(GLES20.glGetUniformLocation(prog, "uDay"), 0);
@@ -188,7 +227,7 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         // Earth on its orbit (same numbers as in the shader: a=225, period 40 s, start angle 0.9)
         double ang = simT * 2 * Math.PI / 40.0 + 0.9;
         float px = 960f + (float) Math.cos(ang) * 225f, py = 560f + (float) Math.sin(ang) * 225f * 0.34f;
-        float pr = 11f * (1f + 0.12f * (float) Math.sin(ang));
+        float pr = 12f * (1f + 0.12f * (float) Math.sin(ang));
         float ec = 1f - (1f - e) * (1f - e) * (1f - e);
         float cx = 960f + (px - 960f) * ec, cy = 1700f + (py - 1700f) * ec;
         float r = (float) Math.exp(Math.log(1000) + (Math.log(pr) - Math.log(1000)) * e);
@@ -204,6 +243,11 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
         GLES20.glUniform1f(uT, (float) (simT % 200000.0));
         GLES20.glUniform1f(uEB, (e > 0.98f && Math.sin(ang) < 0) ? 1f : 0f);
         GLES20.glUniform3f(uL, lx / ll, ly / ll, lz / ll);
+        // the Moon circles the Earth (once every 8 s), only once the Earth is out on its orbit
+        double ma = simT * 2 * Math.PI / 8.0;
+        float mr = e > 0.7f ? 4.5f * (e - 0.7f) / 0.3f : 0f;
+        GLES20.glUniform3f(uM, cx + (float) Math.cos(ma) * 24f * e, cy + (float) Math.sin(ma) * 24f * 0.45f * e, mr);
+        shownE = e; shownT = simT;
         GLES20.glUniform1f(uRot, (float) (rot % 1.0));
         GLES20.glUniform1f(uCld, (float) (cld % 1.0));
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);

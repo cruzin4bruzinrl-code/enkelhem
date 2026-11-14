@@ -80,6 +80,7 @@ public class HomeActivity extends Activity {
         web = new WebView(this);
         android.widget.FrameLayout root = new android.widget.FrameLayout(this);
         root.addView(earth, new android.widget.FrameLayout.LayoutParams(-1, -1));
+        root.addView(new LabelView(this, earth), new android.widget.FrameLayout.LayoutParams(-1, -1));
         root.addView(web, new android.widget.FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
         WebSettings s = web.getSettings();
