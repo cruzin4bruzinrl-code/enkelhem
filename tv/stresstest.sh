@@ -205,6 +205,20 @@ seen=$(printf '%s\n' "$L" | grep -c "dök upp av sig själv")
 printf '%s\n' "$L" | grep -E "HemVakt|dök upp" | tail -10 | sed 's/^/     /' >> "$R"
 say "Resultat: $hok av $htot. Vakten stoppade Telias startsida $stop gånger. Telias startsida syntes $seen gånger."
 
+sec "HOME utan vakten (som efter en omstart av boxen)"
+S pkill -f 'tvhem.Guard' >/dev/null; sleep 1
+a logcat -c
+nok=0; ntot=0
+for app in "monkey -p com.teamsmart.videomanager.tv -c android.intent.category.LEANBACK_LAUNCHER 1" "monkey -p com.google.android.youtube.tv -c android.intent.category.LEANBACK_LAUNCHER 1" "am start -a android.settings.SETTINGS"; do
+  S $app >/dev/null 2>&1; sleep 7
+  before=$(top_act); home; sleep 3; cur=$(top_act)
+  ntot=$((ntot+1)); [[ "$cur" == $PKG* ]] && nok=$((nok+1))
+  say "Från ${before:-?}: $([[ "$cur" == $PKG* ]] && echo OK || echo "FEL, hamnade i $cur")"
+done
+a logcat -d -s HemTv | tr -d '\r' | grep -E "Telia|täcke" | tail -8 | sed 's/^/     /' >> "$R"
+say "Resultat utan vakten: $nok av $ntot"
+curl -fsSL "$RAW/vakt.sh?v=$RANDOM" | bash >/dev/null 2>&1 && say "Vakten startad igen"
+
 sec "SVT (inbyggd spelare)"
 curl -fsSL "$RAW/kanaler.txt?t=$RANDOM" | grep -v '^#' > "$DIR/kanaler.txt"
 while IFS='|' read -r kind name url tab desc col; do
