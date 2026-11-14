@@ -202,7 +202,7 @@ done
 L=$(a logcat -d | tr -d '\r')
 stop=$(printf '%s\n' "$L" | grep -c "stoppade Telias startsida")
 seen=$(printf '%s\n' "$L" | grep -c "dök upp av sig själv")
-printf '%s\n' "$L" | grep -E "HemVakt" | tail -8 | sed 's/^/     /' >> "$R"
+printf '%s\n' "$L" | grep -E "HemVakt|dök upp" | tail -10 | sed 's/^/     /' >> "$R"
 say "Resultat: $hok av $htot. Vakten stoppade Telias startsida $stop gånger. Telias startsida syntes $seen gånger."
 
 sec "SVT (inbyggd spelare)"
@@ -241,7 +241,9 @@ if [ $JSOK = 1 ]; then
     say "$name: efter 12 s ${s1:-?}, efter 22 s ${s2:-?}"
     a logcat -d -s HemTv | tr -d '\r' | grep -v '^-' | tail -60 | sed 's/^/     /' >> "$R"
   done < "$DIR/kanaler.txt"
-  home; sleep 2
+  a logcat -c; home; sleep 3
+  say "Efter HOME från Telia-kanal: $(top_act)"
+  a logcat -d | tr -d '\r' | grep -E "HemVakt|HemTv" | tail -10 | sed 's/^/     /' >> "$R"
 else say "Hoppas över (testkanalen svarade inte)"; fi
 
 sec "Slutläge"

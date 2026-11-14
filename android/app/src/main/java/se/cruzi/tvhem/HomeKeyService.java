@@ -102,26 +102,40 @@ public class HomeKeyService extends AccessibilityService {
         // Back while watching a Telia channel: straight home to Hem instead of into Telia's guide/start page
         if (e.getKeyCode() == KeyEvent.KEYCODE_BACK && pending == null && teliaAllowed && inTelia()) {
             if (e.getAction() == KeyEvent.ACTION_UP) {
-                teliaAllowed = false;
                 Log.d(TAG, "Bakåt i Telia, tillbaka till Hem");
-                try {
-                    startActivity(new Intent(this, HomeActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
-                } catch (Exception ignored) {}
+                goHem();
             }
             return true;
         }
         if (e.getKeyCode() != KeyEvent.KEYCODE_HOME) return false;
         if (e.getAction() == KeyEvent.ACTION_UP) {
-            teliaAllowed = false;
             finish("HOME");
-            try {
-                startActivity(new Intent(this, HomeActivity.class)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
-            } catch (Exception ignored) {}
+            goHem();
         }
         return true;
     }
+
+    /** Back to Hem, and tell the guard right away that Telia is no longer allowed. */
+    private void goHem() {
+        teliaAllowed = false;
+        try { android.provider.Settings.Global.putString(getContentResolver(), "hem_telia", "0"); } catch (Exception ignored) {}
+        try {
+            startActivity(new Intent(this, HomeActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+        } catch (Exception ignored) {}
+    }
+
+    /** Telia really is on screen without us asking: bounce to Hem, and look again shortly in case it comes back. */
+    private int watchTries;
+    private final Runnable watch = new Runnable() {
+        @Override public void run() {
+            if (pending != null || teliaAllowed) { watchTries = 0; return; }
+            if (!inTelia()) { watchTries = 0; return; }
+            Log.d(TAG, "Telias launcher dök upp av sig själv, tillbaka till Hem");
+            goHem();
+            if (++watchTries < 6) h.postDelayed(this, 400); else watchTries = 0;
+        }
+    };
 
     private boolean inTelia() {
         try {
@@ -138,15 +152,8 @@ public class HomeKeyService extends AccessibilityService {
         // Telia's own HOME handling (or anything else) opened Telia's launcher without us asking: go back to Hem.
         if (pending == null && !teliaAllowed && p != null && TELIA.contentEquals(p)
                 && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            long now = SystemClock.uptimeMillis();
-            if (now - lastBounce > 1500) {
-                lastBounce = now;
-                Log.d(TAG, "Telias launcher dök upp av sig själv, tillbaka till Hem");
-                try {
-                    startActivity(new Intent(this, HomeActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
-                } catch (Exception ignored) {}
-            }
+            h.removeCallbacks(watch);
+            h.post(watch);
             return;
         }
         if (pending == null) return;
