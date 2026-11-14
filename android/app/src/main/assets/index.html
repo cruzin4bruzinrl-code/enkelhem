@@ -194,7 +194,7 @@ body.saving #saver{background:transparent;}
 
 <script>
 "use strict";
-const VERSION="32.2";
+const VERSION="32.3";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -651,7 +651,7 @@ function placeKey(k){const N=PLACES.length;
   render();}
 
 /* ===== toast ===== */
-let tT=0;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("on"),3200);}
+let tT=0;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("on"),m.length>60?9000:3200);}
 
 /* ===== FPS meter ===== */
 let fpsOn=false,fc=0,fl=0;

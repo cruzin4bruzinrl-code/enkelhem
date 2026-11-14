@@ -157,9 +157,13 @@ public class HomeKeyService extends AccessibilityService {
         if (pending == null && p != null && TELIA.contentEquals(p)
                 && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             CharSequence cls = e.getClassName();
-            boolean startPage = cls != null && cls.toString().endsWith(".MainActivity");
-            if (startPage && SystemClock.uptimeMillis() - finishedAt > 2000) {
-                Log.d(TAG, "Telias startsida visades efter kanalen, tillbaka till Hem");
+            String c = cls == null ? "" : cls.toString();
+            Log.d(TAG, "Telia-fönster: " + c);
+            // Anything of Telia's own except its player (start page, guide, menus) is only allowed while Hem
+            // steers to a channel. Telia's player itself may stay (TV4/Axess); its dialogs (android.*) too.
+            boolean teliaScreen = (c.startsWith("se.telia") || c.startsWith("se.tv4")) && !c.toLowerCase().contains("player");
+            if (teliaScreen && SystemClock.uptimeMillis() - finishedAt > 2000) {
+                if (teliaAllowed) Log.d(TAG, "Telias startsida visades efter kanalen, tillbaka till Hem");
                 teliaAllowed = false;
             }
         }

@@ -207,6 +207,22 @@ public class HomeActivity extends Activity {
         if (earth != null) earth.onPause();
     }
 
+    private long guardWarned;
+
+    /** The guard (started with 'hemvakt' from the phone) stops when the box restarts: say so on the TV. */
+    private void checkGuard() {
+        try {
+            String g = Settings.Global.getString(getContentResolver(), "hem_guard");
+            long at = g == null ? 0 : Long.parseLong(g.trim());
+            long now = System.currentTimeMillis();
+            if (now - at > 120000 && now - guardWarned > 600000 && web != null) {
+                guardWarned = now;
+                web.postDelayed(() -> web.evaluateJavascript(
+                    "window.toast&&toast('Vakten är avstängd (boxen har startat om). Kör hemvakt i Termux.')", null), 1500);
+            }
+        } catch (Exception ignored) {}
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -220,6 +236,7 @@ public class HomeActivity extends Activity {
             } catch (Exception ignored) {}
         }
         ensureHomeKey();
+        checkGuard();
         fetchRemote();
         if (web != null) web.evaluateJavascript("window.oceanShown && oceanShown()", null);
     }

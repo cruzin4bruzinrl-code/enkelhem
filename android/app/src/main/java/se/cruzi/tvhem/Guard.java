@@ -50,6 +50,8 @@ public class Guard extends android.app.IActivityController.Stub {
                     while ((l = r.readLine()) != null) if (l.trim().equals("package:se.cruzi.tvhem")) found = true;
                     p.waitFor();
                     hemEnabled = found;
+                    // heartbeat, so Hem can tell when the guard is not running (e.g. after a restart of the box)
+                    Runtime.getRuntime().exec(new String[]{"settings", "put", "global", "hem_guard", String.valueOf(System.currentTimeMillis())}).waitFor();
                 } catch (Throwable ignored) {}
                 try { Thread.sleep(30000); } catch (InterruptedException ignored) {}
             }
