@@ -62,6 +62,13 @@ say "Vila: sleep=$(S settings get secure sleep_timeout) attentive=$(S settings g
 say "Animationer: $(S settings get global window_animation_scale)/$(S settings get global transition_animation_scale)/$(S settings get global animator_duration_scale)"
 say "Avstängda paket: $(S pm list packages -d | cut -d: -f2 | paste -sd' ')"
 
+sec "Integritet (mikrofon, spårning)"
+say "Appar som får använda mikrofonen: $(S dumpsys package | awk '/^Package \[/{p=$2} /android.permission.RECORD_AUDIO: granted=true/{print p}' | tr -d '[]' | sort -u | paste -sd' ')"
+say "Röstassistent: $(S settings get secure voice_interaction_service) / $(S settings get secure assistant)"
+say "Användningsstatistik till Google: $(S settings get global usage_stats_enabled) · diagnostik: $(S settings get secure send_action_app_error)"
+say "Annons-id spärrat: $(S settings get secure limit_ad_tracking 2>/dev/null)"
+say "Alla paket som är igång: $(S pm list packages -e | cut -d: -f2 | grep -iE 'telia|sdmc|analytics|track|stat|report|log|feedback|katniss|assistant|mediashell|cast|tvrecommend|partner|backdrop|nielsen|conviva|adjust|firebase' | paste -sd' ')"
+
 sec "Start från annan app"
 for n in 1 2 3; do
   S am start -a android.settings.SETTINGS >/dev/null; sleep 3
