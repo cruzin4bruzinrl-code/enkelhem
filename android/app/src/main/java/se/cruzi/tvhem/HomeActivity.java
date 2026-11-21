@@ -81,7 +81,6 @@ public class HomeActivity extends Activity {
         try { web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false); } catch (Throwable ignored) {}
         android.widget.FrameLayout root = new android.widget.FrameLayout(this);
         root.addView(earth, new android.widget.FrameLayout.LayoutParams(-1, -1));
-        root.addView(new LabelView(this, earth), new android.widget.FrameLayout.LayoutParams(-1, -1));
         root.addView(web, new android.widget.FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
         WebSettings s = web.getSettings();
@@ -209,6 +208,24 @@ public class HomeActivity extends Activity {
     }
 
     private long guardWarned, lastTrim;
+
+    /** Screensaver: ask the TV for 60 Hz (same resolution) so the particles move at 60 frames a second; back to normal after. */
+    private void refresh60(boolean on) {
+        try {
+            android.view.Display d = getWindowManager().getDefaultDisplay();
+            android.view.Display.Mode cur = d.getMode();
+            int id = 0;
+            if (on) for (android.view.Display.Mode m : d.getSupportedModes())
+                if (m.getPhysicalWidth() == cur.getPhysicalWidth() && m.getPhysicalHeight() == cur.getPhysicalHeight()
+                        && Math.abs(m.getRefreshRate() - 60f) < 1f) id = m.getModeId();
+            android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+            if (lp.preferredDisplayModeId != id) {
+                lp.preferredDisplayModeId = id;
+                getWindow().setAttributes(lp);
+                android.util.Log.d("HemTv", "bildfrekvens: " + (id == 0 ? "som vanligt" : "60 Hz") + " (nu " + cur.getRefreshRate() + ")");
+            }
+        } catch (Exception ignored) {}
+    }
 
     /** Back on Hem: close apps left running in the background (Pluto, YouTube, Telia…) so the box has its
      *  memory and processor for the home screen. Music that is playing (e.g. Spotify) is left alone. */
@@ -453,13 +470,76 @@ public class HomeActivity extends Activity {
 
         @JavascriptInterface
         public void earthSaver(final boolean on) {
-            ui.post(() -> { if (earth != null) earth.setSaver(on); });
+            ui.post(() -> { if (earth != null) earth.setSaver(on); refresh60(on); });
         }
 
         /** Tell the guard (Guard.java) that the next Telia start is ours. */
         private void allowTelia() {
             try { Settings.Global.putString(getContentResolver(), "hem_telia", String.valueOf(System.currentTimeMillis())); }
             catch (Exception ignored) {}
+        }
+
+        /** Music/video that is playing (or paused) right now, for the player on the home screen. */
+        private String npArtKey = "";
+        @JavascriptInterface
+        public String nowPlaying(String haveArt) {
+            try {
+                android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+                android.media.session.MediaController best = null;
+                for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(HomeActivity.this, MediaListener.class))) {
+                    if (mc.getPackageName().equals(getPackageName())) continue;
+                    android.media.session.PlaybackState st = mc.getPlaybackState();
+                    if (st == null || mc.getMetadata() == null) continue;
+                    int k = st.getState();
+                    if (k == android.media.session.PlaybackState.STATE_PLAYING) { best = mc; break; }
+                    if (best == null && (k == android.media.session.PlaybackState.STATE_PAUSED || k == android.media.session.PlaybackState.STATE_BUFFERING)) best = mc;
+                }
+                if (best == null) return "null";
+                android.media.MediaMetadata m = best.getMetadata();
+                JSONObject o = new JSONObject();
+                CharSequence t = m.getText(android.media.MediaMetadata.METADATA_KEY_TITLE);
+                if (t == null) t = m.getText(android.media.MediaMetadata.METADATA_KEY_DISPLAY_TITLE);
+                CharSequence a = m.getText(android.media.MediaMetadata.METADATA_KEY_ARTIST);
+                if (a == null) a = m.getText(android.media.MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE);
+                o.put("pkg", best.getPackageName());
+                try { o.put("app", getPackageManager().getApplicationLabel(getPackageManager().getApplicationInfo(best.getPackageName(), 0)).toString()); } catch (Exception ignored) {}
+                o.put("title", t == null ? "" : t.toString());
+                o.put("sub", a == null ? "" : a.toString());
+                o.put("playing", best.getPlaybackState().getState() == android.media.session.PlaybackState.STATE_PLAYING);
+                String key = best.getPackageName() + "|" + o.optString("title");
+                o.put("key", key);
+                if (!key.equals(haveArt)) {
+                    android.graphics.Bitmap b = m.getBitmap(android.media.MediaMetadata.METADATA_KEY_ALBUM_ART);
+                    if (b == null) b = m.getBitmap(android.media.MediaMetadata.METADATA_KEY_ART);
+                    if (b == null) b = m.getBitmap(android.media.MediaMetadata.METADATA_KEY_DISPLAY_ICON);
+                    if (b != null) {
+                        android.graphics.Bitmap sc = android.graphics.Bitmap.createScaledBitmap(b, 220, Math.max(1, Math.round(220f * b.getHeight() / Math.max(1, b.getWidth()))), true);
+                        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                        sc.compress(android.graphics.Bitmap.CompressFormat.JPEG, 82, out);
+                        o.put("art", android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP));
+                    }
+                }
+                return o.toString();
+            } catch (Exception e) { return "null"; }
+        }
+
+        /** Play/pause, next, previous for whatever is playing. */
+        @JavascriptInterface
+        public void mediaCmd(String cmd) {
+            try {
+                android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+                for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(HomeActivity.this, MediaListener.class))) {
+                    android.media.session.PlaybackState st = mc.getPlaybackState();
+                    if (st == null || mc.getPackageName().equals(getPackageName())) continue;
+                    int k = st.getState();
+                    if (k != android.media.session.PlaybackState.STATE_PLAYING && k != android.media.session.PlaybackState.STATE_PAUSED) continue;
+                    android.media.session.MediaController.TransportControls tc = mc.getTransportControls();
+                    if ("toggle".equals(cmd)) { if (k == android.media.session.PlaybackState.STATE_PLAYING) tc.pause(); else tc.play(); }
+                    else if ("next".equals(cmd)) tc.skipToNext();
+                    else if ("prev".equals(cmd)) tc.skipToPrevious();
+                    return;
+                }
+            } catch (Exception ignored) {}
         }
 
         @JavascriptInterface

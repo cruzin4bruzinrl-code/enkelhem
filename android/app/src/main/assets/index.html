@@ -38,6 +38,20 @@ body.saving #saver{background:transparent;}
 .dt .tile svg{width:58%;height:58%;color:#fff;}
 .dt .tile .wm{font-size:21px;font-weight:800;color:#fff;text-align:center;line-height:1.05;padding:0 8px;}
 .dt.focus{background:rgba(255,255,255,.62);transform:translateY(-14px) scale(1.08);box-shadow:0 18px 40px rgba(30,25,40,.3);}
+#np{position:absolute;right:96px;top:170px;width:640px;display:flex;align-items:center;gap:26px;padding:22px 26px;border-radius:34px;
+  background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.2);
+  opacity:0;transform:translateY(-10px);transition:opacity .4s ease,transform .4s var(--ease),background .25s;}
+#np.on{opacity:1;transform:none;}
+#np.focus{background:rgba(255,255,255,.75);transform:scale(1.04);}
+#np .art{width:120px;height:120px;border-radius:22px;background:#2a2d36 center/cover;flex:0 0 auto;box-shadow:0 8px 20px rgba(0,0,0,.2);}
+#np .tx{min-width:0;flex:1;}
+#np .app{font-size:20px;font-weight:600;opacity:.6;text-transform:uppercase;letter-spacing:1px;}
+#np b{display:block;font-size:30px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#np small{display:block;font-size:24px;opacity:.75;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#np .pp{width:62px;height:62px;border-radius:50%;background:#16181d;flex:0 0 auto;display:grid;place-items:center;}
+#np .pp svg{width:26px;height:26px;fill:#fff;}
+#np .hint2{position:absolute;left:0;right:0;top:100%;margin-top:12px;text-align:center;font-size:20px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5);opacity:0;transition:opacity .2s;}
+#np.focus .hint2{opacity:.9;}
 #dlabel{position:absolute;left:0;right:0;bottom:300px;text-align:center;font-size:34px;font-weight:600;color:#fff;
   text-shadow:0 2px 14px rgba(0,0,0,.45);transition:opacity .2s ease;}
 #dlabel small{display:block;font-size:22px;font-weight:500;opacity:.85;margin-top:4px;}
@@ -140,6 +154,8 @@ body.saving #saver{background:transparent;}
       <svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/></svg>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
     </div>
+    <div id="np"><div class="art" id="npart"></div><div class="tx"><div class="app" id="npapp"></div><b id="nptitle"></b><small id="npsub"></small></div>
+      <div class="pp" id="nppp"></div><div class="hint2">◀ ▶ byt låt · OK paus/spela · ▼ tillbaka</div></div>
     <div id="dlabel"></div>
     <div id="dock"></div>
   </div>
@@ -164,7 +180,7 @@ body.saving #saver{background:transparent;}
 
 <script>
 "use strict";
-const VERSION="40.0";
+const VERSION="40.2";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -238,8 +254,9 @@ function render(){noScroll();document.querySelectorAll(".focus").forEach(e=>e.cl
     let off=Math.min(max,Math.max(0,bot-vh+40));if(top<off)off=Math.max(0,top-20);$("qlist").style.transform=`translateY(${-off}px)`;}return;}
   if(zone==="places"){const p=document.querySelectorAll("#pl div");if(p[pi]){p[pi].classList.add("focus");}return;}
   if(zone==="live"){const el=lr===0?document.querySelectorAll("#ltabs .ltab")[lt]:document.querySelectorAll("#lgrid .lc")[li];if(el)el.classList.add("focus");return;}
-  if(zone==="main")showSel();}
-function toMain(){if(zone==="grid")closeGrid();else if(zone==="live")closeLive();else if(zone==="panel")closePanel();
+  if(zone==="player")$("np").classList.add("focus");else $("np").classList.remove("focus");
+  if(zone==="main"||zone==="player")showSel();}
+function toMain(){if(zone==="player"){zone="main";render();return;}if(zone==="grid")closeGrid();else if(zone==="live")closeLive();else if(zone==="panel")closePanel();
   else if(zone==="places"){$("places").classList.remove("open");zone="main";render();}}
 function key(k){
   bumpIdle();
@@ -249,13 +266,14 @@ function key(k){
   if(k==="menu"||k==="rec"){if(zone==="panel")return closePanel();if(zone==="places")return placeKey("back");toMain();return openPanel();}
   if(k==="allapps"){if(zone==="grid")return closeGrid();toMain();return openGrid();}
   if(k==="last"){const r=getRecent().map(x=>x.pkg).filter(byPkg);if(r[1])return launch(r[1]);if(r[0])return launch(r[0]);return toast("Ingen tidigare app än");}
-  if(k==="playkey"){if(zone==="grid")return toggleFav(sortedApps()[gi].pkg);if(zone==="main"){const r=getRecent().find(x=>byPkg(x.pkg));
+  if(k==="playkey"){if(zone==="grid")return toggleFav(sortedApps()[gi].pkg);if(NP&&(zone==="main"||zone==="player"))return npCmd("toggle");if(zone==="main"){const r=getRecent().find(x=>byPkg(x.pkg));
       if(r)return launch(r.pkg);return toast("Ingen app att fortsätta med än");}return;}
   if(/^n\d$/.test(k))return numKey(+k[1]);
   if(zone==="grid")return gridKey(k);
   if(zone==="live")return liveKey(k);
   if(zone==="panel")return panelKey(k);
   if(zone==="places")return placeKey(k);
+  if(zone==="player")return playerKey(k);
   mainKey(k);}
 
 /* ===== the dock ===== */
@@ -296,8 +314,22 @@ function showSel(){const o=ORB[sel];if(!o)return;lastKey=o.key;
   $("dock").style.transform=`translateX(calc(-50% + ${dx}px))`;}
 function setSel(i){sel=Math.max(0,Math.min(ORB.length-1,i));showSel();}
 function activate(){const o=ORB[sel];if(!o)return;try{o.run();}catch(e){toast(o.name+" gick inte att öppna");}}
+/* ===== now playing: Spotify or other music shows a small player on the home screen ===== */
+let NP=null,npKey="";
+const PLAY='<svg viewBox="0 0 24 24"><path d="M7 4l14 8-14 8z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>';
+function npPoll(){if(!B||!B.nowPlaying||document.hidden||saverOn)return;let o=null;try{o=JSON.parse(B.nowPlaying(npKey));}catch(e){}
+  const el=$("np");
+  if(!o||!o.title){if(NP){NP=null;el.classList.remove("on","focus");if(zone==="player"){zone="main";render();}}return;}
+  if(o.art){$("npart").style.backgroundImage=`url(data:image/jpeg;base64,${o.art})`;npKey=o.key;}else if(o.key!==npKey){$("npart").style.backgroundImage="";npKey=o.key;}
+  $("npapp").textContent=o.app||"";$("nptitle").textContent=o.title;$("npsub").textContent=o.sub||"";$("nppp").innerHTML=o.playing?PAUSE:PLAY;
+  NP=o;el.classList.add("on");}
+setInterval(npPoll,2000);setTimeout(npPoll,600);
+function npCmd(c){call("mediaCmd",c);setTimeout(npPoll,450);setTimeout(npPoll,1500);}
+function playerKey(k){if(k==="left")return npCmd("prev");if(k==="right")return npCmd("next");if(k==="ok")return npCmd("toggle");
+  if(k==="up"){zone="main";return openPanel();}if(k==="down"||k==="back"){zone="main";render();}}
 function mainKey(k){
   if(k==="left")setSel(sel-1);else if(k==="right")setSel(sel+1);
+  else if(k==="up"&&NP){zone="player";render();}
   else if(k==="ok")activate();else if(k==="up")openPanel();else if(k==="down")openGrid();
   else if(k==="back")setSel(ORB.findIndex(o=>o.key==="tv"));
   else if(k==="hold"){const o=ORB[sel];if(o&&o.pkg)toggleFav(o.pkg);}}
@@ -421,7 +453,7 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["mem","Frigör minne",memText(),freeMem],
    ["net","Nätverk",netText(),()=>call("action",NEWAPP?"wifi":"settings")],
    ["sun","Väderort",ort,openPlaces],
-   ["sun","Skärmsläckare","Jorden snurrar · startar efter 10 min, OK visar den nu",()=>{closePanel();setTimeout(startSaver,400);}],
+   ["sun","Skärmsläckare","Partiklar · startar efter 10 min, OK visar den nu",()=>{closePanel();setTimeout(startSaver,400);}],
    ["img","Mitt innehåll","Inspelat och sparat hos Telia",()=>act("content")],
    ["set","Mitt konto","Ditt Telia-konto",()=>act("account")],
    ["spark","Prestandaläge",perf?"På":"Av",()=>{LS.set("perf",!perf);applyPerf();fillPanel();}],
