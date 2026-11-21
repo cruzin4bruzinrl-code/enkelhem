@@ -35,6 +35,7 @@ public class HomeKeyService extends AccessibilityService {
     /** true while the user is in Telia because we sent them there (a channel, Mitt innehåll …). */
     static volatile boolean teliaAllowed;
     static volatile boolean teliaPage;
+    static volatile String lastApp;
     private long lastBounce;
     private static String channel;
     private static int scans;
@@ -188,6 +189,12 @@ public class HomeKeyService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent e) {
         if (e == null) return;
         CharSequence p = e.getPackageName();
+        // remember which app was last on screen, so Hem can close it when you come back with HOME
+        if (p != null && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            String pk = p.toString();
+            if (!pk.equals(getPackageName()) && !pk.equals("com.android.systemui") && !pk.equals("android")
+                    && !pk.startsWith("com.google.android.inputmethod") && !pk.contains("droidlogic")) lastApp = pk;
+        }
         // Telia's own HOME handling (or anything else) opened Telia's launcher without us asking: go back to Hem.
         // Telia's start page showing when we are not steering a fresh channel request (e.g. Telia's player
         // went back to it by itself after HOME): bounce too, even while a Telia channel is allowed.

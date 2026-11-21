@@ -267,7 +267,9 @@ public class EarthView extends GLSurfaceView implements GLSurfaceView.Renderer {
     }
 
     /** Page visible/hidden: when visible draw at least one frame. */
+    /** Only the screensaver uses the solar system: otherwise the view is not even composited. */
     void setShown(boolean on) {
         setRenderMode(on ? RENDERMODE_CONTINUOUSLY : RENDERMODE_WHEN_DIRTY);
+        setVisibility(on ? VISIBLE : INVISIBLE);
     }
 }

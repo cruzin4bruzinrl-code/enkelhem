@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Hem</title>
-<!-- HEM-v30 -->
+<!-- HEM-v40 Nordic Calm -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;cursor:none;
@@ -12,52 +12,37 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:#010208;}
 :root{--ease:cubic-bezier(.32,.72,0,1);}
 
-/* space */
-#space{display:none;}
-#sky{position:absolute;inset:0;transition:opacity 1.2s ease;}
-#planets,#halo,#sel,#dots,.clock,.topr,#orbit,#fx{transition:opacity 1s ease;}
-body.saving #sky,body.saving #planets,body.saving #halo,body.saving #sel,body.saving #dots,body.saving .clock,body.saving .topr,body.saving #orbit,body.saving #fx{opacity:0!important;}
+/* home: a still Nordic photo, a clock and one dock – nothing moves unless you press a key */
+#bg{position:absolute;inset:0;background:#cfc3c6 center/cover no-repeat;transition:opacity 1.2s ease;}
+#bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 35%,rgba(20,18,26,0) 62%,rgba(20,18,26,.28) 100%);}
+#home{position:absolute;inset:0;transition:opacity .8s ease;}
+body.saving #bg,body.saving #home{opacity:0!important;}
 body.saving #saver{background:transparent;}
-#fx{position:absolute;left:-40px;top:0;width:2000px;height:1080px;pointer-events:none;}
-#earth{position:absolute;left:0;top:560px;width:1920px;height:520px;}
-#orbit{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;}
-
-/* planets */
-#halo{position:absolute;left:960px;top:430px;width:0;height:0;will-change:transform,opacity;transition:opacity .35s ease;}
-.hx{position:absolute;left:-210px;top:-210px;width:420px;height:420px;border-radius:50%;opacity:0;transition:opacity .5s ease;}
-.hx.on{opacity:1;}
-#ring{position:absolute;left:-141px;top:-141px;width:282px;height:282px;border-radius:50%;
-  border:2px solid var(--hc,#4da3ff);opacity:.6;transition:border-color .5s ease;}
-#planets{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:1;}
-.ov,#qp{z-index:20;}#gfx{z-index:21;}#toast,#fps{z-index:30;}#night{z-index:15;}#saver{z-index:25;}
-.orb{position:absolute;left:0;top:0;width:230px;height:230px;will-change:transform,opacity;}
-.ball{position:absolute;inset:0;border-radius:50%;overflow:hidden;display:grid;place-items:center;
-  box-shadow:inset -28px -36px 64px rgba(0,0,0,.62),inset 10px 12px 28px rgba(255,255,255,.2),0 18px 30px rgba(0,0,0,.5);}
-.ball img{width:58%;height:58%;border-radius:50%;object-fit:cover;box-shadow:0 6px 18px rgba(0,0,0,.35);}
-.ball svg{width:46%;height:46%;color:#fff;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
-.ball .wm{font-size:34px;font-weight:800;text-align:center;padding:0 22px;line-height:1.05;text-shadow:0 3px 12px rgba(0,0,0,.4);}
-.gl{position:absolute;inset:0;border-radius:50%;pointer-events:none;
-  background:radial-gradient(circle at 31% 24%,rgba(255,255,255,.62) 0,rgba(255,255,255,.16) 13%,rgba(255,255,255,0) 32%),
-    radial-gradient(circle at 70% 82%,rgba(160,200,255,.18) 0,rgba(160,200,255,0) 38%);
-  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.14);}
-#sel{position:absolute;left:460px;width:1000px;top:584px;text-align:center;transition:opacity .22s ease,transform .3s var(--ease);}
-#sel.out{opacity:0;transform:translateY(10px);}
-#sname{font-size:46px;font-weight:600;letter-spacing:.3px;text-shadow:0 4px 24px rgba(0,0,0,.8);}
-#sdesc{font-size:24px;opacity:.62;margin-top:8px;text-shadow:0 3px 16px rgba(0,0,0,.8);}
-#dots{position:absolute;left:0;right:0;bottom:34px;display:flex;justify-content:center;gap:12px;}
-#dots i{width:9px;height:9px;border-radius:5px;background:rgba(255,255,255,.35);transition:width .35s var(--ease),background .35s;}
-#dots i.on{width:28px;background:#fff;}
+.ov,#qp{z-index:20;}#toast,#fps{z-index:30;}#night{z-index:15;}#saver{z-index:25;}
+.clock,.topr{color:#16181d;}
+.clock{position:absolute;left:96px;top:70px;}
+.theme{font-size:30px;font-weight:600;letter-spacing:.2px;opacity:.85;margin-bottom:46px;}
+.clock .t{font-size:104px;font-weight:300;letter-spacing:-2px;line-height:1;}
+.clock .d{font-size:32px;font-weight:500;opacity:.8;margin-top:10px;}
+.topr{position:absolute;right:96px;top:78px;display:flex;align-items:center;gap:34px;opacity:.85;}
+.topr svg{width:38px;height:38px;}
+.wx{font-size:28px;font-weight:600;}
+#wifi.off{opacity:.35;}
+#dock{position:absolute;left:50%;bottom:88px;transform:translateX(-50%);display:flex;gap:30px;padding:26px 34px;border-radius:52px;
+  background:rgba(250,247,250,.34);border:1.5px solid rgba(255,255,255,.55);box-shadow:0 30px 70px rgba(30,25,40,.25),inset 0 1px 0 rgba(255,255,255,.6);
+  transition:transform .35s var(--ease);}
+.dt{width:156px;height:156px;border-radius:38px;display:grid;place-items:center;position:relative;flex:0 0 auto;
+  transition:transform .28s var(--ease),box-shadow .28s ease,background .28s ease;}
+.dt .tile{width:116px;height:116px;border-radius:30px;display:grid;place-items:center;overflow:hidden;box-shadow:0 8px 18px rgba(0,0,0,.18);}
+.dt .tile img{width:100%;height:100%;object-fit:cover;}
+.dt .tile svg{width:58%;height:58%;color:#fff;}
+.dt .tile .wm{font-size:21px;font-weight:800;color:#fff;text-align:center;line-height:1.05;padding:0 8px;}
+.dt.focus{background:rgba(255,255,255,.62);transform:translateY(-14px) scale(1.08);box-shadow:0 18px 40px rgba(30,25,40,.3);}
+#dlabel{position:absolute;left:0;right:0;bottom:300px;text-align:center;font-size:34px;font-weight:600;color:#fff;
+  text-shadow:0 2px 14px rgba(0,0,0,.45);transition:opacity .2s ease;}
+#dlabel small{display:block;font-size:22px;font-weight:500;opacity:.85;margin-top:4px;}
 
 /* top */
-.clock,.topr{text-shadow:0 2px 16px rgba(0,0,0,.6);}
-.clock{position:absolute;left:96px;top:66px;}
-.clock .t{font-size:92px;font-weight:300;letter-spacing:-1px;line-height:1;}
-.clock .d{font-size:30px;opacity:.75;margin-top:12px;}
-.topr{position:absolute;right:96px;top:78px;display:flex;align-items:center;gap:30px;color:rgba(255,255,255,.85);}
-.topr svg{width:38px;height:38px;}
-.wx{font-size:28px;font-weight:500;}
-#wifi.off{opacity:.35;}
-
 /* cards (Alla appar) */
 .rc{width:262px;height:164px;border-radius:22px;overflow:hidden;position:relative;display:grid;place-items:center;
   background:#24262b;border:1.5px solid rgba(255,255,255,.08);transition:transform .4s var(--ease),box-shadow .3s;}
@@ -84,13 +69,11 @@ body.saving #saver{background:transparent;}
 #grid{background:rgba(3,5,14,.96);padding:80px 110px;}
 #grid h2,#places h2{font-size:44px;font-weight:600;}
 .hint{font-size:23px;opacity:.55;margin:10px 0 36px;}
-#grid .gw .rc{opacity:0;transform:scale(.45) rotate(-5deg);transition:opacity .35s ease,transform .7s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;}
-#grid .gw .rc.gone{opacity:0;transform:scale(.3) translateY(40px);transition:opacity .3s ease,transform .45s cubic-bezier(.5,0,.75,0);}
+#grid .gw .rc{opacity:0;transform:translateY(18px);transition:opacity .3s ease,transform .35s var(--ease),box-shadow .3s;}
 #grid h2,#grid .hint{transform:translateY(-24px);opacity:0;transition:opacity .45s ease .1s,transform .6s var(--ease) .1s;}
 #grid.open h2{transform:none;opacity:1;}#grid.open .hint{transform:none;opacity:.55;}
 #grid .gw .rc.lit{opacity:1;transform:none;}
 #grid .gw .rc.lit.focus{transform:scale(1.06);}
-#gfx{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;}
 .lhead{display:flex;align-items:center;gap:60px;margin-bottom:46px;}
 #live{background:#03050d;padding:80px 110px;}
 #live h2{font-size:44px;font-weight:600;}
@@ -149,34 +132,21 @@ body.saving #saver{background:transparent;}
 </head>
 <body>
 <div id="stage">
-  <div id="sky"></div>
-  <canvas id="space" width="1250" height="675"></canvas>
-  <canvas id="fx" width="1000" height="540"></canvas>
-  <canvas id="earth" width="1344" height="364"></canvas>
-  <svg id="orbit" viewBox="0 0 1920 1080">
-    <defs><linearGradient id="og" x1="0" x2="1" y1="0" y2="0">
-      <stop offset="0" stop-color="#9cc4ff" stop-opacity="0"/><stop offset=".22" stop-color="#9cc4ff" stop-opacity=".28"/>
-      <stop offset=".5" stop-color="#cfe2ff" stop-opacity=".42"/><stop offset=".78" stop-color="#9cc4ff" stop-opacity=".28"/>
-      <stop offset="1" stop-color="#9cc4ff" stop-opacity="0"/></linearGradient></defs>
-    <filter id="ob" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="3"/></filter>
-    <ellipse cx="960" cy="1080" rx="1000" ry="650" fill="none" stroke="url(#og)" stroke-width="7" opacity=".35" filter="url(#ob)"/>
-    <ellipse cx="960" cy="1080" rx="1000" ry="650" fill="none" stroke="url(#og)" stroke-width="1.2" opacity=".45"/>
-  </svg>
-  <div id="halo"><div class="hx" id="hA"></div><div class="hx" id="hB"></div><div id="ring"></div></div>
-  <div id="planets"></div>
-  <div id="sel"><div id="sname"></div><div id="sdesc"></div></div>
-  <div id="dots"></div>
-  <div class="clock"><div class="t" id="ct">--:--</div><div class="d" id="cd"></div></div>
-  <div class="topr">
-    <div class="wx" id="wx"></div>
-    <svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/></svg>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  <div id="bg"></div>
+  <div id="home">
+    <div class="clock"><div class="t" id="ct">--:--</div><div class="d" id="cd"></div></div>
+    <div class="topr">
+      <div class="wx" id="wx"></div>
+      <svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </div>
+    <div id="dlabel"></div>
+    <div id="dock"></div>
   </div>
 
   <div id="night"></div>
 
-  <div id="grid" class="ov"><h2>Alla appar</h2><div class="hint">Håll in OK eller tryck ▶❚❚ för att fästa en app i omloppsbanan runt jorden.</div><div class="gvp"><div class="gw" id="gw"></div></div></div>
-  <canvas id="gfx" width="960" height="540"></canvas>
+  <div id="grid" class="ov"><h2>Alla appar</h2><div class="hint">Håll in OK eller tryck ▶❚❚ för att fästa en app i dockan.</div><div class="gvp"><div class="gw" id="gw"></div></div></div>
   <div id="live" class="ov"><div class="lhead"><h2>Live-tv</h2><div class="ltabs" id="ltabs"></div></div>
     <div class="lvp"><div class="lgrid" id="lgrid"></div></div><div class="lhint" id="lhint"></div></div>
   <div id="places" class="ov"><h2>Välj ort för vädret</h2><div class="pl" id="pl"></div></div>
@@ -194,7 +164,7 @@ body.saving #saver{background:transparent;}
 
 <script>
 "use strict";
-const VERSION="32.3";
+const VERSION="40.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -267,7 +237,8 @@ function render(){noScroll();document.querySelectorAll(".focus").forEach(e=>e.cl
     const it=q[qi],vh=860,top=it.offsetTop,bot=top+it.offsetHeight,max=Math.max(0,$("qlist").scrollHeight-vh);
     let off=Math.min(max,Math.max(0,bot-vh+40));if(top<off)off=Math.max(0,top-20);$("qlist").style.transform=`translateY(${-off}px)`;}return;}
   if(zone==="places"){const p=document.querySelectorAll("#pl div");if(p[pi]){p[pi].classList.add("focus");}return;}
-  if(zone==="live"){const el=lr===0?document.querySelectorAll("#ltabs .ltab")[lt]:document.querySelectorAll("#lgrid .lc")[li];if(el)el.classList.add("focus");return;}}
+  if(zone==="live"){const el=lr===0?document.querySelectorAll("#ltabs .ltab")[lt]:document.querySelectorAll("#lgrid .lc")[li];if(el)el.classList.add("focus");return;}
+  if(zone==="main")showSel();}
 function toMain(){if(zone==="grid")closeGrid();else if(zone==="live")closeLive();else if(zone==="panel")closePanel();
   else if(zone==="places"){$("places").classList.remove("open");zone="main";render();}}
 function key(k){
@@ -287,13 +258,13 @@ function key(k){
   if(zone==="places")return placeKey(k);
   mainKey(k);}
 
-/* ===== solar system: the apps orbit the Earth ===== */
+/* ===== the dock ===== */
 const GLYPH={
  tv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="13" rx="2.5"/><path d="M8 21h8M9 2l3 3 3-3"/></svg>',
  apps:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1.4"/><rect x="9.5" y="3" width="5" height="5" rx="1.4"/><rect x="16" y="3" width="5" height="5" rx="1.4"/><rect x="3" y="9.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="16" y="9.5" width="5" height="5" rx="1.4"/><rect x="3" y="16" width="5" height="5" rx="1.4"/><rect x="9.5" y="16" width="5" height="5" rx="1.4"/><rect x="16" y="16" width="5" height="5" rx="1.4"/></svg>',
  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/><circle cx="12" cy="12" r="7"/></svg>',
  yt:'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4" fill="#fff"/><path d="M10 9l5 3-5 3z" fill="#e62117"/></svg>'};
-const BRAND=[[/youtube|smarttube/i,"#ff2a3a"],[/disney/i,"#1f5cff"],[/spotify/i,"#1ed760"],[/prime|amazon/i,"#1aa8e8"],[/stremio/i,"#7b5cff"],
+const BRAND=[[/youtube|smarttube/i,"#ff2a3a"],[/disney/i,"#1f3c9c"],[/spotify/i,"#121212"],[/prime|amazon/i,"#1aa8e8"],[/stremio/i,"#7b5cff"],
  [/svt/i,"#2fbf6a"],[/tv4/i,"#ff2e4d"],[/pluto/i,"#f5c400"],[/play butik|vending/i,"#3ddc84"],[/max|hbo/i,"#3a5bff"],[/vlc/i,"#ff8800"],[/browse|bro\b/i,"#3ea6ff"]];
 function brand(a){const s=a.label+" "+a.pkg;for(const[r,c]of BRAND)if(r.test(s))return c;return null;}
 function ytApp(){return byPkg("com.google.android.youtube.tv")||APPS.find(a=>/youtube/i.test(a.label)&&!/music|kids|smarttube/i.test(a.label+a.pkg))||find(/smarttube/i);}
@@ -301,180 +272,49 @@ const DESC=[[/youtube|smarttube/i,"Videor och klipp"],[/disney/i,"Filmer och ser
  [/stremio/i,"Filmer och serier"],[/svt/i,"SVT Play"],[/tv4/i,"TV4 Play"],[/pluto/i,"Gratis tv-kanaler"],[/vending|play butik/i,"Hämta appar"],[/browse|bro\b/i,"Webbläsare"]];
 function desc(a){const s=a.label+" "+a.pkg;for(const[r,d]of DESC)if(r.test(s))return d;return "Öppna appen";}
 
-let ORB=[],sel=0,op=0,ov=0,lastKey="tv";
+let ORB=[],sel=0,lastKey="tv";
 function buildOrbit(){
   const it=[],add=o=>{if(o&&!it.some(x=>x.key===o.key))it.push(o);};
   const app=(a,name)=>a&&!/netflix/i.test(a.label+a.pkg)?{key:a.pkg,pkg:a.pkg,name:name||a.label,desc:desc(a),col:brand(a),icon:a.icon,run:()=>launch(a.pkg,a.label)}:null;
-  add({key:"apps",name:"Appar",desc:"Alla dina appar",col:"#6f86ff",svg:GLYPH.apps,run:openGrid});
-  const yt=ytApp();add(yt?{...app(yt,"YouTube"),col:"#ff2a3a"}:{key:"yt",name:"YouTube",desc:"Videor och klipp",col:"#ff2a3a",svg:GLYPH.yt,run:()=>act("youtube")});
-  add({key:"tv",name:"Live-tv",desc:"Kanaler och tv-guide",col:"#2f8cff",svg:GLYPH.tv,run:openLive});
+  add({key:"tv",name:"Live-tv",desc:"Kanaler och tv-guide",col:"#2f6fd6",svg:GLYPH.tv,run:openLive});
+  const yt=ytApp();add(yt?app(yt,"YouTube"):{key:"yt",name:"YouTube",desc:"Videor och klipp",col:"#ff2a3a",svg:GLYPH.yt,run:()=>act("youtube")});
   add(app(find(/disney/i)));add(app(find(/spotify/i)));add(app(find(/prime ?video|amazon/i),"Prime Video"));
   getFav().filter(Boolean).map(byPkg).forEach(a=>add(app(a)));
-  add({key:"settings",name:"Inställningar",desc:"Boxens inställningar",col:"#7d8799",svg:GLYPH.gear,run:()=>{leftForApp=true;call("action","settings");}});
+  add({key:"apps",name:"Appar",desc:"Alla dina appar",col:"rgba(255,255,255,.55)",svg:GLYPH.apps.replace('fill="currentColor"','fill="#3a3f4a"'),run:openGrid});
+  add({key:"settings",name:"Inställningar",desc:"Boxens inställningar",col:"rgba(255,255,255,.55)",svg:GLYPH.gear.replace('stroke="currentColor"','stroke="#3a3f4a"'),run:()=>{leftForApp=true;call("action","settings");}});
   ORB=it;
-  const box=$("planets");box.innerHTML="";
-  ORB.forEach(o=>{if(!o.col)o.col=o.icon?iconColor(o):"#5a6b8c";
-    const d=document.createElement("div");d.className="orb";
-    const inner=o.svg?o.svg:o.icon?`<img src="data:image/png;base64,${o.icon}">`:`<span class="wm">${o.name}</span>`;
-    d.innerHTML=`<div class="ball" style="background:radial-gradient(circle at 34% 28%,${mix(o.col,"#ffffff",.38)} 0%,${o.col} 42%,${mix(o.col,"#000000",.72)} 100%)">${inner}</div><div class="gl"></div>`;
-    box.appendChild(d);o.el=d;});
-  $("dots").innerHTML=ORB.map(()=>"<i></i>").join("");
-  const i=ORB.findIndex(o=>o.key===lastKey);sel=i>=0?i:Math.max(0,ORB.findIndex(o=>o.key==="tv"));
-  op=sel;ov=0;layout(true);showSel(true);}
-function mix(a,b,k){const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const x=p(a),y=p(b);
-  return "#"+x.map((v,i)=>Math.round(v+(y[i]-v)*k).toString(16).padStart(2,"0")).join("");}
-/* average saturated colour of an app icon, for apps without a known brand colour */
-function iconColor(o){try{const img=new Image();img.onload=()=>{const c=document.createElement("canvas");c.width=c.height=16;const g=c.getContext("2d");
-    g.drawImage(img,0,0,16,16);const d=g.getImageData(0,0,16,16).data;let r=0,gg=0,b=0,n=0;
-    for(let i=0;i<d.length;i+=4){const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);if(d[i+3]<200||mx-mn<40)continue;r+=d[i];gg+=d[i+1];b+=d[i+2];n++;}
-    if(!n)return;const col="#"+[r,gg,b].map(v=>Math.round(v/n).toString(16).padStart(2,"0")).join("");o.col=col;
-    o.el.querySelector(".ball").style.background=`radial-gradient(circle at 34% 28%,${mix(col,"#ffffff",.38)} 0%,${col} 42%,${mix(col,"#000000",.72)} 100%)`;
-    if(ORB[sel]===o)showSel(true);};img.src="data:image/png;base64,"+o.icon;}catch(e){}return "#4a5a7a";}
-
-/* orbit geometry: ellipse centred below the screen, the selected planet sits at the top */
-const OX=960,OY=1080,OA=1000,OB=650,STEP=.36;
-let pulse={};
-function layout(force){
-  const now=performance.now();
-  ORB.forEach((o,i)=>{const th=(i-op)*STEP,a=Math.abs(th);
-    if(a>1.5){if(o.vis!==false||force){o.el.style.opacity=0;o.vis=false;}return;}
-    o.vis=true;
-    const x=OX+OA*Math.sin(th),y=OY-OB*Math.cos(th);
-    let s=(.6+.4*Math.cos(th*1.15))*(1+.16*Math.max(0,1-a/STEP));
-    const pu=pulse[o.key];if(pu){const k=(now-pu)/360;if(k<1)s*=1+.09*Math.sin(k*Math.PI);else delete pulse[o.key];}
-    const al=a<.85?1:Math.max(0,1-(a-.85)/.5);
-    o.el.style.transform=`translate3d(${(x-115).toFixed(1)}px,${(y-115).toFixed(1)}px,0) scale(${s.toFixed(4)})`;
-    o.el.style.opacity=al.toFixed(3);const z=Math.round(100-a*40);if(o.z!==z){o.z=z;o.el.style.zIndex=z;}});
-}
-let hFlip=false;
-function showSel(now){const o=ORB[sel];if(!o)return;lastKey=o.key;
-  const hc=o.col;$("ring").style.setProperty("--hc",hc);
-  const a=$(hFlip?"hA":"hB"),b=$(hFlip?"hB":"hA");hFlip=!hFlip;
-  const rgb=[1,3,5].map(i=>parseInt(hc.slice(i,i+2),16)).join(",");
-  a.style.background=`radial-gradient(circle closest-side,rgba(${rgb},0) 57%,rgba(${rgb},.85) 64%,rgba(${rgb},.32) 72%,rgba(${rgb},.1) 85%,rgba(${rgb},0) 100%)`;
-  a.classList.add("on");b.classList.remove("on");
-  const se=$("sel"),put=()=>{$("sname").textContent=o.name;$("sdesc").textContent=o.desc;};
-  if(now){put();se.classList.remove("out");}else{se.classList.add("out");clearTimeout(showSel.t);showSel.t=setTimeout(()=>{put();se.classList.remove("out");},200);}
-  [...$("dots").children].forEach((d,i)=>d.classList.toggle("on",i===sel));}
-function setSel(i){i=Math.max(0,Math.min(ORB.length-1,i));if(i===sel){pulse[ORB[sel].key]=performance.now();return;}sel=i;$("halo").style.opacity=0;showSel(false);}
-function activate(){const o=ORB[sel];if(!o)return;pulse[o.key]=performance.now();try{o.run();}catch(e){toast(o.name+" gick inte att öppna");}}
+  $("dock").innerHTML=ORB.map(o=>{const inner=o.icon?`<img src="data:image/png;base64,${o.icon}">`:o.svg?o.svg:`<span class="wm">${o.name}</span>`;
+    return `<div class="dt"><div class="tile" style="background:${o.icon?"#fff":o.col||"#5a6b8c"}">${inner}</div></div>`;}).join("");
+  ORB.forEach((o,i)=>o.el=$("dock").children[i]);
+  const i=ORB.findIndex(o=>o.key===lastKey);sel=i>=0?i:0;showSel();}
+function showSel(){const o=ORB[sel];if(!o)return;lastKey=o.key;
+  ORB.forEach((x,i)=>x.el.classList.toggle("focus",i===sel&&zone==="main"));
+  $("dlabel").innerHTML=`${o.name}<small>${o.desc}</small>`;
+  /* many favourites: slide the dock so the chosen tile stays on screen */
+  const n=ORB.length,w=186,full=n*w+38,max=1760;let dx=0;
+  if(full>max){const c=sel*w+w/2+38;dx=Math.max(-(full-max)/2,Math.min((full-max)/2,full/2-c));}
+  $("dock").style.transform=`translateX(calc(-50% + ${dx}px))`;}
+function setSel(i){sel=Math.max(0,Math.min(ORB.length-1,i));showSel();}
+function activate(){const o=ORB[sel];if(!o)return;try{o.run();}catch(e){toast(o.name+" gick inte att öppna");}}
 function mainKey(k){
   if(k==="left")setSel(sel-1);else if(k==="right")setSel(sel+1);
   else if(k==="ok")activate();else if(k==="up")openPanel();else if(k==="down")openGrid();
   else if(k==="back")setSel(ORB.findIndex(o=>o.key==="tv"));
   else if(k==="hold"){const o=ORB[sel];if(o&&o.pkg)toggleFav(o.pkg);}}
 
-/* ===== Earth: WebGL sphere with day map, city lights, drifting clouds and an atmosphere ===== */
-const EARTH="https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/earth/";
-const EC=$("earth");let gl=null,eU={},eTex=0,eFrames=0,eQ=0;
-const VS="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
-const FS=`precision highp float;
-uniform vec2 uRes;uniform float uRot,uCld,uTex;uniform sampler2D uDay,uAux;
-const float R=1000.;const vec2 C=vec2(960.,1700.);
-void main(){
- vec2 sp=vec2(gl_FragCoord.x/uRes.x*1920.,560.+(1.-gl_FragCoord.y/uRes.y)*520.);
- vec2 p=(sp-C)/R;p.y=-p.y;float r2=dot(p,p);
- vec3 L=normalize(vec3(-.6,.62,.5));
- float lit=clamp(dot(normalize(vec3(p,.25)),L)*.7+.45,.12,1.);
- if(r2>1.){float d=(sqrt(r2)-1.)*R;
-   float a=(exp(-d/22.)*.75+exp(-d/70.)*.28)*lit*smoothstep(560.,700.,sp.y);gl_FragColor=vec4(vec3(.36,.62,1.)*a,a);return;}
- float z=sqrt(1.-r2);vec3 n=vec3(p,z);
- float cr=cos(.38),sr=sin(.38);vec3 q=vec3(n.x*cr-n.y*sr,n.x*sr+n.y*cr,n.z);
- float ct=cos(.12),st=sin(.12);vec3 b=vec3(q.x,q.y*ct+q.z*st,-q.y*st+q.z*ct);
- float lon=atan(b.x,b.z),lat=asin(clamp(b.y,-1.,1.));
- float v=.5-lat/3.14159265;float u=fract(lon/6.2831853+uRot);
- float dif=dot(n,L),day=clamp(dif,0.,1.);
- vec3 base=vec3(.03,.14,.36);float lights=0.,cl=0.;
- if(uTex>.5){base=texture2D(uDay,vec2(u,v)).rgb;lights=texture2D(uAux,vec2(u,v)).r;cl=texture2D(uAux,vec2(fract(u+uCld),v)).g;}
- cl=clamp(cl*1.5,0.,1.);
- vec3 col=base*(.05+1.25*day);
- float ocean=clamp((base.b-max(base.r,base.g)*1.05)*6.,0.,1.);
- col+=vec3(1.,.95,.85)*pow(max(dot(reflect(-L,n),vec3(0.,0.,1.)),0.),36.)*.38*ocean*(1.-cl);
- col=mix(col,vec3(1.)*(.05+1.05*day),cl*.88);
- col+=vec3(1.,.74,.38)*lights*lights*2.2*(1.-smoothstep(-.18,.08,dif))*(1.-cl*.8);
- float fr=pow(1.-z,2.3);col=mix(col,vec3(.36,.62,1.)*(.25+.95*clamp(dif+.35,0.,1.)),fr*.8);
- float edge=clamp((1.-sqrt(r2))*R/1.6,0.,1.);float ga=1.05*lit;
- gl_FragColor=vec4(col*edge+vec3(.36,.62,1.)*ga*(1.-edge),edge+ga*(1.-edge));}`;
-function earthSize(){eQ=LS.get("perf",false)?.4:.55;const w=Math.round(1920*eQ),h=Math.round(520*eQ);
-  if(EC.width!==w){EC.width=w;EC.height=h;}if(gl){gl.viewport(0,0,w,h);gl.uniform2f(eU.res,w,h);}}
+/* background photo: bundled with the app (works offline), else from GitHub */
+function setBg(){const local="file:///android_asset/bg.jpg",remote="https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/bg.jpg";
+  const im=new Image();im.onload=()=>{$("bg").style.backgroundImage=`url("${im.src}")`;};
+  im.onerror=()=>{if(im.src!==remote)im.src=remote;};im.src=B?local:remote;}
+
+/* the native solar system behind the page is only used by the screensaver */
 const NATIVE_EARTH=!!(B&&B.earth);
-function earthState(){if(!NATIVE_EARTH)return;const on=!document.hidden&&(saverOn||(zone!=="grid"&&zone!=="live"&&zone!=="places"));
-  const k=on+"/"+!fxOn;if(k!==earthState.k){earthState.k=k;try{B.earth(on,!fxOn);}catch(e){}}}
-function initEarth(){
-  if(NATIVE_EARTH){EC.style.display="none";document.documentElement.style.background=document.body.style.background=$("stage").style.background="transparent";return;}
-  try{gl=EC.getContext("webgl",{alpha:true,premultipliedAlpha:true,antialias:false,depth:false,stencil:false,powerPreference:"low-power"});}catch(e){gl=null;}
-  if(!gl){earth2D();return;}
-  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.log("jordfel "+gl.getShaderInfoLog(o));return o;};
-  const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(pr);
-  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){console.log("jordfel länk");gl=null;earth2D();return;}
-  gl.useProgram(pr);const bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);
-  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
-  const loc=gl.getAttribLocation(pr,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-  ["res","rot","cld","tex","day","aux"].forEach(k=>eU[k]=gl.getUniformLocation(pr,"u"+k[0].toUpperCase()+k.slice(1)));
-  gl.uniform1i(eU.day,0);gl.uniform1i(eU.aux,1);gl.uniform1f(eU.tex,0);gl.clearColor(0,0,0,0);
-  earthSize();
-  let n=0;const tx=[gl.createTexture(),gl.createTexture()];
-  ["day.jpg","aux.jpg"].forEach((f,i)=>{const im=new Image();im.crossOrigin="anonymous";
-    im.onload=()=>{gl.activeTexture(gl.TEXTURE0+i);gl.bindTexture(gl.TEXTURE_2D,tx[i]);
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,im);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-      if(++n===2){eTex=1;gl.uniform1f(eU.tex,1);}};
-    im.onerror=()=>console.log("jordtextur saknas "+f);im.src=EARTH+f;});}
-function drawEarth(t){if(!gl)return;const s=t/1000;
-  gl.uniform1f(eU.rot,(s/260)%1);gl.uniform1f(eU.cld,(s/2200)%1);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3);eFrames++;}
-function earth2D(){const c=EC.getContext("2d");if(!c)return;const w=EC.width,h=EC.height,k=w/1920;
-  const cx=960*k,cy=(1700-560)*k,r=1000*k;
-  const at=c.createRadialGradient(cx,cy,r*.98,cx,cy,r*1.08);at.addColorStop(0,"rgba(90,160,255,.7)");at.addColorStop(1,"rgba(90,160,255,0)");
-  c.fillStyle=at;c.beginPath();c.arc(cx,cy,r*1.08,0,7);c.fill();
-  const sg=c.createRadialGradient(cx-r*.45,cy-r*.75,r*.1,cx,cy,r);sg.addColorStop(0,"#3f86d8");sg.addColorStop(.6,"#0d3a7a");sg.addColorStop(1,"#020a1e");
-  c.fillStyle=sg;c.beginPath();c.arc(cx,cy,r,0,7);c.fill();}
-
-/* ===== space: stars and nebulae painted once, slow dust drifting on top ===== */
-function paintSpace(){const c=$("space").getContext("2d"),W=1250,H=675;if(!NATIVE_EARTH){c.fillStyle="#010208";c.fillRect(0,0,W,H);}
-  const neb=(x,y,r,col,a)=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(0,0,W,H);};
-  neb(1000,110,420,"70,60,170",.22);neb(1120,330,300,"30,90,170",.16);neb(170,190,380,"90,40,130",.14);neb(620,40,260,"40,70,150",.1);neb(620,560,520,"20,60,140",.18);
-  let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
-  for(let i=0;i<520;i++){const x=rnd()*W,y=rnd()*H*.86,m=rnd(),r=m>.985?1.5:m>.9?.95:.55,a=.25+rnd()*.7,blue=rnd()<.3;
-    c.fillStyle=blue?`rgba(190,215,255,${a})`:`rgba(255,250,240,${a})`;c.beginPath();c.arc(x,y,r,0,7);c.fill();
-    if(m>.985){const g=c.createRadialGradient(x,y,0,x,y,7);g.addColorStop(0,"rgba(200,220,255,.35)");g.addColorStop(1,"rgba(200,220,255,0)");c.fillStyle=g;c.fillRect(x-7,y-7,14,14);}}
-  if(NATIVE_EARTH){/* the Earth is drawn by the app behind the page: cut a soft hole where it and its atmosphere are */
-    c.globalCompositeOperation="destination-out";const k=W/2000,cx=(960+40)*k,cy=1700*k,g=c.createRadialGradient(cx,cy,1000*k,cx,cy,1120*k);
-    g.addColorStop(0,"rgba(0,0,0,1)");g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(0,0,W,H);c.globalCompositeOperation="source-over";}
-  try{const st=$("sky");st.style.background=`${NATIVE_EARTH?"transparent":"#010208"} url(${$("space").toDataURL(NATIVE_EARTH?"image/png":"image/jpeg",.92)}) -40px 0/2000px 1080px no-repeat`;}catch(e){$("space").style.display="block";}}
-const fx=$("fx"),g=fx.getContext("2d");
-function sprite(rgb){const s=document.createElement("canvas");s.width=s.height=32;const c=s.getContext("2d");
-  const gr=c.createRadialGradient(16,16,0,16,16,16);gr.addColorStop(0,`rgba(${rgb},1)`);gr.addColorStop(.35,`rgba(${rgb},.35)`);gr.addColorStop(1,`rgba(${rgb},0)`);
-  c.fillStyle=gr;c.fillRect(0,0,32,32);return s;}
-const SPR=[sprite("255,255,255"),sprite("170,200,255"),sprite("200,170,255")];
-const P=[];for(let i=0;i<34;i++)P.push(newP(true));
-function newP(any){return{x:any?Math.random()*1000:-10,y:Math.random()*420,s:2+Math.random()*6,v:.05+Math.random()*.16,
-  w:Math.random()*6.28,ws:.003+Math.random()*.008,a:.12+Math.random()*.35,k:SPR[Math.floor(Math.random()*3)]};}
-let fxOn=true;
-function drawDust(){g.clearRect(0,0,1000,540);
-  for(const p of P){p.x+=p.v;p.w+=p.ws;if(p.x>1010)Object.assign(p,newP(false));
-    g.globalAlpha=p.a*(0.55+0.45*Math.sin(p.w*2));g.drawImage(p.k,p.x-p.s/2,p.y+Math.sin(p.w)*8-p.s/2,p.s,p.s);}
-  g.globalAlpha=1;}
-function applyPerf(){const on=LS.get("perf",false);fxOn=!on;document.body.classList.toggle("perf",on);if(on)g.clearRect(0,0,1000,540);earthSize();}
-
-/* ===== one animation loop for everything on the home screen ===== */
-let fLast=0,fN=0,hLast=0;
-let eClock=0;
-function frame(t){requestAnimationFrame(frame);
-  const dt=Math.min((t-(fLast||t))/1000,1/20);fLast=t;
-  earthState();
-  if(document.hidden||saverOn||zone==="grid"||zone==="live"||zone==="places")return;
-  fN++;
-  const d=sel-op;const moving=Math.abs(d)>.003||Math.abs(ov)>.03;
-  if(moving){ov+=(170*d-26*ov)*dt;op+=ov*dt;}else if(op!==sel){op=sel;ov=0;layout(false);}
-  if(moving||Object.keys(pulse).length)layout(false);
-  /* the Earth always turns; while the planets glide it is drawn less often (it turns so slowly that the eye can't tell) */
-  /* the Earth stands still on the home screen (it turns in the screensaver) */
-  if(moving){if(fN%4===0)drawEarth(eClock*1000);return;}
-  if(t-hLast>80){hLast=t;const br=.5+.5*Math.sin(t/1000*Math.PI*2/3.2);
-    const h=$("halo");h.style.transform=`scale(${(.97+.05*br).toFixed(4)})`;h.style.opacity=(.55+.45*br).toFixed(3);}
-  if(fN%2===0)drawEarth(eClock*1000);
-  else if(fxOn&&fN%4===1)drawDust();}
+let eTex=0,eFrames=0,eQ=0,gl=null;
+function earthState(){if(!NATIVE_EARTH)return;const on=!document.hidden&&saverOn;
+  if(on!==earthState.k){earthState.k=on;try{B.earth(on,false);}catch(e){}}}
+function initEarth(){if(NATIVE_EARTH){document.documentElement.style.background=document.body.style.background=$("stage").style.background="transparent";}}
+function applyPerf(){document.body.classList.toggle("perf",LS.get("perf",false));}
+document.addEventListener("visibilitychange",earthState);
 
 /* ===== favourites + number keys ===== */
 function toggleFav(pkg){let f=getFav();const a=byPkg(pkg);
@@ -542,46 +382,9 @@ function fillGrid(){const w=$("gw"),wasOpen=$("grid").classList.contains("open")
 let gOff=0;
 function openGrid(){fillGrid();gi=0;gOff=0;zone="grid";$("gw").style.transform="";$("grid").classList.add("open");render();
   requestAnimationFrame(()=>requestAnimationFrame(gridIn));}
-let pulseT=0;
-function stagePos(el){let x=0,y=0,e=el;while(e&&e.id!=="stage"){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent;}return{x,y,w:el.offsetWidth,h:el.offsetHeight};}
-function appsTile(){const i=ORB.findIndex(o=>o.key==="apps"),th=(i-op)*STEP;if(i<0||Math.abs(th)>1.2)return{x:960,y:430};return{x:OX+OA*Math.sin(th),y:OY-OB*Math.cos(th)};}
-function pulseTile(){const n=performance.now();if(n-pulseT<120)return;pulseT=n;pulse.apps=n;}
-function closeGrid(){const d=gridOut()||0;zone="main";setTimeout(()=>{$("grid").classList.remove("open");setTimeout(()=>{if(zone!=="grid")$("gw").innerHTML="";},600);},Math.min(520,d+320));render();}
-
-/* ===== particles: burst out of the Appar tile into the grid, and get sucked back in ===== */
-const gfx=$("gfx"),gg=gfx.getContext("2d");let GP=[],gAnim=false;
-function gfxRun(){if(gAnim)return;gAnim=true;requestAnimationFrame(gStep);}
-function bez(p,k){const q=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,iq=1-q;return[iq*iq*p.sx+2*iq*q*p.cx+q*q*p.tx,iq*iq*p.sy+2*iq*q*p.cy+q*q*p.ty];}
-function gStep(t){gg.clearRect(0,0,960,540);let alive=false;
-  for(const p of GP){const e=t-p.t0;if(e<0){alive=true;continue;}let a,s=p.s,x,y;
-    if(p.kind==="out"){const k=e/p.d;if(k>=1)continue;x=p.sx+p.vx*k;y=p.sy+p.vy*k-30*k*k;a=p.a*(1-k);}
-    else{const k=Math.min(1,e/p.d);[x,y]=bez(p,k);
-      if(k>=1){if(!p.done){p.done=1;if(p.card)p.card.classList.add("lit");else if(p.onEnd)p.onEnd();}
-        const f=(e-p.d)/300;if(f>=1)continue;a=p.a*(1-f);s=p.s*(1+f*1.6);}
-      else{a=p.a*Math.min(1,k*3);if(k>.05){const g=bez(p,k-.06);gg.globalAlpha=a*.35;gg.drawImage(p.k,g[0]/2-s*.35,g[1]/2-s*.35,s*.7,s*.7);}}}
-    alive=true;gg.globalAlpha=a;gg.drawImage(p.k,x/2-s/2,y/2-s/2,s,s);}
-  gg.globalAlpha=1;if(alive)requestAnimationFrame(gStep);else{gAnim=false;GP=[];gg.clearRect(0,0,960,540);}}
-function gridIn(){const cards=[...document.querySelectorAll("#gw .rc")];if(!cards.length)return;const now=performance.now();
-  cards.forEach(c=>c.classList.remove("gone"));
-  if(LS.get("perf",false)){cards.forEach((c,i)=>{c.style.transitionDelay=Math.min(i,24)*25+"ms";c.classList.add("lit");});return;}
-  const o=appsTile(),R=cards.map(c=>stagePos(c)),vis=R.map(r=>r.y<1040);
-  GP=GP.filter(p=>p.kind==="out");
-  cards.forEach((c,i)=>{c.style.transitionDelay="0ms";if(!vis[i]){setTimeout(()=>c.classList.add("lit"),900);return;}
-    const r=R[i],delay=Math.hypot(r.x+r.w/2-o.x,r.y+r.h/2-o.y)*0.18;
-    for(let j=0;j<7;j++){const tx=r.x+Math.random()*r.w,ty=r.y+Math.random()*r.h,ang=Math.random()*6.283,fl=180+Math.random()*320;
-      GP.push({kind:"in",card:c,t0:now+delay+Math.random()*120,d:520+Math.random()*220,sx:o.x,sy:o.y,tx,ty,
-        cx:o.x+Math.cos(ang)*fl,cy:o.y+Math.sin(ang)*fl,s:9+Math.random()*13,a:.6+Math.random()*.35,k:SPR[j%3]});}});
-  gfxRun();setTimeout(()=>cards.forEach(c=>c.classList.add("lit")),2400);}
-function gridOut(){const now=performance.now(),o=appsTile(),cards=[...document.querySelectorAll("#gw .rc.lit")],perf=LS.get("perf",false);let maxD=0;
-  GP=GP.filter(p=>!p.card);
-  cards.forEach(c=>{const r=stagePos(c);r.y+=gOff;const vis=!(r.y>1040||r.y+r.h<0);
-    const delay=Math.hypot(r.x+r.w/2-o.x,r.y+r.h/2-o.y)*0.14;maxD=Math.max(maxD,delay);
-    c.style.transitionDelay=Math.round(delay)+"ms";c.classList.remove("lit");c.classList.add("gone");
-    if(perf||!vis)return;
-    for(let j=0;j<5;j++){const sx=r.x+Math.random()*r.w,sy=r.y+Math.random()*r.h,ang=Math.random()*6.283,fl=80+Math.random()*200;
-      GP.push({kind:"in",t0:now+delay+80+Math.random()*80,d:480+Math.random()*180,sx,sy,tx:o.x+(Math.random()-.5)*60,ty:o.y+(Math.random()-.5)*60,
-        cx:sx+Math.cos(ang)*fl,cy:sy+Math.sin(ang)*fl,s:8+Math.random()*11,a:.75,k:SPR[j%3],onEnd:pulseTile});}});
-  gfxRun();return maxD;}
+function closeGrid(){gridOut();zone="main";setTimeout(()=>{$("grid").classList.remove("open");setTimeout(()=>{if(zone!=="grid")$("gw").innerHTML="";},400);},120);render();}
+function gridIn(){const cards=[...document.querySelectorAll("#gw .rc")];cards.forEach((c,i)=>{c.style.transitionDelay=Math.min(i,18)*18+"ms";c.classList.add("lit");});}
+function gridOut(){document.querySelectorAll("#gw .rc.lit").forEach(c=>{c.style.transitionDelay="0ms";c.classList.remove("lit");});return 0;}
 function gridKey(k){const N=APPS.length,list=sortedApps();
   if(k==="right")gi=Math.min(N-1,gi+1);else if(k==="left")gi=Math.max(0,gi-1);
   else if(k==="down")gi=Math.min(N-1,gi+6);else if(k==="up")gi=Math.max(0,gi-6);
@@ -621,7 +424,7 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["sun","Skärmsläckare","Jorden snurrar · startar efter 10 min, OK visar den nu",()=>{closePanel();setTimeout(startSaver,400);}],
    ["img","Mitt innehåll","Inspelat och sparat hos Telia",()=>act("content")],
    ["set","Mitt konto","Ditt Telia-konto",()=>act("account")],
-   ["spark","Prestandaläge",perf?"På · lättare jord och inget stoft":"Av · full kvalitet",()=>{LS.set("perf",!perf);applyPerf();fillPanel();}],
+   ["spark","Prestandaläge",perf?"På":"Av",()=>{LS.set("perf",!perf);applyPerf();fillPanel();}],
    ["fps","FPS-mätare",(fps?"På":"Av")+" · boxen mätte "+LS.get("measuredFps","?")+" FPS",()=>{toggleFps();fillPanel();}],
    ["set","Inställningar","Boxens inställningar",()=>call("action","settings")]];}
 let QI=[];
@@ -656,9 +459,9 @@ let tT=0;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("o
 /* ===== FPS meter ===== */
 let fpsOn=false,fc=0,fl=0;
 function toggleFps(){fpsOn=!LS.get("fps",false);LS.set("fps",fpsOn);$("fps").style.display=fpsOn?"block":"none";
-  toast("FPS-mätare "+(fpsOn?"på":"av"));}
-function fpsLoop(t){requestAnimationFrame(fpsLoop);if(!fpsOn)return;fc++;if(t-fl>=1000){$("fps").textContent="FPS "+fc;fc=0;fl=t;}}
-requestAnimationFrame(fpsLoop);
+  toast("FPS-mätare "+(fpsOn?"på":"av"));if(fpsOn)requestAnimationFrame(fpsLoop);}
+/* the FPS meter is the only thing that runs every frame, and only while it is switched on */
+function fpsLoop(t){if(!fpsOn)return;requestAnimationFrame(fpsLoop);fc++;if(t-fl>=1000){$("fps").textContent="FPS "+fc;fc=0;fl=t;}}
 
 /* ===== clock, weather, night dim ===== */
 const DAG=["söndag","måndag","tisdag","onsdag","torsdag","fredag","lördag"],MAN=["januari","februari","mars","april","maj","juni","juli","augusti","september","oktober","november","december"];
@@ -687,9 +490,9 @@ function startSaver(){if(saverOn)return;
   if(zone==="live")$("live").classList.remove("open");["grid","places"].forEach(i=>$(i).classList.remove("open"));$("qp").classList.remove("open");
   if(zone!=="main"){zone="main";render();}
   saverOn=true;tick();
-  if(NATIVE_EARTH){try{B.earthSaver(true);}catch(e){}document.body.classList.add("saving");$("saver").classList.add("open");return;}
+  if(NATIVE_EARTH){earthState();try{B.earthSaver(true);}catch(e){}document.body.classList.add("saving");$("saver").classList.add("open");return;}
   sPhoto();$("saver").classList.add("open");sT=setInterval(sPhoto,20000);}
-function stopSaver(){saverOn=false;clearInterval(sT);$("saver").classList.remove("open");if(NATIVE_EARTH){try{B.earthSaver(false);}catch(e){}document.body.classList.remove("saving");}setTimeout(()=>{$("saver").querySelectorAll(".sp").forEach(e=>e.remove());sCur=null;},400);}
+function stopSaver(){saverOn=false;setTimeout(earthState,1300);clearInterval(sT);$("saver").classList.remove("open");if(NATIVE_EARTH){try{B.earthSaver(false);}catch(e){}document.body.classList.remove("saving");}setTimeout(()=>{$("saver").querySelectorAll(".sp").forEach(e=>e.remove());sCur=null;},400);}
 function bumpIdle(){clearTimeout(iT);iT=setTimeout(startSaver,6e5);}bumpIdle();
 
 /* ===== self-update from GitHub (only when started through the loader) ===== */
@@ -718,8 +521,8 @@ function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080),st=$("stage");
 function noScroll(){[document.scrollingElement,document.body,$("stage")].forEach(e=>{if(e){e.scrollTop=0;e.scrollLeft=0;}});}
 addEventListener("scroll",noScroll,true);
 addEventListener("resize",fit);fit();
-if(LS.get("fps",false)){fpsOn=true;$("fps").style.display="block";}
-paintSpace();initEarth();applyPerf();buildOrbit();render();requestAnimationFrame(frame);
+if(LS.get("fps",false)){fpsOn=true;$("fps").style.display="block";requestAnimationFrame(fpsLoop);}
+setBg();initEarth();applyPerf();buildOrbit();render();earthState();
 (function(){let n=0,t0=0;function m(t){if(!t0)t0=t;n++;if(t-t0<2000)return requestAnimationFrame(m);
   LS.set("measuredFps",Math.round(n*1000/(t-t0)));}setTimeout(()=>requestAnimationFrame(m),1500);})();
 </script>

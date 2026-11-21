@@ -214,6 +214,19 @@ public class HomeActivity extends Activity {
      *  memory and processor for the home screen. Music that is playing (e.g. Spotify) is left alone. */
     private void autoTrim() {
         long now = android.os.SystemClock.uptimeMillis();
+        // HOME closes the app you came from, wherever you were
+        final String last = HomeKeyService.lastApp;
+        HomeKeyService.lastApp = null;
+        if (last != null && !last.equals(getPackageName())) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(800);
+                    if (last.equals(HomeKeyService.TELIA) && HomeKeyService.teliaAllowed) return;
+                    ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE)).killBackgroundProcesses(last);
+                    android.util.Log.d("HemTv", "stängde " + last);
+                } catch (Exception ignored) {}
+            }).start();
+        }
         if (now - lastTrim < 60000 || now - HomeKeyService.requestAt < 30000) return;
         lastTrim = now;
         new Thread(() -> {
@@ -249,7 +262,7 @@ public class HomeActivity extends Activity {
             String g = Settings.Global.getString(getContentResolver(), "hem_guard");
             long at = g == null ? 0 : Long.parseLong(g.trim());
             long now = System.currentTimeMillis();
-            if (now - at > 120000 && now - guardWarned > 600000 && web != null) {
+            if (false && now - at > 120000 && now - guardWarned > 600000 && web != null) {
                 guardWarned = now;
                 web.postDelayed(() -> web.evaluateJavascript(
                     "window.toast&&toast('Vakten är avstängd (boxen har startat om). Kör hemvakt i Termux.')", null), 1500);

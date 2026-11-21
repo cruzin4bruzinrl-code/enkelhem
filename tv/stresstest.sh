@@ -141,10 +141,9 @@ nav snabbpanel "openPanel()" "20 20 20 20 20 20 20 20 19 19 19 19 19 19 19 19" "
 nav allaappar "openGrid()" "22 22 22 22 20 20 21 21 21 21 20 22 22 22 19 19 19" "closeGrid()"
 nav livetv "openLive()" "22 22 22 22 22 22 21 21 21 21 21 21 19 22 20 22 22 22" "closeLive()"
 
-sec "Jorden och omloppsbanan"
+sec "Dockan"
 if [ $JSOK = 1 ]; then
-  say "Planeter: $(js 'ORB.map(o=>o.name).join(", ")' 5)"
-  say "Jord: $(js 'new Promise(r=>{const f=eFrames;setTimeout(()=>r({webgl:!!gl,texturer:eTex,kvalitet:eQ,bilder_per_s:+((eFrames-f)/5).toFixed(1)}),5000)})' 10)"
+  say "I dockan: $(js 'ORB.map(o=>o.name).join(", ")' 5)"
 fi
 
 sec "Fjärrknappar"
