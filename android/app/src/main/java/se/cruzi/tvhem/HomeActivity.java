@@ -410,6 +410,7 @@ public class HomeActivity extends Activity {
 
     /** The guard (started with 'hemvakt' from the phone) stops when the box restarts: say so on the TV. */
     private void checkGuard() {
+        AdbSelf.ensureGuard(this);
         try {
             String g = Settings.Global.getString(getContentResolver(), "hem_guard");
             long at = g == null ? 0 : Long.parseLong(g.trim());

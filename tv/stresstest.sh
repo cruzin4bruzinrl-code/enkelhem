@@ -217,7 +217,13 @@ for app in "monkey -p com.teamsmart.videomanager.tv -c android.intent.category.L
 done
 a logcat -d -s HemTv | tr -d '\r' | grep -E "Telia|täcke" | tail -8 | sed 's/^/     /' >> "$R"
 say "Resultat utan vakten: $nok av $ntot"
-curl -fsSL "$RAW/vakt.sh?v=$RANDOM" | bash >/dev/null 2>&1 && say "Vakten startad igen"
+sec "Vakten startar själv (som efter en omstart)"
+S pkill -f 'tvhem.Guard' >/dev/null; S settings put global hem_guard 0; sleep 1
+S am start -n $PKG/.HomeActivity >/dev/null; ok=""
+for i in $(seq 1 30); do sleep 1; [ -n "$(S pgrep -f 'tvhem.Gu[a]rd')" ] && { ok=$i; break; }; done
+[ -n "$ok" ] && say "Självstart: OK på $ok s" || say "Självstart: FEL"
+a logcat -d -s HemTv | grep "självstart" | tail -4 | sed 's/^/     /' | while read -r l; do say "$l"; done
+[ -z "$ok" ] && { curl -fsSL "$RAW/vakt.sh?v=$RANDOM" | bash >/dev/null 2>&1 && say "Vakten startad igen (från telefonen)"; }
 
 sec "SVT (inbyggd spelare)"
 curl -fsSL "$RAW/kanaler.txt?t=$RANDOM" | grep -v '^#' > "$DIR/kanaler.txt"

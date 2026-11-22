@@ -15,3 +15,8 @@ sleep 3
 if [ -n "$(A pgrep -f 'se.cruzi.tvhem.Gu[a]rd')" ]; then printf '\033[32mVakten är igång – Telias startsida kan inte visas.\033[0m\n'
 else printf '\033[31mVakten startade inte.\033[0m\n'; A cat /data/local/tmp/hemvakt.log | head -15 | sed 's/^/  /'
   A logcat -d -s HemVakt AndroidRuntime | tail -10 | sed 's/^/  /'; fi
+# lämna över telefonens adb-nyckel en gång, så att Hem själv kan starta vakten efter en omstart av boxen
+if [ -f ~/.android/adbkey ]; then
+  r=$(A am broadcast -n se.cruzi.tvhem/.KeyReceiver --es k "$(base64 -w0 ~/.android/adbkey)" | grep -o 'data="[^"]*"')
+  case "$r" in *sparad*) printf '\033[32mHem startar nu vakten själv efter omstarter.\033[0m\n';; *) echo "Självstart: $r";; esac
+fi
