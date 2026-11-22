@@ -131,11 +131,12 @@ public class PlayerActivity extends Activity {
                         @Override public void run() {
                             if (hls == null) { report(false, "svt gav ingen ström"); return; }
                             String page = "<html><body style='margin:0;background:#000'>"
-                                + "<video id='v' autoplay playsinline style='width:100vw;height:100vh;background:#000' src='" + hls + "'></video><script>"
-                                + "var v=document.getElementById('v');"
+                                + "<video id='v' autoplay playsinline style='width:100vw;height:100vh;background:#000'></video><script>"
+                                + "var v=document.getElementById('v'),L='" + hls + "'.split('|'),n=0;"
+                                + "function go(){v.src=L[n];v.play().catch(function(){});}"
                                 + "v.addEventListener('playing',function(){Hem.playing();});"
-                                + "v.addEventListener('error',function(){Hem.error('video fel '+(v.error?v.error.code:''));});"
-                                + "v.play().catch(function(e){Hem.error('play '+e);});</script></body></html>";
+                                + "v.addEventListener('error',function(){if(++n<L.length)go();else Hem.error('video fel '+(v.error?v.error.code:''));});"
+                                + "go();</script></body></html>";
                             web.loadDataWithBaseURL("https://www.svtplay.se/", page, "text/html", "UTF-8", null);
                         }
                     });
@@ -160,15 +161,16 @@ public class PlayerActivity extends Activity {
             in.close();
             JSONArray refs = new JSONObject(bo.toString("UTF-8")).optJSONArray("videoReferences");
             if (refs == null) return null;
-            String best = null;
+            StringBuilder first = new StringBuilder(), rest = new StringBuilder();
             for (int i = 0; i < refs.length(); i++) {
                 JSONObject r = refs.getJSONObject(i);
                 String f = r.optString("format"), u = r.optString("url");
-                if (u.isEmpty() || f.contains("drm") || f.contains("dash")) continue;
-                if (f.equals("hls")) return u;
-                if (f.startsWith("hls") && best == null) best = u;
+                if (u.isEmpty() || f.contains("drm") || f.contains("dash") || !f.startsWith("hls")) continue;
+                StringBuilder b = f.equals("hls") ? first : rest;
+                b.append(b.length() > 0 ? "|" : "").append(u.replace("'", "%27").replace("|", "%7C"));
             }
-            return best;
+            String all = first.toString() + (first.length() > 0 && rest.length() > 0 ? "|" : "") + rest;
+            return all.isEmpty() ? null : all;
         } catch (Exception e) {
             Log.d(TAG, "svt api: " + e);
             return null;
