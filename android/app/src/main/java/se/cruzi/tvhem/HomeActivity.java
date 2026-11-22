@@ -291,6 +291,43 @@ public class HomeActivity extends Activity {
         return done;
     }
 
+    private long lastSilence;
+    /** Called every couple of seconds while Hem is on screen: tv/video sound behind it is stopped. */
+    void silenceBehind() {
+        long now = android.os.SystemClock.uptimeMillis();
+        if (now - lastSilence < 1800 || now - HomeKeyService.requestAt < 8000) return;
+        lastSilence = now;
+        java.util.List<String> p = pauseMedia(false);
+        boolean musicOn = false;
+        try {
+            android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+            for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(this, MediaListener.class))) {
+                android.media.session.PlaybackState st = mc.getPlaybackState();
+                if (st != null && st.getState() == android.media.session.PlaybackState.STATE_PLAYING && isMusic(this, mc.getPackageName())) musicOn = true;
+            }
+        } catch (Exception ignored) {}
+        boolean sound = ((android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE)).isMusicActive();
+        if (p.isEmpty() && (!sound || musicOn)) return;
+        // sound without a controllable player: close tv and video apps (not music)
+        new Thread(() -> {
+            try {
+                Thread.sleep(500);
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                for (String pk : p) am.killBackgroundProcesses(pk);
+                if (!p.isEmpty()) return;
+                int n = 0;
+                for (ApplicationInfo ai : getPackageManager().getInstalledApplications(0)) {
+                    String pk = ai.packageName;
+                    boolean user = (ai.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
+                    boolean telia = pk.equals(HomeKeyService.TELIA) || pk.equals("com.teliacompany.tv.teletext");
+                    if (pk.equals(getPackageName()) || !(user || telia) || isMusic(this, pk)) continue;
+                    am.killBackgroundProcesses(pk); n++;
+                }
+                android.util.Log.d("HemTv", "ljud bakom Hem utan spelare: stängde " + n + " appar");
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     /** Stop tv/video sound behind Hem and close those apps. */
     private void stopVideoBehind() {
         if (android.os.SystemClock.uptimeMillis() - HomeKeyService.requestAt < 5000) return;
@@ -564,6 +601,7 @@ public class HomeActivity extends Activity {
         private String npArtKey = "";
         @JavascriptInterface
         public String nowPlaying(String haveArt) {
+            silenceBehind();
             try {
                 android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
                 android.media.session.MediaController best = null;
@@ -688,6 +726,31 @@ public class HomeActivity extends Activity {
                     if (la.getAddress() instanceof Inet4Address) o.put("ip", la.getAddress().getHostAddress());
                 return o.toString();
             } catch (Exception e) { return "{\"type\":\"none\"}"; }
+        }
+
+        /** Wi-Fi details for the little Wi-Fi card on the home screen. */
+        @JavascriptInterface
+        public String wifiInfo() {
+            try {
+                JSONObject o = new JSONObject(network());
+                if (!"wifi".equals(o.optString("type"))) return o.toString();
+                android.net.wifi.WifiManager wm = (android.net.wifi.WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                android.net.wifi.WifiInfo wi = wm.getConnectionInfo();
+                if (wi != null) {
+                    int rssi = wi.getRssi();
+                    o.put("rssi", rssi);
+                    o.put("pct", Math.max(0, Math.min(100, 2 * (rssi + 100))));
+                    o.put("level", wm.calculateSignalLevel(rssi));
+                    o.put("maxLevel", wm.getMaxSignalLevel());
+                    o.put("speed", wi.getLinkSpeedMbps());
+                    o.put("freq", wi.getFrequency());
+                    try { o.put("rx", wi.getRxLinkSpeedMbps()); o.put("tx", wi.getTxLinkSpeedMbps()); } catch (Throwable ignored) {}
+                    String ss = wi.getSSID();
+                    if (ss != null && !ss.contains("unknown")) o.put("ssid", ss.replace("\"", ""));
+                    try { o.put("std", wi.getWifiStandard()); } catch (Throwable ignored) {}
+                }
+                return o.toString();
+            } catch (Exception e) { return network(); }
         }
 
         private long[] mem() {

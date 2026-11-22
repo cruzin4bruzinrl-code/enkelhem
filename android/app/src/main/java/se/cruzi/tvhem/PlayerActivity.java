@@ -212,6 +212,14 @@ public class PlayerActivity extends Activity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        // never keep playing sound behind Hem: leaving the player (HOME, another app) closes it
+        try { web.loadUrl("about:blank"); } catch (Exception ignored) {}
+        if (!isFinishing()) finish();
+    }
+
+    @Override
     protected void onDestroy() {
         h.removeCallbacksAndMessages(null);
         web.loadUrl("about:blank");

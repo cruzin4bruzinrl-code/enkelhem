@@ -155,11 +155,8 @@ if [ $JSOK = 1 ]; then
     say "$1: $okk ($z)"; }
   FK_OK=0; FK_N=0
   fk "Höger" 22 main; fk "Vänster" 21 main; fk "Ner = Alla appar" 20 grid; fk "Bakåt" 4 main
-  if [ "$(js 'NP?1:0' 4 | tr -d '"')" = 1 ]; then
-    fk "Upp = Musikspelaren" 19 player; fk "Upp igen = Snabbpanel" 19 panel; fk "Bakåt" 4 main
-  else
-    fk "Upp = Snabbpanel" 19 panel; fk "Bakåt" 4 main
-  fi
+  fk "Upp = Minne-widget" 19 mem; fk "Upp igen = Väder/Wi-Fi" 19 top
+  fk "OK = Väderkort" 23 sheet; fk "Höger = Wi-Fi-kort" 22 sheet; fk "Bakåt" 4 top; fk "Bakåt" 4 main
   fk "Guide" 172 live; fk "Bakåt" 4 main
   fk "Kanal upp" 166 live; fk "Bakåt" 4 main
   fk "Meny" 82 panel; fk "Bakåt" 4 main
