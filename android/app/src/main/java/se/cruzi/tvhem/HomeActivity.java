@@ -780,6 +780,45 @@ public class HomeActivity extends Activity {
             return new long[]{mi.availMem / 1048576, mi.totalMem / 1048576};
         }
 
+        /** Picture of the last video watched (taken by HomeKeyService), base64 JPEG, with its app. */
+        @JavascriptInterface
+        public String lastShot() {
+            try {
+                java.io.File f = new java.io.File(getFilesDir(), "shot.jpg");
+                if (!f.exists()) return "null";
+                android.content.SharedPreferences sp = getSharedPreferences("hem", MODE_PRIVATE);
+                JSONObject o = new JSONObject();
+                String pk = sp.getString("shotPkg", "");
+                o.put("pkg", pk);
+                o.put("t", sp.getLong("shotT", 0));
+                try { o.put("app", getPackageManager().getApplicationLabel(getPackageManager().getApplicationInfo(pk, 0)).toString()); } catch (Exception ignored) {}
+                o.put("img", android.util.Base64.encodeToString(java.nio.file.Files.readAllBytes(f.toPath()), android.util.Base64.NO_WRAP));
+                return o.toString();
+            } catch (Exception e) { return "null"; }
+        }
+
+        /** Fetch a news feed off the UI; the answer comes back as newsCb(id, text). */
+        @JavascriptInterface
+        public void fetchText(final String url, final String id) {
+            new Thread(() -> {
+                String txt = "";
+                try {
+                    java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                    c.setConnectTimeout(7000); c.setReadTimeout(9000);
+                    c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) Hem/1.0");
+                    c.setInstanceFollowRedirects(true);
+                    try (java.io.InputStream in = c.getInputStream()) {
+                        java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                        byte[] buf = new byte[16384]; int n;
+                        while ((n = in.read(buf)) > 0 && b.size() < 1500000) b.write(buf, 0, n);
+                        txt = b.toString("UTF-8");
+                    }
+                } catch (Exception e) { android.util.Log.d("HemTv", "nyheter: " + url + " " + e); }
+                final String js = "window.newsCb&&newsCb(" + JSONObject.quote(id) + "," + JSONObject.quote(txt) + ")";
+                ui.post(() -> { if (web != null) web.evaluateJavascript(js, null); });
+            }).start();
+        }
+
         /** The last thing that played (title, app, cover), for "Fortsätt" on the home screen. */
         @JavascriptInterface
         public String lastMedia() {
@@ -788,7 +827,8 @@ public class HomeActivity extends Activity {
 
         @JavascriptInterface
         public void forgetMedia() {
-            getSharedPreferences("hem", MODE_PRIVATE).edit().remove("lastMedia").apply();
+            getSharedPreferences("hem", MODE_PRIVATE).edit().remove("lastMedia").remove("shotPkg").apply();
+            new java.io.File(getFilesDir(), "shot.jpg").delete();
         }
 
         /** Continue: play the paused session if it still exists, otherwise open the app. */

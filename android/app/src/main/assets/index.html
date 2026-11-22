@@ -31,14 +31,14 @@ body.saving #saver{background:transparent;}
 .ti{display:flex;align-items:center;padding:10px 16px;border-radius:28px;transition:background .25s ease,transform .3s var(--ease),box-shadow .25s ease;}
 .ti.focus{background:rgba(255,255,255,.75);transform:scale(1.12);box-shadow:0 12px 28px rgba(30,25,40,.22);}
 .topr:has(.focus){opacity:1;}
-#mw{position:absolute;left:96px;top:290px;width:500px;display:flex;align-items:center;gap:26px;padding:22px 28px;border-radius:34px;
+#mw{position:absolute;left:96px;top:258px;width:600px;display:flex;align-items:center;gap:26px;padding:16px 24px;border-radius:34px;
   background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.18);
   transition:transform .35s var(--ease),background .25s;}
 #mw.focus{background:rgba(255,255,255,.75);transform:scale(1.04);}
-#mw .ring{width:116px;height:116px;flex:0 0 auto;transform:rotate(-90deg);}
+#mw .ring{width:104px;height:104px;flex:0 0 auto;transform:rotate(-90deg);}
 #mw .rb{fill:none;stroke:rgba(22,24,29,.1);stroke-width:11;}
 #mw .rf{fill:none;stroke:url(#rg);stroke-width:11;stroke-linecap:round;stroke-dasharray:301.6;stroke-dashoffset:301.6;transition:stroke-dashoffset 1.3s cubic-bezier(.2,.8,.2,1);}
-#mw .mwp{position:absolute;left:28px;top:50%;transform:translateY(-50%);width:116px;text-align:center;font-size:30px;font-weight:700;}
+#mw .mwp{position:absolute;left:24px;top:50%;transform:translateY(-50%);width:104px;text-align:center;font-size:30px;font-weight:700;}
 #mw .mtx{min-width:0;flex:1;transition:opacity .3s;}
 #mw .app{font-size:20px;font-weight:600;opacity:.6;text-transform:uppercase;letter-spacing:1px;}
 #mw b{display:block;font-size:32px;font-weight:700;margin-top:4px;}
@@ -58,7 +58,40 @@ body.saving #saver{background:transparent;}
   border:1.5px solid rgba(255,255,255,.8);color:#16181d;box-shadow:0 40px 90px rgba(30,25,40,.35);transform-origin:calc(100% - 140px) -20px;
   opacity:0;transform:translateY(-18px) scale(.9);transition:opacity .25s ease,transform .4s var(--ease);pointer-events:none;}
 #sheet.on{opacity:1;transform:none;}
-#home.sheeton #np{opacity:0;}
+#home.sheeton #np,#home.sheeton #nw{opacity:0;}
+#home.sheeton #dock,#home.sheeton #dlabel{opacity:.25;transition:opacity .3s;}
+#sheet{z-index:6;}
+.wg{background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.18);border-radius:34px;}
+#cw{position:absolute;left:96px;top:446px;width:600px;display:none;align-items:center;gap:24px;padding:18px;border-radius:30px;
+  background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.18);transition:transform .35s var(--ease),background .25s,opacity .3s;}
+#cw.on{display:flex;}#cw.focus{background:rgba(255,255,255,.75);transform:scale(1.04);}
+#cw .th{width:272px;height:153px;border-radius:20px;background:#2a2d36 center/cover;flex:0 0 auto;position:relative;display:grid;place-items:center;
+  font-size:64px;font-weight:700;color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25);overflow:hidden;}
+#cw .pl{position:absolute;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 6px 18px rgba(0,0,0,.3);}
+#cw .pl::after{content:"";position:absolute;left:25px;top:19px;border-left:22px solid #16181d;border-top:13px solid transparent;border-bottom:13px solid transparent;}
+#cw .tx{min-width:0;flex:1;}#cw .app{font-size:19px;font-weight:600;opacity:.6;text-transform:uppercase;letter-spacing:1px;}
+#cw b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:28px;font-weight:700;margin-top:6px;line-height:1.2;}
+#cw small{display:block;font-size:21px;opacity:.7;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#cw .hint2,#nw .hint2{position:absolute;left:0;right:0;top:100%;margin-top:10px;text-align:center;font-size:20px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5);opacity:0;transition:opacity .2s;}
+#cw.focus .hint2,#nw.focus .hint2{opacity:.9;}
+#nw{position:absolute;right:96px;top:170px;width:700px;padding:22px 26px 14px;border-radius:30px;display:none;
+  background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.18);transition:transform .35s var(--ease),background .25s,top .45s var(--ease),opacity .3s;}
+#nw.on{display:block;}#home.music #nw{top:372px;}#nw.focus{background:rgba(255,255,255,.75);transform:scale(1.03);}
+#nw .app{font-size:19px;font-weight:600;opacity:.6;text-transform:uppercase;letter-spacing:1px;}#nw .app span{text-transform:none;letter-spacing:0;font-weight:500;}
+#nwl .ft{display:flex;gap:18px;margin-top:12px;animation:nfade .6s ease;}
+#nwl .ft i{width:190px;height:107px;border-radius:16px;background:#c9c3cc center/cover;flex:0 0 auto;}
+#nwl .ft b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:26px;line-height:1.22;font-weight:700;}
+#nwl .ft small,#nwl .ln small{font-size:18px;opacity:.6;font-weight:600;}
+#nwl .ln{margin-top:10px;font-size:22px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:9px;border-top:1px solid rgba(22,24,29,.1);}
+@keyframes nfade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.nl{height:560px;overflow:hidden;margin-top:14px;}.nl>div{transition:transform .3s var(--ease);}
+.nr{display:flex;gap:16px;align-items:center;padding:10px 12px;border-radius:18px;transition:background .2s;}
+.nr.sel{background:rgba(22,24,29,.09);}
+.nr i{width:120px;height:68px;border-radius:12px;background:#d5cfd8 center/cover;flex:0 0 auto;}
+.nr b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:23px;line-height:1.22;}
+.nr small{display:block;font-size:17px;opacity:.55;font-weight:600;margin-top:3px;}
+.nr .ck{width:34px;height:34px;border-radius:10px;border:2.5px solid rgba(22,24,29,.35);flex:0 0 auto;display:grid;place-items:center;font-size:22px;font-weight:800;}
+.nr .ck.on{background:#4b6bff;border-color:#4b6bff;color:#fff;}
 .sk{font-size:20px;font-weight:600;opacity:.55;text-transform:uppercase;letter-spacing:1.2px;}
 .si{opacity:0;transform:translateY(10px);}#sheet.on .si{animation:sin .45s var(--ease) forwards;}
 @keyframes sin{to{opacity:1;transform:none;}}
@@ -224,6 +257,9 @@ body.gridon #home{opacity:0;transform:scale(.97);}
       <circle cx="60" cy="60" r="48" class="rb"/><circle cx="60" cy="60" r="48" class="rf" id="mwring"/></svg><div class="mwp" id="mwp">–</div>
       <div class="mtx"><div class="app">Minne</div><b id="mwfree">–</b><small id="mwsub"></small><div class="mwi" id="mwi"></div></div>
       <div class="mwr" id="mwr"><b id="mwrb"></b><small id="mwrs"></small></div><div class="hint2">OK rensar bakgrunden</div></div>
+    <div id="cw"><div class="th" id="cwth"><span class="pl"></span></div><div class="tx"><div class="app">Fortsätt titta</div><b id="cwtitle"></b><small id="cwsub"></small></div>
+      <div class="hint2">OK fortsätter · håll in OK tar bort</div></div>
+    <div id="nw"><div class="app">Nyheter <span id="nwsrc"></span></div><div id="nwl"></div><div class="hint2">OK visar fler nyheter och källor</div></div>
     <div id="sheet"><div id="shc"></div></div>
     <div id="np"><div class="art" id="npart"></div><div class="tx"><div class="app" id="npapp"></div><b id="nptitle"></b><small id="npsub"></small></div>
       <div class="pp" id="nppp"></div><div class="hint2"><span class="h2p">◀ ▶ byt låt · OK paus/spela · ▼ tillbaka</span><span class="h2c">OK fortsätt · ◀ ta bort · ▼ tillbaka</span></div></div>
@@ -251,7 +287,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="40.5";
+const VERSION="40.6";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -325,11 +361,9 @@ function render(){noScroll();document.querySelectorAll(".focus").forEach(e=>e.cl
     let off=Math.min(max,Math.max(0,bot-vh+40));if(top<off)off=Math.max(0,top-20);$("qlist").style.transform=`translateY(${-off}px)`;}return;}
   if(zone==="places"){const p=document.querySelectorAll("#pl div");if(p[pi]){p[pi].classList.add("focus");}return;}
   if(zone==="live"){const el=lr===0?document.querySelectorAll("#ltabs .ltab")[lt]:document.querySelectorAll("#lgrid .lc")[li];if(el)el.classList.add("focus");return;}
-  if(zone==="player")$("np").classList.add("focus");else $("np").classList.remove("focus");
-  if(zone==="top"||zone==="sheet")$(["tiwx","tiwifi","tigear"][ti]).classList.add("focus");
-  if(zone==="mem")$("mw").classList.add("focus");
-  if(zone==="main"||zone==="player")showSel();}
-function toMain(){if(zone==="sheet")closeSheet();if(zone==="player"||zone==="top"||zone==="mem"){zone="main";render();return;}if(zone==="grid")closeGrid();else if(zone==="live")closeLive();else if(zone==="panel")closePanel();
+  if((zone==="w"||zone==="sheet")&&$(wid))$(wid).classList.add("focus");
+  if(zone==="main")showSel();}
+function toMain(){if(zone==="sheet")closeSheet();if(zone==="w"){zone="main";render();return;}if(zone==="grid")closeGrid();else if(zone==="live")closeLive();else if(zone==="panel")closePanel();
   else if(zone==="places"){$("places").classList.remove("open");zone="main";render();}}
 function key(k){
   bumpIdle();
@@ -339,33 +373,43 @@ function key(k){
   if(k==="menu"||k==="rec"){if(zone==="panel")return closePanel();if(zone==="places")return placeKey("back");toMain();return openPanel();}
   if(k==="allapps"){if(zone==="grid")return closeGrid();toMain();return openGrid();}
   if(k==="last"){const r=getRecent().map(x=>x.pkg).filter(byPkg);if(r[1])return launch(r[1]);if(r[0])return launch(r[0]);return toast("Ingen tidigare app än");}
-  if(k==="playkey"){if(zone==="grid")return toggleFav(sortedApps()[gi].pkg);if(NP&&(zone==="main"||zone==="player"))return npCmd("toggle");if(CONT&&(zone==="main"||zone==="player"))return resumeCont();if(zone==="main"){const r=getRecent().find(x=>byPkg(x.pkg));
+  if(k==="playkey"){if(zone==="grid")return toggleFav(sortedApps()[gi].pkg);if(NP&&(zone==="main"||zone==="w"))return npCmd("toggle");if(CONT&&(zone==="main"||zone==="w"))return resumeCont();if(zone==="main"){const r=getRecent().find(x=>byPkg(x.pkg));
       if(r)return launch(r.pkg);return toast("Ingen app att fortsätta med än");}return;}
   if(/^n\d$/.test(k))return numKey(+k[1]);
   if(zone==="grid")return gridKey(k);
   if(zone==="live")return liveKey(k);
   if(zone==="panel")return panelKey(k);
   if(zone==="places")return placeKey(k);
-  if(zone==="player")return playerKey(k);
-  if(zone==="top")return topKey(k);
-  if(zone==="mem")return memKey(k);
+  if(zone==="w")return wKey(k);
   if(zone==="sheet")return sheetKey(k);
   mainKey(k);}
 /* ===== top-right: weather, Wi-Fi, settings ===== */
-let ti=0,fromZone="main";
-function hasCard(){return !!(NP||CONT);}
-function topKey(k){if(k==="left")ti=Math.max(0,ti-1);else if(k==="right")ti=Math.min(2,ti+1);
-  else if(k==="ok"){if(ti===0)return openSheet("wx");if(ti===1)return openSheet("wifi");leftForApp=true;call("action","settings");return;}
-  else if(k==="down"){zone=hasCard()?"player":"main";}else if(k==="back"){zone="main";}else if(k==="up")return;render();}
-function memKey(k){if(k==="ok")return cleanMem();if(k==="up"){zone="top";ti=0;}else if(k==="right"&&hasCard())zone="player";else if(k==="down"||k==="back")zone="main";else return;render();}
-function sheetKey(k){if(k==="left"&&ti===1){openSheet("wx",true);ti=0;render();return;}if(k==="right"&&ti===0){openSheet("wifi",true);ti=1;render();return;}
+/* ===== widgets on the home screen: arrows move between them by position ===== */
+let wid="mw";
+function wOn(id){const e=$(id);if(!e)return false;if(id==="np")return !!NP;if(id==="cw")return !!CONT;if(id==="nw")return e.classList.contains("on");return true;}
+function wFind(dir,r){let best=null,bs=1e9;const cx=(r.left+r.right)/2,cy=(r.top+r.bottom)/2;
+  ["tiwx","tiwifi","tigear","mw","cw","np","nw"].forEach(id=>{if(id===wid&&zone==="w"||!wOn(id))return;const q=$(id).getBoundingClientRect(),x=(q.left+q.right)/2,y=(q.top+q.bottom)/2;
+    const dx=x-cx,dy=y-cy,main=dir==="up"?-dy:dir==="down"?dy:dir==="left"?-dx:dx,side=dir==="up"||dir==="down"?Math.abs(dx):Math.abs(dy);
+    if(main<=8)return;const sc=main+side*1.6;if(sc<bs){bs=sc;best=id;}});return best;}
+function wKey(k){
+  if(k==="ok"){if(wid==="tiwx")return openSheet("wx");if(wid==="tiwifi")return openSheet("wifi");if(wid==="tigear"){leftForApp=true;return call("action","settings");}
+    if(wid==="mw")return cleanMem();if(wid==="np")return npCmd("toggle");if(wid==="cw")return resumeCont();if(wid==="nw")return openSheet("news");return;}
+  if(k==="hold"&&wid==="cw")return forgetCont();
+  if(wid==="np"&&(k==="left"||k==="right"))return npCmd(k==="left"?"prev":"next");
+  if(k==="back"){zone="main";return render();}
+  if(["up","down","left","right"].includes(k)){const n=wFind(k,$(wid).getBoundingClientRect());if(n){wid=n;return render();}if(k==="down"){zone="main";render();}}}
+function wFrom(){zone="w";render();}
+function sheetKey(k){if(shKind==="news")return newsKey(k);
+  if(k==="left"&&wid==="tiwifi"){wid="tiwx";openSheet("wx",true);return;}if(k==="right"&&wid==="tiwx"){wid="tiwifi";openSheet("wifi",true);return;}
   if(k==="back"||k==="ok"||k==="down"||k==="up")closeSheet();}
 let wxCache=null,wxAt=0;
-function openSheet(kind,swap){zone="sheet";$("home").classList.add("sheeton");const sh=$("sheet");
-  const fill=()=>{$("shc").innerHTML=kind==="wx"?wxHtml():wifiHtml();if(kind==="wifi")pingNet();if(kind==="wx"&&Date.now()-wxAt>6e5)loadWx().then(()=>{if(zone==="sheet"&&ti===0)$("shc").innerHTML=wxHtml();});};
+let shKind="";
+function openSheet(kind,swap){zone="sheet";shKind=kind;$("home").classList.add("sheeton");const sh=$("sheet");
+  const fill=()=>{if(kind==="news"){nsI=0;nsMode="list";$("shc").innerHTML=newsHtml();newsScroll();return;}
+    $("shc").innerHTML=kind==="wx"?wxHtml():wifiHtml();if(kind==="wifi")pingNet();if(kind==="wx"&&Date.now()-wxAt>6e5)loadWx().then(()=>{if(zone==="sheet"&&shKind==="wx")$("shc").innerHTML=wxHtml();});};
   if(swap&&sh.classList.contains("on")){sh.classList.remove("on");setTimeout(()=>{fill();sh.classList.add("on");},180);}
   else{fill();requestAnimationFrame(()=>sh.classList.add("on"));}render();}
-function closeSheet(){$("sheet").classList.remove("on");$("home").classList.remove("sheeton");zone="top";render();}
+function closeSheet(){$("sheet").classList.remove("on");$("home").classList.remove("sheeton");if(shKind==="news"&&nsDirty){nsDirty=false;loadNews(true);}shKind="";zone="w";render();}
 const WTXT={0:"Klart",1:"Mestadels klart",2:"Halvklart",3:"Mulet",45:"Dimma",48:"Rimfrost och dimma",51:"Lätt duggregn",53:"Duggregn",55:"Kraftigt duggregn",56:"Underkylt duggregn",57:"Underkylt duggregn",
   61:"Lätt regn",63:"Regn",65:"Kraftigt regn",66:"Underkylt regn",67:"Underkylt regn",71:"Lätt snöfall",73:"Snöfall",75:"Kraftigt snöfall",77:"Snökorn",80:"Regnskurar",81:"Regnskurar",82:"Kraftiga skurar",85:"Snöbyar",86:"Kraftiga snöbyar",95:"Åska",96:"Åska med hagel",99:"Åska med hagel"};
 const wi=c=>WI[c]||(c>=71&&c<=86?"🌨️":c>=95?"⛈️":c>=51?"🌧️":"🌡️");
@@ -419,7 +463,7 @@ function cleanMem(){if(memBusy)return;memBusy=true;const mw=$("mw"),n=bgApps().l
     $("mwrs").textContent=(n?n+(n>1?" appar stängda · ":" app stängd · "):"")+(m?(m.after/1024).toFixed(1).replace(".",",")+" GB ledigt":"");
     mw.classList.add("done");setTimeout(npPoll,600);
     setTimeout(()=>{mw.classList.remove("done");memBusy=false;memShow();},3400);},380+n*90);}
-setInterval(()=>{if(!document.hidden&&!saverOn&&(zone==="main"||zone==="mem"||zone==="player"))memShow();},10000);setTimeout(memShow,800);
+setInterval(()=>{if(!document.hidden&&!saverOn&&(zone==="main"||zone==="w"))memShow();},10000);setTimeout(memShow,800);
 
 /* ===== the dock ===== */
 const GLYPH={
@@ -464,8 +508,9 @@ let NP=null,npKey="";
 const PLAY='<svg viewBox="0 0 24 24"><path d="M7 4l14 8-14 8z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>';
 function npPoll(){if(!B||!B.nowPlaying||document.hidden||saverOn)return;let o=null;try{o=JSON.parse(B.nowPlaying(npKey));}catch(e){}
   const el=$("np");
-  if(!o||!o.title){NP=null;showCont();return;}
-  if(CONT){CONT=null;el.classList.remove("cont");$("npart").textContent="";$("npart").style.backgroundColor="";}
+  showCont();
+  if(!o||!o.title){if(NP){NP=null;el.classList.remove("on");$("home").classList.remove("music");if(zone==="w"&&wid==="np"){wid="nw";if(!wOn("nw"))zone="main";render();}}return;}
+  $("home").classList.add("music");
   if(o.art){$("npart").style.backgroundImage=`url(data:image/jpeg;base64,${o.art})`;npKey=o.key;}else if(o.key!==npKey){$("npart").style.backgroundImage="";npKey=o.key;}
   $("npapp").textContent=o.app||"";$("nptitle").textContent=o.title;$("npsub").textContent=o.sub||"";$("nppp").innerHTML=o.playing?PAUSE:PLAY;
   NP=o;el.classList.add("on");}
@@ -475,26 +520,75 @@ let CONT=null;
 function contItem(){const now=Date.now(),D=3*864e5;let m=null;try{m=JSON.parse(B&&B.lastMedia?B.lastMedia():"null");}catch(e){}
   const ch=LS.get("lastch",null);if(m&&now-m.t>D)m=null;const c=ch&&now-ch.t<D?ch:null;
   const tvm=m&&(m.pkg===TELIA_LAUNCHER||/pluto/.test(m.pkg));
-  if(c&&(!m||tvm||c.t>m.t)){const fresh=tvm&&m.t>c.t;return{ch:c.c,app:"Live-tv",title:c.c.n,sub:fresh?m.title:(c.c.d||""),art:fresh?m.art:null,col:c.c.col,key:"ch|"+c.c.n};}
-  if(m&&byPkg(m.pkg))return{pkg:m.pkg,app:m.app||"",title:m.title,sub:m.sub,art:m.art,key:m.pkg+"|"+m.title};return null;}
-function showCont(){const el=$("np"),c=contItem();
-  if(!c){if(CONT||el.classList.contains("on")){CONT=null;el.classList.remove("on","focus","cont");if(zone==="player"){zone="main";render();}}return;}
-  if(!CONT||CONT.key!==c.key){$("npart").style.backgroundImage=c.art?`url(data:image/jpeg;base64,${c.art})`:"";$("npart").style.backgroundColor=c.art?"":(c.col||"#2a2d36");
-    $("npart").textContent=c.art?"":(c.title||"").slice(0,1);npKey="";}
-  CONT=c;$("npapp").textContent="Fortsätt · "+c.app;$("nptitle").textContent=c.title;$("npsub").textContent=c.sub||"";$("nppp").innerHTML=PLAY;
-  el.classList.add("on","cont");}
+  if(c&&(!m||tvm||c.t>m.t)){const fresh=tvm&&m.t>c.t;return{ch:c.c,app:"Live-tv",title:c.c.n,sub:fresh?m.title:(c.c.d||""),art:fresh?m.art:null,col:c.c.col,key:"ch|"+c.c.n,t0:c.t};}
+  if(m&&byPkg(m.pkg))return{pkg:m.pkg,app:m.app||"",title:m.title,sub:m.sub,art:m.art,key:m.pkg+"|"+m.title,t0:m.t};return null;}
+function shotFor(c){let sh=null;try{sh=JSON.parse(B&&B.lastShot?B.lastShot():"null");}catch(e){}
+  if(!sh||!sh.img||Date.now()-sh.t>3*864e5)return null;return sh;}
+function showCont(){const el=$("cw");let c=contItem();const sh=shotFor();
+  // a picture of the last video: use it for the same app (or the channel it came from), or show that app itself if it is newer
+  if(sh){const same=c&&((c.pkg&&c.pkg===sh.pkg)||(c.ch&&(sh.pkg===TELIA_LAUNCHER||/pluto/.test(sh.pkg)||sh.pkg==="se.cruzi.tvhem")));
+    if(same&&sh.t>(c.t0||0)-18e5)c.img=sh.img;
+    else if(byPkg(sh.pkg)&&sh.pkg!=="se.cruzi.tvhem"&&(!c||sh.t>(c.t0||0)+6e4))c={pkg:sh.pkg,app:sh.app||byPkg(sh.pkg).label,title:sh.app||byPkg(sh.pkg).label,sub:"Senast sedd",img:sh.img,key:"shot|"+sh.pkg+sh.t};}
+  if(!c){if(CONT){CONT=null;el.classList.remove("on");if(zone==="w"&&wid==="cw"){zone="main";render();}}return;}
+  const key=c.key+(c.img?"|i":"");
+  if(!CONT||CONT._k!==key){const th=$("cwth"),src=c.img||c.art;th.style.backgroundImage=src?`url(data:image/jpeg;base64,${src})`:"";th.style.backgroundColor=src?"":(c.col||"#2a2d36");
+    th.firstChild&&th.firstChild.nodeType===3&&th.removeChild(th.firstChild);if(!src)th.insertBefore(document.createTextNode((c.title||"").slice(0,1)),th.firstChild);}
+  c._k=key;CONT=c;$("cwtitle").textContent=c.title;$("cwsub").textContent=[c.app,c.sub].filter(Boolean).join(" · ");el.classList.add("on");}
+/* ===== news: headlines from the sources you tick ===== */
+const NSRC=[["svt","SVT Nyheter","https://www.svt.se/nyheter/rss.xml"],["ekot","Ekot","https://api.sr.se/api/rss/program/83"],
+  ["svtnb","SVT Norrbotten","https://www.svt.se/nyheter/lokalt/norrbotten/rss.xml"],["dn","DN","https://www.dn.se/rss/"],
+  ["svd","SvD","https://www.svd.se/feed/articles.rss"],["ab","Aftonbladet","https://rss.aftonbladet.se/rss2/small/pages/sections/senastenytt/"],
+  ["ex","Expressen","https://feeds.expressen.se/nyheter/"],["sport","SVT Sport","https://www.svt.se/sport/rss.xml"],
+  ["tech","Feber","https://feber.se/rss/"]];
+let NEWS=LS.get("news",[]),nsI=0,nsMode="list",nsDirty=false,nsFt=0,nsAt=0;const nsGot={};
+const esc=t=>String(t||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function nsOn(){return LS.get("nsrc",["svt","ekot","svtnb"]);}
+function loadNews(force){if(!B||!B.fetchText)return;if(!force&&Date.now()-nsAt<9e5)return;nsAt=Date.now();
+  const on=nsOn();NSRC.forEach(([id,,u])=>{if(on.includes(id))B.fetchText(u,id);});}
+function ago(t){const m=Math.round((Date.now()-t)/6e4);return m<1?"nyss":m<60?m+" min":m<1440?Math.round(m/60)+" tim":Math.round(m/1440)+" d";}
+window.newsCb=function(id,txt){const src=NSRC.find(x=>x[0]===id);if(!src||!txt)return;let items=[];
+  try{const d=new DOMParser().parseFromString(txt,"text/xml");d.querySelectorAll("item,entry").forEach(it=>{
+    const g=n=>{const e=it.getElementsByTagName(n)[0];return e?e.textContent.trim():"";};
+    let link=g("link");if(!link){const l=it.querySelector("link[href]");if(l)link=l.getAttribute("href");}
+    let img="";const enc=it.querySelector("enclosure[url]");if(enc&&/image|jpe?g|png|webp/i.test((enc.getAttribute("type")||"")+enc.getAttribute("url")))img=enc.getAttribute("url");
+    if(!img){const mc=it.getElementsByTagName("media:content")[0]||it.getElementsByTagName("media:thumbnail")[0];if(mc)img=mc.getAttribute("url")||"";}
+    const desc=(g("description")||g("summary")).replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+    if(!img){const m=(g("description")||"").match(/<img[^>]+src="([^"]+)"/);if(m)img=m[1];}
+    const t=Date.parse(g("pubDate")||g("published")||g("updated")||g("dc:date"))||Date.now();
+    const title=g("title");if(title)items.push({s:src[1],id,title,link,img:img.replace(/^http:/,"https:"),desc:desc.slice(0,300),t});});}catch(e){}
+  nsGot[id]=items.slice(0,15);const on=nsOn();
+  NEWS=Object.keys(nsGot).filter(k=>on.includes(k)).flatMap(k=>nsGot[k]).sort((a,b)=>b.t-a.t).slice(0,40);
+  LS.set("news",NEWS.slice(0,20));showNews();if(zone==="sheet"&&shKind==="news"&&nsMode==="list"){$("shc").innerHTML=newsHtml();newsScroll();}};
+function showNews(){const el=$("nw");if(!NEWS.length){el.classList.remove("on");return;}
+  const on=nsOn();$("nwsrc").textContent="· "+NSRC.filter(x=>on.includes(x[0])).map(x=>x[1]).join(", ");
+  const top=NEWS.slice(0,8),f=top[nsFt%top.length],rest=top.filter(x=>x!==f).slice(0,2);
+  $("nwl").innerHTML=`<div class="ft">${f.img?`<i style="background-image:url('${esc(f.img)}')"></i>`:""}<div><b>${esc(f.title)}</b><small>${esc(f.s)} · ${ago(f.t)}</small></div></div>`+
+    rest.map(x=>`<div class="ln">${esc(x.title)} <small>· ${esc(x.s)}</small></div>`).join("");el.classList.add("on");}
+setInterval(()=>{if(document.hidden||saverOn||!NEWS.length)return;nsFt++;if(zone!=="sheet")showNews();loadNews();},15000);
+setTimeout(()=>{showNews();loadNews(true);},1500);
+function newsHtml(){if(nsMode==="src"){const on=nsOn();return `<div class="sk">Välj nyhetskällor</div><div class="nl"><div id="nlist">`+
+    NSRC.map(([id,n],i)=>`<div class="nr${i===nsI?" sel":""}"><span class="ck${on.includes(id)?" on":""}">${on.includes(id)?"✓":""}</span><b>${n}</b></div>`).join("")+
+    `</div></div><div class="shint">OK bockar i/ur · Bakåt sparar</div>`;}
+  const rows=[`<div class="nr${nsI===0?" sel":""}"><span class="ck on">⚙</span><div><b>Välj källor</b><small>${esc(NSRC.filter(x=>nsOn().includes(x[0])).map(x=>x[1]).join(", "))}</small></div></div>`]
+    .concat(NEWS.slice(0,20).map((x,i)=>`<div class="nr${nsI===i+1?" sel":""}">${x.img?`<i style="background-image:url('${esc(x.img)}')"></i>`:""}<div><b>${esc(x.title)}</b><small>${esc(x.s)} · ${ago(x.t)}</small></div></div>`));
+  return `<div class="sk">Nyheter</div><div class="nl"><div id="nlist">${rows.join("")}</div></div><div class="shint">OK öppnar artikeln · Bakåt stänger</div>`;}
+function newsScroll(){const l=$("nlist");if(!l)return;const r=l.children[nsI];if(!r)return;const off=Math.max(0,Math.min(l.scrollHeight-600,r.offsetTop-200));l.style.transform=`translateY(${-off}px)`;}
+function newsKey(k){const n=nsMode==="src"?NSRC.length:Math.min(20,NEWS.length)+1;
+  if(k==="up"||k==="down"){nsI=Math.max(0,Math.min(n-1,nsI+(k==="up"?-1:1)));document.querySelectorAll("#nlist .nr").forEach((e,i)=>e.classList.toggle("sel",i===nsI));return newsScroll();}
+  if(k==="back"||k==="left"){if(nsMode==="src"){nsMode="list";nsI=0;if(nsDirty){nsDirty=false;Object.keys(nsGot).forEach(x=>{if(!nsOn().includes(x))delete nsGot[x];});NEWS=NEWS.filter(x=>nsOn().includes(x.id));showNews();loadNews(true);}$("shc").innerHTML=newsHtml();return newsScroll();}return closeSheet();}
+  if(k!=="ok")return;
+  if(nsMode==="src"){const id=NSRC[nsI][0],on=nsOn(),i=on.indexOf(id);if(i>=0){if(on.length>1)on.splice(i,1);}else on.push(id);LS.set("nsrc",on);nsDirty=true;$("shc").innerHTML=newsHtml();return newsScroll();}
+  if(nsI===0){nsMode="src";nsI=0;$("shc").innerHTML=newsHtml();return;}
+  const x=NEWS[nsI-1];if(x&&x.link){leftForApp=true;call("openUri",x.link,"");}}
 function resumeCont(){const c=CONT;if(!c)return;
   if(c.ch)return playLive(c.ch);
   if(B&&B.resumeMedia&&B.resumeMedia(c.pkg)){setTimeout(npPoll,500);return;}launch(c.pkg);}
-function forgetCont(){if(B&&B.forgetMedia)B.forgetMedia();LS.set("lastch",null);CONT=null;$("np").classList.remove("on","focus","cont");zone="main";render();toast("Borttaget");}
+function forgetCont(){if(B&&B.forgetMedia)B.forgetMedia();LS.set("lastch",null);CONT=null;$("cw").classList.remove("on","focus");zone="main";render();toast("Borttaget");}
 function npCmd(c){call("mediaCmd",c);setTimeout(npPoll,450);setTimeout(npPoll,1500);}
-function playerKey(k){if(!NP&&CONT){if(k==="ok")return resumeCont();if(k==="left")return forgetCont();if(k==="up"){zone="top";ti=1;return render();}if(k==="down"||k==="back"){zone="main";render();}return;}
-  if(k==="left")return npCmd("prev");if(k==="right")return npCmd("next");if(k==="ok")return npCmd("toggle");
-  if(k==="up"){zone="top";ti=1;return render();}if(k==="down"||k==="back"){zone="main";render();}}
 function mainKey(k){
   if(k==="left")setSel(sel-1);else if(k==="right")setSel(sel+1);
-  else if(k==="up"){zone=hasCard()&&sel>=ORB.length/2?"player":"mem";render();}
-  else if(k==="ok")activate();else if(k==="down")openGrid();
+  else if(k==="up"){const t=document.querySelectorAll("#dock .dt")[sel];wid=wFind("up",t?t.getBoundingClientRect():$("dock").getBoundingClientRect())||"mw";zone="w";render();}
+  else if(k==="ok")activate();
   else if(k==="back")setSel(ORB.findIndex(o=>o.key==="tv"));
   else if(k==="hold"){const o=ORB[sel];if(o&&o.pkg)toggleFav(o.pkg);}}
 

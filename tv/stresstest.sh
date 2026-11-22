@@ -154,9 +154,11 @@ if [ $JSOK = 1 ]; then
     local okk=FEL; [[ "$z" == $3* ]] && okk=OK; [ $okk = OK ] && FK_OK=$((FK_OK+1)); FK_N=$((FK_N+1))
     say "$1: $okk ($z)"; }
   FK_OK=0; FK_N=0
-  fk "Höger" 22 main; fk "Vänster" 21 main; fk "Ner = Alla appar" 20 grid; fk "Bakåt" 4 main
-  fk "Upp = Minne-widget" 19 mem; fk "Upp igen = Väder/Wi-Fi" 19 top
-  fk "OK = Väderkort" 23 sheet; fk "Höger = Wi-Fi-kort" 22 sheet; fk "Bakåt" 4 top; fk "Bakåt" 4 main
+  fk "Höger" 22 main; fk "Vänster" 21 main; fk "Ner stannar på hemskärmen" 20 main
+  fk "Upp = widgetarna" 19 w; fk "Upp igen" 19 w; fk "Bakåt" 4 main
+  js 'wid="tiwx",zone="w",render(),1' 4 >/dev/null
+  fk "OK = Väderkort" 23 sheet; fk "Höger = Wi-Fi-kort" 22 sheet; fk "Bakåt" 4 w
+  js 'wid="nw",1' 4 >/dev/null; fk "OK = Nyheter" 23 sheet; fk "Ner i listan" 20 sheet; fk "Bakåt" 4 w; fk "Bakåt" 4 main
   fk "Guide" 172 live; fk "Bakåt" 4 main
   fk "Kanal upp" 166 live; fk "Bakåt" 4 main
   fk "Meny" 82 panel; fk "Bakåt" 4 main

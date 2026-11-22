@@ -36,6 +36,7 @@ public class HomeKeyService extends AccessibilityService {
     static volatile boolean teliaAllowed;
     static volatile boolean teliaPage;
     static volatile String lastApp;
+    static volatile String fgPkg, fgCls;
     private long lastBounce;
     private static String channel;
     private static int scans;
@@ -91,6 +92,60 @@ public class HomeKeyService extends AccessibilityService {
         instance = this;
         Log.d(TAG, "tjänsten startad");
         if (pending != null) { showOverlay(pending); schedule(900); }
+        h.removeCallbacks(shot);
+        h.postDelayed(shot, 15000);
+    }
+
+    /** Every 15 s while a video plays in another app: keep a small picture of it for "Fortsätt titta" on the home screen. */
+    private final Runnable shot = new Runnable() {
+        @Override public void run() {
+            h.postDelayed(this, 15000);
+            final String pk = fgPkg, cls = fgCls == null ? "" : fgCls;
+            if (pk == null || cls.contains("HomeActivity") || (pk.equals(getPackageName()) && !cls.contains("Player"))) return;
+            if (!videoPlaying(pk) && !cls.contains("Player")) return;
+            if (HomeActivity.isMusic(HomeKeyService.this, pk)) return;
+            try {
+                takeScreenshot(android.view.Display.DEFAULT_DISPLAY, getMainExecutor(), new TakeScreenshotCallback() {
+                    @Override public void onSuccess(ScreenshotResult r) {
+                        new Thread(() -> saveShot(r, pk)).start();
+                    }
+                    @Override public void onFailure(int code) {}
+                });
+            } catch (Throwable ignored) {}
+        }
+    };
+
+    private boolean videoPlaying(String pk) {
+        try {
+            android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
+            for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(this, MediaListener.class))) {
+                android.media.session.PlaybackState st = mc.getPlaybackState();
+                if (mc.getPackageName().equals(pk) && st != null && st.getState() == android.media.session.PlaybackState.STATE_PLAYING) return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private void saveShot(ScreenshotResult r, String pk) {
+        try {
+            android.hardware.HardwareBuffer hb = r.getHardwareBuffer();
+            android.graphics.Bitmap hw = android.graphics.Bitmap.wrapHardwareBuffer(hb, r.getColorSpace());
+            hb.close();
+            if (hw == null) return;
+            android.graphics.Bitmap sw = hw.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
+            hw.recycle();
+            android.graphics.Bitmap sm = android.graphics.Bitmap.createScaledBitmap(sw, 480, 270, true);
+            sw.recycle();
+            long sum = 0; int n = 0;
+            for (int y = 10; y < 270; y += 20) for (int x = 10; x < 480; x += 20) {
+                int c = sm.getPixel(x, y); sum += ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255); n++;
+            }
+            if (sum / (3 * n) < 14) { sm.recycle(); return; } // black: protected video (DRM) or nothing yet
+            java.io.File f = new java.io.File(getFilesDir(), "shot.jpg");
+            try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) { sm.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, o); }
+            sm.recycle();
+            getSharedPreferences("hem", MODE_PRIVATE).edit().putString("shotPkg", pk).putLong("shotT", System.currentTimeMillis()).apply();
+        } catch (Throwable ignored) {}
     }
 
     @Override
@@ -192,6 +247,9 @@ public class HomeKeyService extends AccessibilityService {
         // remember which app was last on screen, so Hem can close it when you come back with HOME
         if (p != null && e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             String pk = p.toString();
+            if (!pk.equals("com.android.systemui") && !pk.startsWith("com.google.android.inputmethod") && !pk.equals("android")) {
+                fgPkg = pk; fgCls = e.getClassName() == null ? "" : e.getClassName().toString();
+            }
             if (!pk.equals(getPackageName()) && !pk.equals("com.android.systemui") && !pk.equals("android")
                     && !pk.startsWith("com.google.android.inputmethod") && !pk.contains("droidlogic")) lastApp = pk;
         }
