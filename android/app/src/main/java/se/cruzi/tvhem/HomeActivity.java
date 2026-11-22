@@ -742,7 +742,7 @@ public class HomeActivity extends Activity {
                     o.put("pct", Math.max(0, Math.min(100, 2 * (rssi + 100))));
                     o.put("level", wm.calculateSignalLevel(rssi));
                     o.put("maxLevel", wm.getMaxSignalLevel());
-                    o.put("speed", wi.getLinkSpeedMbps());
+                    o.put("speed", wi.getLinkSpeed());
                     o.put("freq", wi.getFrequency());
                     try { o.put("rx", wi.getRxLinkSpeedMbps()); o.put("tx", wi.getTxLinkSpeedMbps()); } catch (Throwable ignored) {}
                     String ss = wi.getSSID();
