@@ -227,6 +227,85 @@ public class HomeActivity extends Activity {
         } catch (Exception ignored) {}
     }
 
+    /** Music apps may keep playing behind Hem; everything else (tv, video) is stopped when you leave it. */
+    static boolean isMusic(android.content.Context c, String pkg) {
+        if (pkg == null) return false;
+        if (pkg.matches("(?i).*(spotify|tidal|deezer|soundcloud|youtube\\.music|youtube\\.tvmusic|podcast|pocketcasts|audible|storytel|bookbeat|nextory|sverigesradio|radio|bbc\\.sounds|music|mixcloud|qobuz|plexamp).*")) return true;
+        try { return c.getPackageManager().getApplicationInfo(pkg, 0).category == ApplicationInfo.CATEGORY_AUDIO; }
+        catch (Exception e) { return false; }
+    }
+
+    private static String art64(android.media.MediaMetadata m) {
+        try {
+            android.graphics.Bitmap b = m.getBitmap(android.media.MediaMetadata.METADATA_KEY_ALBUM_ART);
+            if (b == null) b = m.getBitmap(android.media.MediaMetadata.METADATA_KEY_ART);
+            if (b == null) b = m.getBitmap(android.media.MediaMetadata.METADATA_KEY_DISPLAY_ICON);
+            if (b == null) return null;
+            android.graphics.Bitmap sc = android.graphics.Bitmap.createScaledBitmap(b, 220, Math.max(1, Math.round(220f * b.getHeight() / Math.max(1, b.getWidth()))), true);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            sc.compress(android.graphics.Bitmap.CompressFormat.JPEG, 82, out);
+            return android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
+        } catch (Exception e) { return null; }
+    }
+
+    /** Remember what was playing so the home screen can offer "Fortsätt". */
+    private void snapshot(android.media.session.MediaController mc) {
+        try {
+            android.media.MediaMetadata m = mc.getMetadata();
+            if (m == null) return;
+            CharSequence t = m.getText(android.media.MediaMetadata.METADATA_KEY_TITLE);
+            if (t == null) t = m.getText(android.media.MediaMetadata.METADATA_KEY_DISPLAY_TITLE);
+            if (t == null || t.length() == 0) return;
+            CharSequence a = m.getText(android.media.MediaMetadata.METADATA_KEY_ARTIST);
+            if (a == null) a = m.getText(android.media.MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE);
+            JSONObject o = new JSONObject();
+            o.put("pkg", mc.getPackageName());
+            try { o.put("app", getPackageManager().getApplicationLabel(getPackageManager().getApplicationInfo(mc.getPackageName(), 0)).toString()); } catch (Exception ignored) {}
+            o.put("title", t.toString());
+            o.put("sub", a == null ? "" : a.toString());
+            o.put("t", System.currentTimeMillis());
+            String art = art64(m);
+            if (art != null) o.put("art", art);
+            getSharedPreferences("hem", MODE_PRIVATE).edit().putString("lastMedia", o.toString()).apply();
+        } catch (Exception ignored) {}
+    }
+
+    /** Pause what is playing behind Hem: tv and video always, music too when all=true. Returns the packages paused. */
+    java.util.List<String> pauseMedia(boolean all) {
+        java.util.List<String> done = new java.util.ArrayList<>();
+        try {
+            android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+            for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(this, MediaListener.class))) {
+                String pk = mc.getPackageName();
+                if (pk.equals(getPackageName())) continue;
+                android.media.session.PlaybackState st = mc.getPlaybackState();
+                int k = st == null ? 0 : st.getState();
+                boolean active = k == android.media.session.PlaybackState.STATE_PLAYING || k == android.media.session.PlaybackState.STATE_BUFFERING;
+                if (active || done.isEmpty()) snapshot(mc);
+                if (!active || (!all && isMusic(this, pk))) continue;
+                mc.getTransportControls().pause();
+                done.add(pk);
+            }
+        } catch (Exception ignored) {}
+        if (!done.isEmpty()) android.util.Log.d("HemTv", "pausade " + done);
+        return done;
+    }
+
+    /** Stop tv/video sound behind Hem and close those apps. */
+    private void stopVideoBehind() {
+        if (android.os.SystemClock.uptimeMillis() - HomeKeyService.requestAt < 5000) return;
+        new Thread(() -> {
+            try {
+                Thread.sleep(300);
+                java.util.List<String> p = pauseMedia(false);
+                if (p.isEmpty()) return;
+                Thread.sleep(600);
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                for (String pk : p) am.killBackgroundProcesses(pk);
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     /** Back on Hem: close apps left running in the background (Pluto, YouTube, Telia…) so the box has its
      *  memory and processor for the home screen. Music that is playing (e.g. Spotify) is left alone. */
     private void autoTrim() {
@@ -254,7 +333,7 @@ public class HomeActivity extends Activity {
                     android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
                     for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(this, MediaListener.class))) {
                         android.media.session.PlaybackState st = mc.getPlaybackState();
-                        if (st != null && st.getState() == android.media.session.PlaybackState.STATE_PLAYING) playing.add(mc.getPackageName());
+                        if (st != null && st.getState() == android.media.session.PlaybackState.STATE_PLAYING && isMusic(this, mc.getPackageName())) playing.add(mc.getPackageName());
                     }
                 } catch (Exception ignored) {}
                 ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -300,6 +379,7 @@ public class HomeActivity extends Activity {
             } catch (Exception ignored) {}
         }
         HomeKeyService.uncover();
+        stopVideoBehind();
         autoTrim();
         ensureHomeKey();
         checkGuard();
@@ -471,6 +551,7 @@ public class HomeActivity extends Activity {
         @JavascriptInterface
         public void earthSaver(final boolean on) {
             ui.post(() -> { if (earth != null) earth.setSaver(on); refresh60(on); });
+            if (on) stopVideoBehind();
         }
 
         /** Tell the guard (Guard.java) that the next Telia start is ours. */
@@ -616,6 +697,29 @@ public class HomeActivity extends Activity {
             return new long[]{mi.availMem / 1048576, mi.totalMem / 1048576};
         }
 
+        /** The last thing that played (title, app, cover), for "Fortsätt" on the home screen. */
+        @JavascriptInterface
+        public String lastMedia() {
+            return getSharedPreferences("hem", MODE_PRIVATE).getString("lastMedia", "null");
+        }
+
+        @JavascriptInterface
+        public void forgetMedia() {
+            getSharedPreferences("hem", MODE_PRIVATE).edit().remove("lastMedia").apply();
+        }
+
+        /** Continue: play the paused session if it still exists, otherwise open the app. */
+        @JavascriptInterface
+        public boolean resumeMedia(String pkg) {
+            try {
+                android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+                for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(HomeActivity.this, MediaListener.class)))
+                    if (mc.getPackageName().equals(pkg) && mc.getPlaybackState() != null
+                        && mc.getPlaybackState().getState() == android.media.session.PlaybackState.STATE_PAUSED) { mc.getTransportControls().play(); return true; }
+            } catch (Exception ignored) {}
+            return false;
+        }
+
         @JavascriptInterface
         public String memory() {
             long[] m = mem();
@@ -626,6 +730,8 @@ public class HomeActivity extends Activity {
         public String freeMemory() {
             long before = mem()[0];
             try {
+                pauseMedia(true);
+                Thread.sleep(400);
                 ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
                 for (ApplicationInfo ai : getPackageManager().getInstalledApplications(0))
                     if (!ai.packageName.equals(getPackageName())) am.killBackgroundProcesses(ai.packageName);

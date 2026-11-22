@@ -52,6 +52,8 @@ body.saving #saver{background:transparent;}
 #np .pp svg{width:26px;height:26px;fill:#fff;}
 #np .hint2{position:absolute;left:0;right:0;top:100%;margin-top:12px;text-align:center;font-size:20px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5);opacity:0;transition:opacity .2s;}
 #np.focus .hint2{opacity:.9;}
+#np .h2c{display:none;}#np.cont .h2c{display:block;}#np.cont .h2p{display:none;}
+#np .art{display:grid;place-items:center;font-size:56px;font-weight:700;color:#fff;}
 #dlabel{position:absolute;left:0;right:0;bottom:300px;text-align:center;font-size:34px;font-weight:600;color:#fff;
   text-shadow:0 2px 14px rgba(0,0,0,.45);transition:opacity .2s ease;}
 #dlabel small{display:block;font-size:22px;font-weight:500;opacity:.85;margin-top:4px;}
@@ -167,7 +169,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
     </div>
     <div id="np"><div class="art" id="npart"></div><div class="tx"><div class="app" id="npapp"></div><b id="nptitle"></b><small id="npsub"></small></div>
-      <div class="pp" id="nppp"></div><div class="hint2">◀ ▶ byt låt · OK paus/spela · ▼ tillbaka</div></div>
+      <div class="pp" id="nppp"></div><div class="hint2"><span class="h2p">◀ ▶ byt låt · OK paus/spela · ▼ tillbaka</span><span class="h2c">OK fortsätt · ◀ ta bort · ▼ tillbaka</span></div></div>
     <div id="dlabel"></div>
     <div id="dock"></div>
   </div>
@@ -192,7 +194,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="40.3";
+const VERSION="40.4";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -278,7 +280,7 @@ function key(k){
   if(k==="menu"||k==="rec"){if(zone==="panel")return closePanel();if(zone==="places")return placeKey("back");toMain();return openPanel();}
   if(k==="allapps"){if(zone==="grid")return closeGrid();toMain();return openGrid();}
   if(k==="last"){const r=getRecent().map(x=>x.pkg).filter(byPkg);if(r[1])return launch(r[1]);if(r[0])return launch(r[0]);return toast("Ingen tidigare app än");}
-  if(k==="playkey"){if(zone==="grid")return toggleFav(sortedApps()[gi].pkg);if(NP&&(zone==="main"||zone==="player"))return npCmd("toggle");if(zone==="main"){const r=getRecent().find(x=>byPkg(x.pkg));
+  if(k==="playkey"){if(zone==="grid")return toggleFav(sortedApps()[gi].pkg);if(NP&&(zone==="main"||zone==="player"))return npCmd("toggle");if(CONT&&(zone==="main"||zone==="player"))return resumeCont();if(zone==="main"){const r=getRecent().find(x=>byPkg(x.pkg));
       if(r)return launch(r.pkg);return toast("Ingen app att fortsätta med än");}return;}
   if(/^n\d$/.test(k))return numKey(+k[1]);
   if(zone==="grid")return gridKey(k);
@@ -290,6 +292,7 @@ function key(k){
 
 /* ===== the dock ===== */
 const GLYPH={
+ clean:'<svg viewBox="0 0 24 24" fill="none" stroke="#3a3f4a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/><path d="M5.5 15.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/></svg>',
  tv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5" width="19" height="13" rx="2.5"/><path d="M8 21h8M9 2l3 3 3-3"/></svg>',
  apps:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1.4"/><rect x="9.5" y="3" width="5" height="5" rx="1.4"/><rect x="16" y="3" width="5" height="5" rx="1.4"/><rect x="3" y="9.5" width="5" height="5" rx="1.4"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.4"/><rect x="16" y="9.5" width="5" height="5" rx="1.4"/><rect x="3" y="16" width="5" height="5" rx="1.4"/><rect x="9.5" y="16" width="5" height="5" rx="1.4"/><rect x="16" y="16" width="5" height="5" rx="1.4"/></svg>',
  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/><circle cx="12" cy="12" r="7"/></svg>',
@@ -311,6 +314,7 @@ function buildOrbit(){
   add(app(find(/disney/i)));add(app(find(/spotify/i)));add(app(find(/prime ?video|amazon/i),"Prime Video"));
   getFav().filter(Boolean).map(byPkg).forEach(a=>add(app(a)));
   add({key:"apps",name:"Appar",desc:"Alla dina appar",col:"rgba(255,255,255,.55)",svg:GLYPH.apps.replace('fill="currentColor"','fill="#3a3f4a"'),run:openGrid});
+  add({key:"clean",name:"Rensa",desc:"Stänger appar som körs i bakgrunden",col:"rgba(255,255,255,.55)",svg:GLYPH.clean,run:cleanAll});
   add({key:"settings",name:"Inställningar",desc:"Boxens inställningar",col:"rgba(255,255,255,.55)",svg:GLYPH.gear.replace('stroke="currentColor"','stroke="#3a3f4a"'),run:()=>{leftForApp=true;call("action","settings");}});
   ORB=it;
   $("dock").innerHTML=ORB.map(o=>{const inner=o.icon?`<img src="data:image/png;base64,${o.icon}">`:o.svg?o.svg:`<span class="wm">${o.name}</span>`;
@@ -331,17 +335,38 @@ let NP=null,npKey="";
 const PLAY='<svg viewBox="0 0 24 24"><path d="M7 4l14 8-14 8z"/></svg>',PAUSE='<svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1"/><rect x="14" y="4" width="5" height="16" rx="1"/></svg>';
 function npPoll(){if(!B||!B.nowPlaying||document.hidden||saverOn)return;let o=null;try{o=JSON.parse(B.nowPlaying(npKey));}catch(e){}
   const el=$("np");
-  if(!o||!o.title){if(NP){NP=null;el.classList.remove("on","focus");if(zone==="player"){zone="main";render();}}return;}
+  if(!o||!o.title){NP=null;showCont();return;}
+  if(CONT){CONT=null;el.classList.remove("cont");$("npart").textContent="";$("npart").style.backgroundColor="";}
   if(o.art){$("npart").style.backgroundImage=`url(data:image/jpeg;base64,${o.art})`;npKey=o.key;}else if(o.key!==npKey){$("npart").style.backgroundImage="";npKey=o.key;}
   $("npapp").textContent=o.app||"";$("nptitle").textContent=o.title;$("npsub").textContent=o.sub||"";$("nppp").innerHTML=o.playing?PAUSE:PLAY;
   NP=o;el.classList.add("on");}
 setInterval(npPoll,2000);setTimeout(npPoll,600);
+/* ===== Fortsätt: the last thing that played, when nothing plays now ===== */
+let CONT=null;
+function contItem(){const now=Date.now(),D=3*864e5;let m=null;try{m=JSON.parse(B&&B.lastMedia?B.lastMedia():"null");}catch(e){}
+  const ch=LS.get("lastch",null);if(m&&now-m.t>D)m=null;const c=ch&&now-ch.t<D?ch:null;
+  const tvm=m&&(m.pkg===TELIA_LAUNCHER||/pluto/.test(m.pkg));
+  if(c&&(!m||tvm||c.t>m.t)){const fresh=tvm&&m.t>c.t;return{ch:c.c,app:"Live-tv",title:c.c.n,sub:fresh?m.title:(c.c.d||""),art:fresh?m.art:null,col:c.c.col,key:"ch|"+c.c.n};}
+  if(m&&byPkg(m.pkg))return{pkg:m.pkg,app:m.app||"",title:m.title,sub:m.sub,art:m.art,key:m.pkg+"|"+m.title};return null;}
+function showCont(){const el=$("np"),c=contItem();
+  if(!c){if(CONT||el.classList.contains("on")){CONT=null;el.classList.remove("on","focus","cont");if(zone==="player"){zone="main";render();}}return;}
+  if(!CONT||CONT.key!==c.key){$("npart").style.backgroundImage=c.art?`url(data:image/jpeg;base64,${c.art})`:"";$("npart").style.backgroundColor=c.art?"":(c.col||"#2a2d36");
+    $("npart").textContent=c.art?"":(c.title||"").slice(0,1);npKey="";}
+  CONT=c;$("npapp").textContent="Fortsätt · "+c.app;$("nptitle").textContent=c.title;$("npsub").textContent=c.sub||"";$("nppp").innerHTML=PLAY;
+  el.classList.add("on","cont");}
+function resumeCont(){const c=CONT;if(!c)return;
+  if(c.ch)return playLive(c.ch);
+  if(B&&B.resumeMedia&&B.resumeMedia(c.pkg)){setTimeout(npPoll,500);return;}launch(c.pkg);}
+function forgetCont(){if(B&&B.forgetMedia)B.forgetMedia();LS.set("lastch",null);CONT=null;$("np").classList.remove("on","focus","cont");zone="main";render();toast("Borttaget");}
+function cleanAll(){const r=call("freeMemory");setTimeout(npPoll,700);if(r===null)return toast("Kräver nya appversionen");
+  try{const m=JSON.parse(r);toast("Bakgrundsappar stängda · "+Math.max(0,Math.round(m.after-m.before))+" MB frigjort");}catch(e){toast("Bakgrundsappar stängda");}}
 function npCmd(c){call("mediaCmd",c);setTimeout(npPoll,450);setTimeout(npPoll,1500);}
-function playerKey(k){if(k==="left")return npCmd("prev");if(k==="right")return npCmd("next");if(k==="ok")return npCmd("toggle");
+function playerKey(k){if(!NP&&CONT){if(k==="ok")return resumeCont();if(k==="left")return forgetCont();if(k==="up"){zone="main";return openPanel();}if(k==="down"||k==="back"){zone="main";render();}return;}
+  if(k==="left")return npCmd("prev");if(k==="right")return npCmd("next");if(k==="ok")return npCmd("toggle");
   if(k==="up"){zone="main";return openPanel();}if(k==="down"||k==="back"){zone="main";render();}}
 function mainKey(k){
   if(k==="left")setSel(sel-1);else if(k==="right")setSel(sel+1);
-  else if(k==="up"&&NP){zone="player";render();}
+  else if(k==="up"&&(NP||CONT)){zone="player";render();}
   else if(k==="ok")activate();else if(k==="up")openPanel();else if(k==="down")openGrid();
   else if(k==="back")setSel(ORB.findIndex(o=>o.key==="tv"));
   else if(k==="hold"){const o=ORB[sel];if(o&&o.pkg)toggleFav(o.pkg);}}
@@ -415,7 +440,7 @@ function liveKey(k){const n=LIVE[lt].ch.length;
   else if(k==="ok")return playLive(LIVE[lt].ch[li]);else if(k==="back")return closeLive();
   render();const g=document.querySelectorAll("#lgrid .lc")[li];if(g){const row=Math.floor(li/4),rh=g.offsetHeight+34;
     lOff=-Math.max(0,row-2)*rh;$("lgrid").style.transform=`translateY(${lOff}px)`;}}
-function playLive(c){
+function playLive(c){LS.set("lastch",{c,t:Date.now()});
   if(c.k==="telia"){if(B&&B.openTelia){remember(TELIA_LAUNCHER);leftForApp=true;B.openTelia("Tv"+(c.tg?":"+c.tg:""));}else toast("Tryck HOME för att komma till Telia");return;}
   if(c.k==="pluto"){if(B&&B.openUri){const u="https://pluto.tv/live-tv/"+c.u,cold=Date.now()-LS.get("plutoT",0)>6e5;LS.set("plutoT",Date.now());remember("tv.pluto.android");leftForApp=true;B.openUri(u,"tv.pluto.android");if(cold)setTimeout(()=>{if(leftForApp)B.openUri(u,"tv.pluto.android");},4000);}else toast("Spelas upp på TV:n");return;}
   if(!(B&&B.play)){toast(B?"Kräver nya appversionen: skriv tv uppdatera":"Spelas upp på TV:n");return;}
