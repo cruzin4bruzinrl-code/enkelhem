@@ -102,7 +102,8 @@ body.saving #saver{background:transparent;}
 @keyframes sin{to{opacity:1;transform:none;}}
 .shead{display:flex;align-items:center;gap:30px;margin-top:10px;}
 .wbig{font-size:84px;font-weight:300;letter-spacing:-2px;line-height:1;}
-.wem{font-size:72px;line-height:1;}
+.wem{font-size:72px;line-height:1;display:inline-flex;}.wem .wsv{width:96px;height:104px;}
+.hours i .wsv{width:40px;height:43px;}.days .wsv{width:34px;height:37px;vertical-align:middle;}
 .wdesc{font-size:28px;font-weight:600;}.wdesc small{display:block;font-size:22px;font-weight:500;opacity:.65;margin-top:6px;}
 .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;}
 .sgrid div{background:rgba(22,24,29,.06);border-radius:20px;padding:14px 18px;}
@@ -292,7 +293,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="40.9";
+const VERSION="41.0";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -417,7 +418,17 @@ function openSheet(kind,swap){zone="sheet";shKind=kind;$("home").classList.add("
 function closeSheet(){$("sheet").classList.remove("on");$("home").classList.remove("sheeton");if(shKind==="news"&&nsDirty){nsDirty=false;loadNews(true);}shKind="";zone="w";render();}
 const WTXT={0:"Klart",1:"Mestadels klart",2:"Halvklart",3:"Mulet",45:"Dimma",48:"Rimfrost och dimma",51:"Lätt duggregn",53:"Duggregn",55:"Kraftigt duggregn",56:"Underkylt duggregn",57:"Underkylt duggregn",
   61:"Lätt regn",63:"Regn",65:"Kraftigt regn",66:"Underkylt regn",67:"Underkylt regn",71:"Lätt snöfall",73:"Snöfall",75:"Kraftigt snöfall",77:"Snökorn",80:"Regnskurar",81:"Regnskurar",82:"Kraftiga skurar",85:"Snöbyar",86:"Kraftiga snöbyar",95:"Åska",96:"Åska med hagel",99:"Åska med hagel"};
-const wi=c=>WI[c]||(c>=71&&c<=86?"🌨️":c>=95?"⛈️":c>=51?"🌧️":"🌡️");
+const WSVG=(()=>{const sun='<circle cx="24" cy="24" r="9" fill="#f6a623"/><g stroke="#f6a623" stroke-width="3" stroke-linecap="round"><path d="M24 6v5M24 37v5M6 24h5M37 24h5M11.3 11.3l3.5 3.5M33.2 33.2l3.5 3.5M11.3 36.7l3.5-3.5M33.2 14.8l3.5-3.5"/></g>',
+  cl=(c,x=0,y=0)=>`<path transform="translate(${x} ${y})" d="M14 38h22a8 8 0 0 0 0-16 11 11 0 0 0-21-2 8 8 0 0 0-1 18z" fill="${c}"/>`,
+  sm='<g transform="translate(-6 -6) scale(.75)">'+sun+'</g>',
+  flakes='<g fill="#2f7cf6"><circle cx="17" cy="43" r="2.6"/><circle cx="26" cy="46" r="2.6"/><circle cx="35" cy="43" r="2.6"/></g>',
+  drops='<g stroke="#2f7cf6" stroke-width="3" stroke-linecap="round"><path d="M17 41l-2 5M26 41l-2 5M35 41l-2 5"/></g>',
+  bolt='<path d="M26 36l-6 9h6l-3 8 9-11h-6l3-6z" fill="#f6a623"/>',
+  fog='<g stroke="#7d8796" stroke-width="3.5" stroke-linecap="round"><path d="M8 18h32M5 26h38M10 34h28"/></g>';
+  const w=b=>`<svg viewBox="0 0 48 52" class="wsv">${b}</svg>`;
+  return c=>c===0?w(sun):c<=2?w(sm+cl("#5f6f86",4,4)):c===3?w(cl("#5f6f86",0,-2)):c<=48?w(fog):c>=95?w(cl("#4a5568",0,-6)+bolt):(c>=71&&c<=77)||c===85||c===86?w(cl("#5f6f86",0,-6)+flakes):w(cl("#5f6f86",0,-6)+drops);})();
+const wi=c=>WSVG(c);
+const wiEmoji=c=>WI[c]||(c>=71&&c<=86?"🌨️":c>=95?"⛈️":c>=51?"🌧️":"🌡️");
 async function loadWx(){try{const o=LS.get("ort",null)||{name:"Stockholm",lat:59.33,lon:18.07};
   const d=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${o.lat}&longitude=${o.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&wind_speed_unit=ms&timezone=auto&forecast_days=6`)).json();
   d.ort=o.name||"";wxCache=d;wxAt=Date.now();LS.set("wxc",d);}catch(e){if(!wxCache)wxCache=LS.get("wxc",null);}}
@@ -806,7 +817,8 @@ window.oceanKey=key;
 /* called by the app whenever the window regains focus (also after volume popups etc.):
    only refresh when we actually came back from another app */
 window.oceanShown=function(){checkUpdate();tick();if(!leftForApp)return;leftForApp=false;if(zone==="live"){render();return;}
-  if(saverOn)stopSaver();if(zone!=="main"){["grid","places"].forEach(i=>$(i).classList.remove("open"));$("qp").classList.remove("open");zone="main";}
+  if(saverOn)stopSaver();if(zone==="sheet"||shKind){$("sheet").classList.remove("on");$("home").classList.remove("sheeton");shKind="";}
+  if(zone!=="main"){["grid","places"].forEach(i=>$(i).classList.remove("open"));$("qp").classList.remove("open");zone="main";}
   buildOrbit();render();bumpIdle();};
 addEventListener("keydown",e=>{const m={ArrowRight:"right",ArrowLeft:"left",ArrowUp:"up",ArrowDown:"down",Enter:"ok",Escape:"back",Backspace:"back",h:"hold",
    MediaPlayPause:"playkey",MediaPlay:"playkey",MediaPause:"playkey",p:"playkey",MediaRecord:"rec",ColorF0Red:"rec",r:"rec",
