@@ -80,12 +80,24 @@ body.saving #saver{background:transparent;}
 /* overlays */
 .ov{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s;}
 .ov.open{opacity:1;visibility:visible;transition:opacity .3s ease;}
-#grid{background:rgba(3,5,14,.96);padding:80px 110px;}
+#grid{background:#cfc3c6 center/cover no-repeat;padding:80px 110px;color:#1d1b22;transition:opacity .45s ease,visibility 0s linear .45s;}
+#grid.open{transition:opacity .45s ease;}
+#grid::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.08) 60%,rgba(20,18,26,.18));pointer-events:none;}
+#grid>*{position:relative;}
+#home{transition:opacity .45s ease,transform .5s var(--ease);}
+body.gridon #home{opacity:0;transform:scale(.97);}
+#grid .rc{background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);box-shadow:0 10px 26px rgba(30,24,40,.14);}
+#grid .gw .rc.focus{box-shadow:0 0 0 4px #fff,0 26px 50px rgba(30,24,40,.32);}
+#grid .rc .wm{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.25);}
+.rc.icn{background:#f2f2f4;}
+#grid .rc.icn{background:rgba(250,247,250,.5);}
+#grid .rc.icn .nm{background:none;color:#1d1b22;text-align:center;font-weight:600;}
+#grid .rc.icn img.ico{margin-bottom:26px;box-shadow:0 8px 18px rgba(30,24,40,.18);}
 #grid h2,#places h2{font-size:44px;font-weight:600;}
 .hint{font-size:23px;opacity:.55;margin:10px 0 36px;}
-#grid .gw .rc{opacity:0;transform:translateY(18px);transition:opacity .3s ease,transform .35s var(--ease),box-shadow .3s;}
+#grid .gw .rc{opacity:0;transform:translateY(26px) scale(.96);transition:opacity .35s ease,transform .5s var(--ease),box-shadow .3s;}
 #grid h2,#grid .hint{transform:translateY(-24px);opacity:0;transition:opacity .45s ease .1s,transform .6s var(--ease) .1s;}
-#grid.open h2{transform:none;opacity:1;}#grid.open .hint{transform:none;opacity:.55;}
+#grid.open h2{transform:none;opacity:1;}#grid.open .hint{transform:none;opacity:.7;}
 #grid .gw .rc.lit{opacity:1;transform:none;}
 #grid .gw .rc.lit.focus{transform:scale(1.06);}
 .lhead{display:flex;align-items:center;gap:60px;margin-bottom:46px;}
@@ -180,7 +192,7 @@ body.saving #saver{background:transparent;}
 
 <script>
 "use strict";
-const VERSION="40.2";
+const VERSION="40.3";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -214,7 +226,7 @@ function ago(t){const m=Math.round((Date.now()-t)/6e4);if(m<1)return "nyss";if(m
 
 function card(a,num){const c=document.createElement("div");c.className="rc f";c.dataset.pkg=a.pkg;
   if(a.banner)c.innerHTML=`<img class="ban" src="data:image/png;base64,${a.banner}">`;
-  else if(a.icon){c.style.background="#f2f2f4";c.innerHTML=`<img class="ico" src="data:image/png;base64,${a.icon}"><div class="nm">${a.label}</div>`;}
+  else if(a.icon){c.classList.add("icn");c.innerHTML=`<img class="ico" src="data:image/png;base64,${a.icon}"><div class="nm">${a.label}</div>`;}
   else{c.style.background=COL[a.label]||"#2a2c31";c.innerHTML=`<span class="wm">${a.label}</span>`;}
   if(num)c.insertAdjacentHTML("beforeend",`<div class="num">${num}</div>`);
   return c;}
@@ -337,7 +349,9 @@ function mainKey(k){
 /* background photo: bundled with the app (works offline), else from GitHub */
 function setBg(){const local="file:///android_asset/bg.jpg",remote="https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/bg.jpg";
   const im=new Image();im.onload=()=>{$("bg").style.backgroundImage=`url("${im.src}")`;};
-  im.onerror=()=>{if(im.src!==remote)im.src=remote;};im.src=B?local:remote;}
+  im.onerror=()=>{if(im.src!==remote)im.src=remote;};im.src=B?local:remote;
+  const bl=new Image();bl.onload=()=>{$("grid").style.backgroundImage=`url("${bl.src}")`;};
+  bl.onerror=()=>{if(bl.src.indexOf("raw.")<0)bl.src=remote.replace("bg.jpg","bgblur.jpg");};bl.src=(B?local:remote).replace("bg.jpg","bgblur.jpg");}
 
 /* the native solar system behind the page is only used by the screensaver */
 const NATIVE_EARTH=!!(B&&B.earth);
@@ -412,9 +426,9 @@ function sortedApps(){const f=getFav().filter(Boolean);return [...f.map(byPkg).f
 function fillGrid(){const w=$("gw"),wasOpen=$("grid").classList.contains("open");w.innerHTML="";const f=getFav();
   sortedApps().forEach(a=>{const i=f.indexOf(a.pkg);const c=card(a,i>=0?i+1:0);if(wasOpen)c.classList.add("lit");w.appendChild(c);});}
 let gOff=0;
-function openGrid(){fillGrid();gi=0;gOff=0;zone="grid";$("gw").style.transform="";$("grid").classList.add("open");render();
+function openGrid(){fillGrid();gi=0;gOff=0;zone="grid";$("gw").style.transform="";$("grid").classList.add("open");document.body.classList.add("gridon");render();
   requestAnimationFrame(()=>requestAnimationFrame(gridIn));}
-function closeGrid(){gridOut();zone="main";setTimeout(()=>{$("grid").classList.remove("open");setTimeout(()=>{if(zone!=="grid")$("gw").innerHTML="";},400);},120);render();}
+function closeGrid(){gridOut();zone="main";document.body.classList.remove("gridon");setTimeout(()=>{$("grid").classList.remove("open");setTimeout(()=>{if(zone!=="grid")$("gw").innerHTML="";},400);},120);render();}
 function gridIn(){const cards=[...document.querySelectorAll("#gw .rc")];cards.forEach((c,i)=>{c.style.transitionDelay=Math.min(i,18)*18+"ms";c.classList.add("lit");});}
 function gridOut(){document.querySelectorAll("#gw .rc.lit").forEach(c=>{c.style.transitionDelay="0ms";c.classList.remove("lit");});return 0;}
 function gridKey(k){const N=APPS.length,list=sortedApps();
