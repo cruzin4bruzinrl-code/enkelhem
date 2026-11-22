@@ -33,6 +33,7 @@ public class Guard extends android.app.IActivityController.Stub {
         if (set == null) { System.out.println("fel: setActivityController saknas"); return; }
         set.invoke(am, g, false);
         g.watchHem();
+        g.watchStop(am);
         Log.d(TAG, "vakten är igång");
         System.out.println("vakten är igång");
         Looper.loop();
@@ -54,6 +55,35 @@ public class Guard extends android.app.IActivityController.Stub {
                     Runtime.getRuntime().exec(new String[]{"settings", "put", "global", "hem_guard", String.valueOf(System.currentTimeMillis())}).waitFor();
                 } catch (Throwable ignored) {}
                 try { Thread.sleep(30000); } catch (InterruptedException ignored) {}
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /** Hem asks (setting hem_stop = "pkg,pkg@time") to force-stop apps that keep playing sound behind it. Hem itself may not. */
+    private void watchStop(final Object am) {
+        Thread t = new Thread(() -> {
+            String done = "";
+            Method fs = null;
+            for (Method m : am.getClass().getMethods())
+                if (m.getName().equals("forceStopPackage") && m.getParameterTypes().length == 2) fs = m;
+            while (true) {
+                try {
+                    Process p = Runtime.getRuntime().exec(new String[]{"settings", "get", "global", "hem_stop"});
+                    String v = new BufferedReader(new InputStreamReader(p.getInputStream())).readLine();
+                    p.waitFor();
+                    if (v != null && v.contains("@") && !v.equals(done)) {
+                        done = v;
+                        for (String pk : v.substring(0, v.indexOf('@')).split(",")) {
+                            if (pk.isEmpty() || pk.equals("se.cruzi.tvhem")) continue;
+                            if (fs != null) fs.invoke(am, pk, 0);
+                            else Runtime.getRuntime().exec(new String[]{"am", "force-stop", pk}).waitFor();
+                            Log.d(TAG, "tvingade stopp av " + pk);
+                        }
+                    }
+                } catch (Throwable e) { Log.d(TAG, "stopp fel " + e); }
+                try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
             }
         });
         t.setDaemon(true);

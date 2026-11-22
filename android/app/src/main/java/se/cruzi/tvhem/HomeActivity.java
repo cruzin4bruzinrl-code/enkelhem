@@ -282,6 +282,7 @@ public class HomeActivity extends Activity {
                 int k = st == null ? 0 : st.getState();
                 boolean active = k == android.media.session.PlaybackState.STATE_PLAYING || k == android.media.session.PlaybackState.STATE_BUFFERING;
                 if (active || done.isEmpty()) snapshot(mc);
+                if (!active && pk.equals(HomeKeyService.TELIA) && !HomeKeyService.teliaAllowed) { try { mc.getTransportControls().stop(); } catch (Exception ignored) {} }
                 if (!active || (!all && isMusic(this, pk))) continue;
                 mc.getTransportControls().pause();
                 done.add(pk);
@@ -291,7 +292,15 @@ public class HomeActivity extends Activity {
         return done;
     }
 
-    private long lastSilence;
+    /** Ask the guard (runs as the shell, may force-stop) to stop these apps for real. */
+    void requestStop(java.util.Collection<String> pkgs) {
+        if (pkgs.isEmpty()) return;
+        try { Settings.Global.putString(getContentResolver(), "hem_stop", android.text.TextUtils.join(",", pkgs) + "@" + System.currentTimeMillis()); }
+        catch (Exception ignored) {}
+        android.util.Log.d("HemTv", "ber vakten stoppa " + pkgs);
+    }
+
+    private long lastSilence, lastHardStop;
     /** Called every couple of seconds while Hem is on screen: tv/video sound behind it is stopped. */
     void silenceBehind() {
         long now = android.os.SystemClock.uptimeMillis();
@@ -308,6 +317,15 @@ public class HomeActivity extends Activity {
         } catch (Exception ignored) {}
         boolean sound = ((android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE)).isMusicActive();
         if (p.isEmpty() && (!sound || musicOn)) return;
+        if (p.isEmpty()) {
+            if (now - lastHardStop < 20000) return;
+            lastHardStop = now;
+            java.util.List<String> stop = new java.util.ArrayList<>();
+            stop.add(HomeKeyService.TELIA); stop.add("com.teliacompany.tv.teletext");
+            for (ApplicationInfo ai : getPackageManager().getInstalledApplications(0))
+                if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) == 0 && !ai.packageName.equals(getPackageName()) && !isMusic(this, ai.packageName)) stop.add(ai.packageName);
+            requestStop(stop);
+        } else requestStop(p);
         // sound without a controllable player: close tv and video apps (not music)
         new Thread(() -> {
             try {
@@ -356,6 +374,7 @@ public class HomeActivity extends Activity {
                     Thread.sleep(800);
                     if (last.equals(HomeKeyService.TELIA) && HomeKeyService.teliaAllowed) return;
                     ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE)).killBackgroundProcesses(last);
+                    if (!isMusic(this, last)) requestStop(java.util.Collections.singletonList(last));
                     android.util.Log.d("HemTv", "stängde " + last);
                 } catch (Exception ignored) {}
             }).start();
