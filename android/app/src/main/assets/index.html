@@ -86,6 +86,9 @@ body.saving #saver{background:transparent;}
 @keyframes nfade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .nl{height:560px;overflow:hidden;margin-top:14px;}.nl>div{transition:transform .3s var(--ease);}
 .nr{display:flex;gap:16px;align-items:center;padding:10px 12px;border-radius:18px;transition:background .2s;}
+#mw.focus,#cw.focus,#nw.focus,#np.focus{background:rgba(255,255,255,.94)!important;box-shadow:0 0 0 5px #fff,0 0 0 10px #4b6bff,0 30px 60px rgba(20,20,40,.35)!important;}
+.ti.focus{background:#16181d!important;color:#fff!important;box-shadow:0 0 0 4px #fff,0 14px 30px rgba(20,20,40,.35)!important;}
+.ti.focus svg{stroke:#fff;}.ti.focus *{color:#fff;}
 .nr.sel{background:#16181d;color:#fff;box-shadow:0 10px 24px rgba(20,20,30,.3);transform:scale(1.02);}
 .nr{transition:background .18s,transform .25s var(--ease),color .18s;}
 .nr.sel .ck{border-color:rgba(255,255,255,.8);}.nr.sel .ck.on{border-color:#6d88ff;}
@@ -289,7 +292,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="40.8";
+const VERSION="40.9";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
