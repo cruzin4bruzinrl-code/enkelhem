@@ -86,7 +86,9 @@ body.saving #saver{background:transparent;}
 @keyframes nfade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .nl{height:560px;overflow:hidden;margin-top:14px;}.nl>div{transition:transform .3s var(--ease);}
 .nr{display:flex;gap:16px;align-items:center;padding:10px 12px;border-radius:18px;transition:background .2s;}
-.nr.sel{background:rgba(22,24,29,.09);}
+.nr.sel{background:#16181d;color:#fff;box-shadow:0 10px 24px rgba(20,20,30,.3);transform:scale(1.02);}
+.nr{transition:background .18s,transform .25s var(--ease),color .18s;}
+.nr.sel .ck{border-color:rgba(255,255,255,.8);}.nr.sel .ck.on{border-color:#6d88ff;}
 .nr i{width:120px;height:68px;border-radius:12px;background:#d5cfd8 center/cover;flex:0 0 auto;}
 .nr b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:23px;line-height:1.22;}
 .nr small{display:block;font-size:17px;opacity:.55;font-weight:600;margin-top:3px;}
@@ -287,7 +289,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="40.7";
+const VERSION="40.8";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
