@@ -14,12 +14,13 @@ public class SaverActivity extends Activity {
     private EarthView v;
     private final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
     private final Runnable music = () -> { if (Ambient.tuneOf(this) == Ambient.YT) startYt(); else Ambient.start(this); };
+    private boolean ytFirst() { return Ambient.tuneOf(this) == Ambient.YT; }
     private android.webkit.WebView yt;
     static final String YT_ID = "wJNtFKCorzQ"; // "Relaxing Music with Nature Sounds – Spa Massage Music" (Beautiful Melodies), live
     private static final int[] YT_VOL = {0, 12, 22, 35, 50, 70};
 
-    /* The stream is played with YouTube's own embedded player, shown as a small card in the corner (YouTube's rules
-       do not allow a hidden player). If it cannot play (no internet, embedding blocked) the music box plays instead. */
+    /* The stream fills the whole screen as the screensaver, played with YouTube's own embedded player.
+       The particles show until the video starts; if it cannot play (no internet, embedding blocked) they stay, with the music box. */
     @android.annotation.SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     private void startYt() {
         if (yt != null) return;
@@ -35,7 +36,7 @@ public class SaverActivity extends Activity {
         }, "Hem");
         int vol = YT_VOL[Ambient.volOf(this)];
         String html = "<!doctype html><html><head><meta name=viewport content='width=device-width'><style>html,body{margin:0;background:transparent;overflow:hidden}"
-            + "#w{position:fixed;inset:0;border-radius:22px;overflow:hidden;opacity:.0;transition:opacity 2s}#w.on{opacity:.9}</style></head><body><div id=w><div id=p></div></div>"
+            + "#w{position:fixed;inset:0;overflow:hidden;opacity:0;transition:opacity 2.5s}#w.on{opacity:1}#w iframe{pointer-events:none}</style></head><body><div id=w><div id=p></div></div>"
             + "<script>var t=setTimeout(function(){Hem.fail('timeout')},25000);"
             + "function onYouTubeIframeAPIReady(){new YT.Player('p',{width:'100%',height:'100%',videoId:'" + YT_ID + "',"
             + "playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,modestbranding:1,playsinline:1,rel:0},"
@@ -43,10 +44,8 @@ public class SaverActivity extends Activity {
             + "onStateChange:function(e){if(e.data===1){clearTimeout(t);document.getElementById('w').className='on';}},"
             + "onError:function(e){Hem.fail('error '+e.data)}}});}"
             + "</script><script src='https://www.youtube.com/iframe_api' onerror=\"Hem.fail('no internet')\"></script></body></html>";
-        float d = getResources().getDisplayMetrics().density;
-        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams((int) (384 * d), (int) (216 * d), android.view.Gravity.BOTTOM | android.view.Gravity.END);
-        lp.setMargins(0, 0, (int) (40 * d), (int) (40 * d));
-        ((android.widget.FrameLayout) findViewById(android.R.id.content)).addView(yt, lp);
+        ((android.widget.FrameLayout) findViewById(android.R.id.content)).addView(yt,
+            new android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
         yt.loadDataWithBaseURL("https://cruzin4bruzinrl-code.github.io/", html, "text/html", "utf-8", null);
     }
 
@@ -63,7 +62,7 @@ public class SaverActivity extends Activity {
         super.onResume();
         showing = true;
         v.onResume(); v.setShown(true); v.setSaver(true);
-        h.postDelayed(music, 1500);
+        h.postDelayed(music, ytFirst() ? 100 : 1500);
     }
 
     @Override protected void onPause() {

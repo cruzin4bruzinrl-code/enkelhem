@@ -370,7 +370,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="42.6";
+const VERSION="42.7";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -906,7 +906,7 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["fps","FPS-mätare",(fps?"På":"Av")+" · boxen mätte "+LS.get("measuredFps","?")+" FPS",()=>{toggleFps();fillPanel();}],
    ["set","Inställningar","Boxens inställningar",()=>call("action","settings")]];}
 let QI=[],pMode="main";
-const SIZES=[[.9,"Mindre"],[1,"Normal"],[1.1,"Större"]],TUNES=["Speldosa","Lugna ackord","Havsvågor","Mjukt regn","Harpa","Vindspel","Mjukt piano","Spa-musik från YouTube (live)","Ingen musik"];
+const SIZES=[[.9,"Mindre"],[1,"Normal"],[1.1,"Större"]],TUNES=["Speldosa","Lugna ackord","Havsvågor","Mjukt regn","Harpa","Vindspel","Mjukt piano","Spa-video från YouTube i helskärm","Ingen musik"];
 function sizeOf(k){const v=LS.get(k,1);return SIZES.find(x=>x[0]===v)||SIZES[1];}
 function cycleSize(k){const i=SIZES.indexOf(sizeOf(k)),n=SIZES[(i+1)%SIZES.length];LS.set(k,n[0]);applySizes();fillPanel();}
 /* sizes: the dock first, then the home screen shrinks a little by itself if the widgets would reach down into the dock */
@@ -929,7 +929,7 @@ function custItems(){const t=tuneIx(),v=volIx();return [
    ["img","Tydligt läge",(seeOn()?"På":"Av")+" · större, svart text och namn under ikonerna",()=>{LS.set("see",!seeOn());applySee();applySizes();fillPanel();}],
    ["sun","Kvällsljus",(todOn()?"På · bakgrunden blir varmare och mörkare på kvällen":"Av · samma ljusa bakgrund hela dagen"),()=>{LS.set("tod",!todOn());tick();fillPanel();}],
    ["sun","Skärmsläckaren startar",saverTxt(),cycleSaver],
-   ["sun","Musik i skärmsläckaren",tuneName(t)+(newMusic()?" · OK byter och spelar en bit":" · fler val efter ny app: kör tvapp"),()=>{const L=tuneList(),n=(t+1)%L.length;call("saverTune",n);if(L[n].includes("YouTube"))toast("Spelas från YouTube när skärmsläckaren visas – en liten bild syns i hörnet");else if(n<L.length-1)call("previewMusic");fillPanel();}],
+   ["sun","Musik i skärmsläckaren",tuneName(t)+(newMusic()?" · OK byter och spelar en bit":" · fler val efter ny app: kör tvapp"),()=>{const L=tuneList(),n=(t+1)%L.length;call("saverTune",n);if(L[n].includes("YouTube"))toast("Skärmsläckaren visar spa-videon från YouTube i helskärm");else if(n<L.length-1)call("previewMusic");fillPanel();}],
    ["sun","Musikens volym","●".repeat(v)+"○".repeat(5-v)+" · OK ändrar och spelar en bit",()=>{const n=v%5+1;call("saverVol",n);call("previewMusic");fillPanel();}],
    ["sun","Visa skärmsläckaren nu","Partiklar och musik · Hem "+VERSION,()=>{closePanel();setTimeout(()=>{if(B&&B.showSaver)B.showSaver();else startSaver();},400);}]];}
 let bi=0;
