@@ -66,6 +66,9 @@ body.saving #saver{background:transparent;}
 #home.sheeton #np,#home.sheeton #nw{opacity:0;}
 #home.sheeton #dock,#home.sheeton #dlabel{opacity:.25;transition:opacity .3s;}
 #sheet{z-index:6;}
+/* frosted glass: each widget shows the blurred photo exactly behind it (set by frost()), cheap on the box unlike backdrop-filter */
+#mw,#cw,#nw,#dock{background-image:linear-gradient(rgba(250,247,250,.26),rgba(250,247,250,.26)),var(--bgf,none);background-size:100% 100%,1920px 1080px;background-repeat:no-repeat;}
+#mw.focus,#cw.focus,#nw.focus{background-image:linear-gradient(rgba(255,255,255,.7),rgba(255,255,255,.7)),var(--bgf,none);}
 .wg{background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.18);border-radius:34px;}
 #cw{position:absolute;left:96px;top:446px;width:600px;display:none;align-items:center;gap:24px;padding:18px;border-radius:30px;
   background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.18);transition:transform .35s var(--ease),background .25s,opacity .3s;}
@@ -197,7 +200,10 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 #grid h2,#grid .hint{transform:translateY(-24px);opacity:0;transition:opacity .45s ease .1s,transform .6s var(--ease) .1s;}
 #grid.open h2{transform:none;opacity:1;}#grid.open .hint{transform:none;opacity:.7;}
 #grid .gw .rc.lit{opacity:1;transform:none;}
-#grid .gw .rc.lit.focus{transform:scale(1.06);}
+#grid .gw .rc.lit.focus{transform:scale(1.1);z-index:2;}
+/* strong focus in the drawer: white gap + blue ring + deep shadow, so it never melts into the pale photo */
+#grid .gw .rc.focus{box-shadow:0 0 0 5px #fff,0 0 0 11px #2f6bff,0 30px 60px rgba(20,20,45,.5);}
+#grid .gw .rc.icn.focus{background:rgba(255,255,255,.96);}
 .lhead{display:flex;align-items:center;gap:60px;margin-bottom:46px;}
 #live{background:#03050d;padding:80px 110px;}
 #live h2{font-size:44px;font-weight:600;}
@@ -220,8 +226,8 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 .gw{display:grid;grid-template-columns:repeat(6,1fr);gap:38px 30px;transition:transform .45s var(--ease);}
 .gw .rc{width:auto;height:auto;aspect-ratio:16/10;}
 #places{background:rgba(3,5,14,.96);padding:80px 110px;}
-.pl{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:36px;}
-.pl div{font-size:27px;padding:20px 24px;border-radius:18px;background:rgba(255,255,255,.07);transition:transform .3s var(--ease),background .2s;}
+.pl{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:30px;}
+.pl div{font-size:26px;padding:18px 20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:18px;background:rgba(255,255,255,.07);transition:transform .3s var(--ease),background .2s;}
 .pl div.focus{background:#fff;color:#111;transform:scale(1.05);}
 
 /* quick panel */
@@ -298,7 +304,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="41.2";
+const VERSION="41.3";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -365,7 +371,7 @@ function act(a,el){
 
 /* ===== focus ===== */
 let zone="main",gi=0,qi=0,pi=0;
-function render(){noScroll();document.querySelectorAll(".focus").forEach(e=>e.classList.remove("focus"));
+function render(){noScroll();setTimeout(frost,520);document.querySelectorAll(".focus").forEach(e=>e.classList.remove("focus"));
   if(zone==="grid"){const g=document.querySelectorAll("#gw .rc");if(g[gi]){g[gi].classList.add("focus");}return;}
   if(zone==="panel"){const q=document.querySelectorAll(".qi");if(q[qi]){q[qi].classList.add("focus");
     const it=q[qi],vh=860,top=it.offsetTop,bot=top+it.offsetHeight,max=Math.max(0,$("qlist").scrollHeight-vh);
@@ -375,7 +381,7 @@ function render(){noScroll();document.querySelectorAll(".focus").forEach(e=>e.cl
   if((zone==="w"||zone==="sheet")&&$(wid))$(wid).classList.add("focus");
   if(zone==="main")showSel();}
 function toMain(){if(zone==="sheet")closeSheet();if(zone==="w"){zone="main";render();return;}if(zone==="grid")closeGrid();else if(zone==="live")closeLive();else if(zone==="panel")closePanel();
-  else if(zone==="places"){$("places").classList.remove("open");zone="main";render();}}
+  else if(zone==="places"){$("places").classList.remove("open");if(placesFrom==="sheet"){$("sheet").classList.remove("on");$("home").classList.remove("sheeton");shKind="";}zone="main";render();}}
 function key(k){
   bumpIdle();
   if(saverOn){stopSaver();return;}
@@ -411,6 +417,7 @@ function wKey(k){
   if(["up","down","left","right"].includes(k)){const n=wFind(k,$(wid).getBoundingClientRect());if(n){wid=n;return render();}if(k==="down"){zone="main";render();}}}
 function wFrom(){zone="w";render();}
 function sheetKey(k){if(shKind==="news")return newsKey(k);
+  if(shKind==="wx"&&k==="ok"){placesFrom="sheet";return openPlaces();}
   if(k==="left"&&wid==="tiwifi"){wid="tiwx";openSheet("wx",true);return;}if(k==="right"&&wid==="tiwx"){wid="tiwifi";openSheet("wifi",true);return;}
   if(k==="back"||k==="ok"||k==="down"||k==="up")closeSheet();}
 let wxCache=null,wxAt=0;
@@ -438,7 +445,7 @@ async function loadWx(){try{const o=LS.get("ort",null)||{name:"Stockholm",lat:59
   const d=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${o.lat}&longitude=${o.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&wind_speed_unit=ms&timezone=auto&forecast_days=6`)).json();
   d.ort=o.name||"";wxCache=d;wxAt=Date.now();LS.set("wxc",d);}catch(e){if(!wxCache)wxCache=LS.get("wxc",null);}}
 function wxHtml(){const d=wxCache||LS.get("wxc",null);let n=0;const st=()=>`style="animation-delay:${(n++)*45}ms"`;
-  if(!d||!d.current)return `<div class="sk si" ${st()}>Väder</div><div class="wdesc si" ${st()}>Hämtar väder…</div>`;
+  if(!d||!d.current)return `<div class="sk si" ${st()}>Väder</div><div class="wdesc si" ${st()}>Hämtar väder…</div><div class="shint">OK byter ort · Bakåt stänger</div>`;
   const c=d.current,dl=d.daily,h=d.hourly,r=Math.round;let i0=h.time.findIndex(t=>t>=c.time.slice(0,13));if(i0<0)i0=0;
   const hrs=[];for(let k=1;k<=8;k++){const i=i0+k*2;if(h.time[i])hrs.push(`<div><span>${h.time[i].slice(11,13)}</span><i>${wi(h.weather_code[i])}</i><b>${r(h.temperature_2m[i])}°</b></div>`);}
   const lo=Math.min(...dl.temperature_2m_min.slice(0,5)),hi=Math.max(...dl.temperature_2m_max.slice(0,5)),sp=Math.max(1,hi-lo);
@@ -449,7 +456,7 @@ function wxHtml(){const d=wxCache||LS.get("wxc",null);let n=0;const st=()=>`styl
   <div class="wdesc">${WTXT[c.weather_code]||""}<small>Känns som ${r(c.apparent_temperature)}° · ${r(dl.temperature_2m_min[0])}° / ${r(dl.temperature_2m_max[0])}°</small></div></div>
   <div class="sgrid si" ${st()}><div><span>Vind</span><b>${r(c.wind_speed_10m)} m/s</b></div><div><span>Luftfuktighet</span><b>${r(c.relative_humidity_2m)} %</b></div>
   <div><span>Sol</span><b>${dl.sunrise[0].slice(11,16)} – ${dl.sunset[0].slice(11,16)}</b></div></div>
-  <div class="hours si" ${st()}>${hrs.join("")}</div><div class="days">${days}</div>`;}
+  <div class="hours si" ${st()}>${hrs.join("")}</div><div class="days">${days}</div><div class="shint">OK byter ort · Bakåt stänger</div>`;}
 let pingMs=null;
 function wifiHtml(){let w=null;try{w=JSON.parse(call("wifiInfo")||call("network")||"null");}catch(e){}let n=0;const st=()=>`style="animation-delay:${(n++)*50}ms"`;
   if(!w||w.type==="none")return `<div class="sk si" ${st()}>Nätverk</div><div class="shead si" ${st()}><div class="wdesc">Inte ansluten<small>Gå till Inställningar för att välja nätverk</small></div></div>`;
@@ -622,7 +629,12 @@ function setBg(){const local="file:///android_asset/bg.jpg",remote="https://raw.
   const im=new Image();im.onload=()=>{$("bg").style.backgroundImage=`url("${im.src}")`;};
   im.onerror=()=>{if(im.src!==remote)im.src=remote;};im.src=B?local:remote;
   const bl=new Image();bl.onload=()=>{$("grid").style.backgroundImage=`url("${bl.src}")`;};
-  bl.onerror=()=>{if(bl.src.indexOf("raw.")<0)bl.src=remote.replace("bg.jpg","bgblur.jpg");};bl.src=(B?local:remote).replace("bg.jpg","bgblur.jpg");}
+  bl.onerror=()=>{if(bl.src.indexOf("raw.")<0)bl.src=remote.replace("bg.jpg","bgblur.jpg");};bl.src=(B?local:remote).replace("bg.jpg","bgblur.jpg");
+  const fr=new Image();fr.onload=()=>{document.documentElement.style.setProperty("--bgf",`url("${fr.src}")`);frost();};
+  fr.onerror=()=>{if(fr.src.indexOf("raw.")<0)fr.src=remote.replace("bg.jpg","bgfrost.jpg");};fr.src=(B?local:remote).replace("bg.jpg","bgfrost.jpg");}
+function frost(){["mw","cw","nw","dock"].forEach(id=>{const e=$(id);if(!e||!e.offsetWidth)return;
+  const x=id==="dock"?e.offsetLeft-e.offsetWidth/2:e.offsetLeft;e.style.backgroundPosition=`0 0,${-x}px ${-e.offsetTop}px`;});}
+setInterval(frost,4000);
 
 /* the native solar system behind the page is only used by the screensaver */
 const NATIVE_EARTH=!!(B&&B.earth);
@@ -748,7 +760,7 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["cast","Spegla telefonen",'Casta till "'+devName()+'"',()=>toast('Öppna Smart View eller Casta på telefonen och välj "'+devName()+'"')],
    ["mem","Frigör minne",memText(),freeMem],
    ["net","Nätverk",netText(),()=>call("action",NEWAPP?"wifi":"settings")],
-   ["sun","Väderort",ort,openPlaces],
+   ["sun","Väderort",ort,()=>{placesFrom="panel";openPlaces();}],
    ["cast","Plattan som fjärrkontroll",remoteLabel(),()=>toast("Öppna adressen i plattans webbläsare och skriv koden")],
    ["sun","Insomningstimer",sleepText(),cycleSleep],
    ["sun","Skärmsläckare","Partiklar · startar efter 10 min, OK visar den nu",()=>{closePanel();setTimeout(startSaver,400);}],
@@ -769,19 +781,30 @@ function freeMem(){const r=call("freeMemory");if(r===null){toast("Kräver nästa
   try{const m=JSON.parse(r);const d=Math.max(0,Math.round(m.after-m.before));toast("Frigjorde "+d+" MB · "+(m.after/1024).toFixed(1)+" GB ledigt");}catch(e){}fillPanel();}
 
 /* ===== weather place picker ===== */
-const PLACES=[["Stockholm",59.33,18.07],["Göteborg",57.71,11.97],["Malmö",55.6,13],["Uppsala",59.86,17.64],["Västerås",59.61,16.55],
+let placesFrom="panel";
+const PLACES=[["Min plats",0,0],["Luleå",65.58,22.15],["Piteå",65.32,21.48],["Boden",65.83,21.69],["Kalix",65.85,23.16],["Haparanda",65.84,24.14],
+ ["Älvsbyn",65.68,21.0],["Kiruna",67.86,20.23],["Gällivare",67.13,20.66],["Jokkmokk",66.61,19.82],["Arvidsjaur",65.59,19.17],["Överkalix",66.33,22.84],
+ ["Pajala",67.21,23.37],["Skellefteå",64.75,20.95],["Stockholm",59.33,18.07],["Göteborg",57.71,11.97],["Malmö",55.6,13],["Uppsala",59.86,17.64],["Västerås",59.61,16.55],
  ["Örebro",59.27,15.21],["Linköping",58.41,15.62],["Norrköping",58.59,16.19],["Helsingborg",56.05,12.69],["Jönköping",57.78,14.16],
  ["Lund",55.7,13.19],["Umeå",63.83,20.26],["Gävle",60.67,17.14],["Borås",57.72,12.94],["Södertälje",59.2,17.63],["Eskilstuna",59.37,16.51],
- ["Halmstad",56.67,12.86],["Växjö",56.88,14.81],["Karlstad",59.38,13.5],["Sundsvall",62.39,17.31],["Luleå",65.58,22.15],
- ["Östersund",63.18,14.64],["Kalmar",56.66,16.36],["Kristianstad",56.03,14.16],["Falun",60.61,15.63]];
+ ["Halmstad",56.67,12.86],["Växjö",56.88,14.81],["Karlstad",59.38,13.5],["Sundsvall",62.39,17.31],
+ ["Östersund",63.18,14.64],["Kalmar",56.66,16.36],["Kristianstad",56.03,14.16],["Falun",60.61,15.63],["Örnsköldsvik",63.29,18.72],["Visby",57.64,18.3]];
 function openPlaces(){$("pl").innerHTML=PLACES.map(p=>`<div>${p[0]}</div>`).join("");const cur=(LS.get("ort",null)||{}).name;
   pi=Math.max(0,PLACES.findIndex(p=>p[0]===cur));zone="places";$("places").classList.add("open");render();}
 function placeKey(k){const N=PLACES.length;
   if(k==="right")pi=Math.min(N-1,pi+1);else if(k==="left")pi=Math.max(0,pi-1);
-  else if(k==="down")pi=Math.min(N-1,pi+5);else if(k==="up")pi=Math.max(0,pi-5);
-  else if(k==="ok"){const[n,la,lo]=PLACES[pi];LS.set("ort",{name:n,lat:la,lon:lo});weather();toast("Vädret visar nu "+n);}
-  if(k==="ok"||k==="back"){$("places").classList.remove("open");zone="panel";fillPanel();return;}
+  else if(k==="down")pi=Math.min(N-1,pi+6);else if(k==="up")pi=Math.max(0,pi-6);
+  else if(k==="ok"){if(pi===0)return myPlace();const[n,la,lo]=PLACES[pi];setPlace(n,la,lo);}
+  if(k==="ok"||k==="back")return placesDone();
   render();}
+function setPlace(n,la,lo){LS.set("ort",{name:n,lat:la,lon:lo});wxAt=0;weather();toast("Vädret visar nu "+n);}
+function placesDone(){$("places").classList.remove("open");
+  if(placesFrom==="sheet"){zone="sheet";loadWx().then(()=>{if(zone==="sheet"&&shKind==="wx")$("shc").innerHTML=wxHtml();});render();}
+  else{zone="panel";fillPanel();}}
+/* "Min plats": town from the internet connection's address (no GPS, nothing stored outside the box) */
+async function myPlace(){toast("Letar upp orten…");try{const j=await(await fetch("https://ipapi.co/json/")).json();
+  if(j&&j.latitude){setPlace(j.city||"Min plats",j.latitude,j.longitude);}else throw 0;}catch(e){toast("Hittade inte orten – välj en i listan");return;}
+  placesDone();}
 
 /* ===== toast ===== */
 let tT=0;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("on"),m.length>60?9000:3200);}
