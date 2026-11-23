@@ -56,6 +56,17 @@ import java.util.Map;
 
 @SuppressLint({"MissingPermission", "SetJavaScriptEnabled"})
 public class HomeActivity extends Activity {
+    private static HomeActivity self;
+
+    /** Run JavaScript in the home screen (from the tablet remote). */
+    static void runJs(String js) {
+        HomeActivity a = self;
+        if (a == null) return;
+        a.ui.post(() -> { if (a.web != null) a.web.evaluateJavascript(js, null); });
+    }
+
+    static void jsKey(String k) { runJs("window.oceanKey&&oceanKey('" + k + "')"); }
+
 
     static final String DEFAULT_URL = "https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/index.html";
     private WebView web;
@@ -68,6 +79,7 @@ public class HomeActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle b) {
+        self = this;
         super.onCreate(b);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         prefs = getSharedPreferences("hem", MODE_PRIVATE);
@@ -793,6 +805,22 @@ public class HomeActivity extends Activity {
             ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
             am.getMemoryInfo(mi);
             return new long[]{mi.availMem / 1048576, mi.totalMem / 1048576};
+        }
+
+        /** Address and code for the tablet remote, and the sleep timer. */
+        @JavascriptInterface
+        public String remoteInfo() {
+            try {
+                Remote r = Remote.get();
+                return new JSONObject().put("url", Remote.address(HomeActivity.this)).put("code", Remote.code(HomeActivity.this))
+                    .put("sleepAt", r == null ? 0 : r.sleepAt()).put("on", r != null).toString();
+            } catch (Exception e) { return "null"; }
+        }
+
+        @JavascriptInterface
+        public void sleepIn(int min) {
+            Remote r = Remote.get();
+            if (r != null) ui.post(() -> r.sleepIn(min));
         }
 
         /** Picture of the last video watched (taken by HomeKeyService), base64 JPEG, with its app. */

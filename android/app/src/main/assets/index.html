@@ -14,7 +14,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#010208;color:#fff;c
 
 /* home: a still Nordic photo, a clock and one dock – nothing moves unless you press a key */
 #bg{position:absolute;inset:0;background:#cfc3c6 center/cover no-repeat;transition:opacity 1.2s ease;}
-#bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 35%,rgba(20,18,26,0) 62%,rgba(20,18,26,.28) 100%);}
+#bg::before{content:"";position:absolute;inset:0;transition:background 4s ease;z-index:1;}
+body.tod-dawn #bg::before{background:linear-gradient(180deg,rgba(255,168,120,.30),rgba(255,205,170,.10) 55%,rgba(255,190,160,.06));}
+body.tod-day #bg::before{background:linear-gradient(180deg,rgba(185,215,255,.22),rgba(255,255,255,.06) 60%,transparent);}
+body.tod-eve #bg::before{background:linear-gradient(180deg,rgba(255,136,96,.30),rgba(190,96,150,.18) 55%,rgba(70,40,110,.20));}
+body.tod-night #bg::before{background:linear-gradient(180deg,rgba(24,32,78,.42),rgba(30,36,80,.30) 55%,rgba(10,14,40,.45));}
+#bg::after{z-index:2;content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 35%,rgba(20,18,26,0) 62%,rgba(20,18,26,.28) 100%);}
 #home{position:absolute;inset:0;transition:opacity .8s ease;}
 body.saving #bg,body.saving #home{opacity:0!important;}
 body.saving #saver{background:transparent;}
@@ -293,7 +298,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="41.0";
+const VERSION="41.1";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -562,7 +567,11 @@ function nsOn(){return LS.get("nsrc",["svt","ekot","svtnb"]);}
 function loadNews(force){if(!B||!B.fetchText)return;if(!force&&Date.now()-nsAt<9e5)return;nsAt=Date.now();
   const on=nsOn();NSRC.forEach(([id,,u])=>{if(on.includes(id))B.fetchText(u,id);});}
 function ago(t){const m=Math.round((Date.now()-t)/6e4);return m<1?"nyss":m<60?m+" min":m<1440?Math.round(m/60)+" tim":Math.round(m/1440)+" d";}
-window.newsCb=function(id,txt){const src=NSRC.find(x=>x[0]===id);if(!src||!txt)return;let items=[];
+const EPG={};
+function epgText(c){const e=c.k==="svt"&&EPG[c.u];return e&&e.t?"Nu: "+esc(e.t):c.s;}
+window.newsCb=function(id,txt){
+  if(id.startsWith("epg:")){const u=id.slice(4);try{const j=JSON.parse(txt);const t=[j.programTitle,j.episodeTitle].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(" – ");
+    EPG[u]={t,at:Date.now()};const el=document.querySelector(`[data-epg="${u}"]`);if(el&&t)el.innerHTML="Nu: "+esc(t);}catch(e){}return;}const src=NSRC.find(x=>x[0]===id);if(!src||!txt)return;let items=[];
   try{const d=new DOMParser().parseFromString(txt,"text/xml");d.querySelectorAll("item,entry").forEach(it=>{
     const g=n=>{const e=it.getElementsByTagName(n)[0];return e?e.textContent.trim():"";};
     let link=g("link");if(!link){const l=it.querySelector("link[href]");if(l)link=l.getAttribute("href");}
@@ -665,7 +674,8 @@ function fillLive(){
   $("ltabs").style.display=LIVE.length>1?"":"none";
   $("ltabs").innerHTML=LIVE.map((t,i)=>`<div class="ltab${i===lt?" sel":""}">${t.tab}</div>`).join("");
   $("lgrid").innerHTML=LIVE[lt].ch.map(c=>`<div class="lc" style="background:linear-gradient(150deg,${c.c},${shade(c.c,-45)})"><div class="lv">LIVE</div>
-      ${c.k==="telia"?'<div class="lapp">Via Telia</div>':""}<div class="ln">${c.n}</div><div class="ls">${c.s}</div></div>`).join("");
+      ${c.k==="telia"?'<div class="lapp">Via Telia</div>':""}<div class="ln">${c.n}</div><div class="ls"${c.k==="svt"?` data-epg="${c.u}"`:""}>${epgText(c)}</div></div>`).join("");
+  LIVE[lt].ch.forEach(c=>{if(c.k==="svt"&&B&&B.fetchText&&!(EPG[c.u]&&Date.now()-EPG[c.u].at<3e5))B.fetchText("https://api.svt.se/video/"+c.u,"epg:"+c.u);});
   $("lhint").textContent="OK startar kanalen · Bakåt stänger";
   lOff=0;$("lgrid").style.transform="";}
 function liveKey(k){const n=LIVE[lt].ch.length;
@@ -721,6 +731,11 @@ function memText(){const r=call("memory");if(r===null)return B?"Kräver nästa a
   try{const m=JSON.parse(r);return (m.avail/1024).toFixed(1)+" GB ledigt av "+(m.total/1024).toFixed(1)+" GB";}catch(e){return "";}}
 function netText(){const r=call("network");if(r===null)return B?"Öppnar inställningar":"Visar anslutning";
   try{const n=JSON.parse(r);return n.type==="none"?"Ingen anslutning":(n.type==="wifi"?"Wi-Fi":"Kabel")+(n.ip?" · "+n.ip:"");}catch(e){return "";}}
+function rInfo(){try{return JSON.parse(call("remoteInfo")||"null");}catch(e){return null;}}
+function remoteLabel(){const r=rInfo();return r&&r.url?r.url.replace("http://","")+" · kod "+r.code:"Startar…";}
+function sleepText(){const r=rInfo();if(!r||!r.sleepAt)return "Av · OK väljer 30, 60, 90 eller 120 min";const m=Math.max(1,Math.round((r.sleepAt-Date.now())/6e4));return "Somnar om "+m+" min · OK ändrar";}
+function cycleSleep(){const r=rInfo(),left=r&&r.sleepAt?Math.round((r.sleepAt-Date.now())/6e4):0,steps=[30,60,90,120,0];
+  const next=steps.find(x=>x>left+2);const v=next===undefined?0:next;call("sleepIn",v);toast(v?"Tv:n somnar om "+v+" min":"Insomningstimer av");setTimeout(fillPanel,200);}
 function devName(){return call("deviceName")||"TV:n";}
 function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(LS.get("ort",null)||{name:"Stockholm"}).name;
   return [
@@ -729,6 +744,8 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["mem","Frigör minne",memText(),freeMem],
    ["net","Nätverk",netText(),()=>call("action",NEWAPP?"wifi":"settings")],
    ["sun","Väderort",ort,openPlaces],
+   ["cast","Plattan som fjärrkontroll",remoteLabel(),()=>toast("Öppna adressen i plattans webbläsare och skriv koden")],
+   ["sun","Insomningstimer",sleepText(),cycleSleep],
    ["sun","Skärmsläckare","Partiklar · startar efter 10 min, OK visar den nu",()=>{closePanel();setTimeout(startSaver,400);}],
    ["img","Mitt innehåll","Inspelat och sparat hos Telia",()=>act("content")],
    ["set","Mitt konto","Ditt Telia-konto",()=>act("account")],
@@ -777,7 +794,9 @@ function dateTxt(d){const x=DAG[d.getDay()];return x[0].toUpperCase()+x.slice(1)
 function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
 const DK=["Sön","Mån","Tis","Ons","Tor","Fre","Lör"],MK=["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
 function wifi(){const r=call("network");if(r===null)return;try{$("wifi").classList.toggle("off",JSON.parse(r).type==="none");}catch(e){}}
-function tick(){const d=new Date();$("ct").textContent=hhmm(d);$("cd").textContent=DK[d.getDay()]+" "+d.getDate()+" "+MK[d.getMonth()];wifi();
+function tod(d){const h=d.getHours(),c=h>=6&&h<9?"dawn":h>=9&&h<15?"day":h>=15&&h<19?"eve":"night";
+  if(!document.body.classList.contains("tod-"+c)){document.body.classList.remove("tod-dawn","tod-day","tod-eve","tod-night");document.body.classList.add("tod-"+c);}}
+function tick(){const d=new Date();tod(d);$("ct").textContent=hhmm(d);$("cd").textContent=DK[d.getDay()]+" "+d.getDate()+" "+MK[d.getMonth()];wifi();
   const h=d.getHours();$("night").style.opacity=(h>=22||h<6)?.22:0;if(saverOn){$("st").textContent=hhmm(d);$("sd").textContent=dateTxt(d);}}
 setInterval(tick,15000);tick();
 const WI={0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",51:"🌦️",53:"🌦️",55:"🌧️",61:"🌦️",63:"🌧️",65:"🌧️",71:"🌨️",73:"🌨️",75:"❄️",80:"🌦️",81:"🌧️",82:"🌧️",95:"⛈️"};
@@ -816,6 +835,22 @@ setInterval(checkUpdate,15*60*1000);setTimeout(checkUpdate,20000);
 window.oceanKey=key;
 /* called by the app whenever the window regains focus (also after volume popups etc.):
    only refresh when we actually came back from another app */
+/* ===== from the tablet remote ===== */
+function remoteChannel(name){const q=(name||"").toLowerCase().replace(/\s+/g,"");let hit=null;
+  LIVE.forEach(T=>T.ch.forEach(c=>{const n=c.n.toLowerCase().replace(/\s+/g,"");if(!hit&&(n===q))hit=c;}));
+  if(!hit)LIVE.forEach(T=>T.ch.forEach(c=>{const n=c.n.toLowerCase().replace(/\s+/g,"");if(!hit&&(n.includes(q)||q.includes(n)))hit=c;}));
+  if(hit){if(zone!=="main")toMain();playLive(hit);}else toast("Hittar ingen kanal som heter "+name);}
+function remoteText(s){toast("Öppna en app med sökfält först");}
+function remoteShow(w){if(zone!=="main"&&zone!=="w")toMain();if(w==="news"){wid="nw";return openSheet("news");}wid=w==="wifi"?"tiwifi":"tiwx";openSheet(w==="wifi"?"wifi":"wx");}
+document.addEventListener("click",e=>{const t=e.target;let x;bumpIdle();
+  if(saverOn)return stopSaver();
+  if((x=t.closest("#dock .dt"))){sel=[...document.querySelectorAll("#dock .dt")].indexOf(x);zone="main";render();return activate();}
+  if((x=t.closest("#mw,#cw,#nw,#np,.ti"))&&zone!=="sheet"){wid=x.id;zone="w";render();return wKey("ok");}
+  if((x=t.closest("#qlist .qi"))){qi=[...document.querySelectorAll("#qlist .qi")].indexOf(x);render();return QI[qi][3]();}
+  if((x=t.closest("#lgrid .lc"))){li=[...document.querySelectorAll("#lgrid .lc")].indexOf(x);return playLive(LIVE[lt].ch[li]);}
+  if((x=t.closest("#gw .rc"))){gi=[...document.querySelectorAll("#gw .rc")].indexOf(x);render();return gridKey("ok");}
+  if((x=t.closest("#nlist .nr"))){nsI=[...document.querySelectorAll("#nlist .nr")].indexOf(x);return newsKey("ok");}
+  if(zone==="sheet"&&!t.closest("#sheet"))return closeSheet();});
 window.oceanShown=function(){checkUpdate();tick();if(!leftForApp)return;leftForApp=false;if(zone==="live"){render();return;}
   if(saverOn)stopSaver();if(zone==="sheet"||shKind){$("sheet").classList.remove("on");$("home").classList.remove("sheeton");shKind="";}
   if(zone!=="main"){["grid","places"].forEach(i=>$(i).classList.remove("open"));$("qp").classList.remove("open");zone="main";}

@@ -70,15 +70,22 @@ final class AdbSelf {
     /** Start the guard in the background if it is not running. Safe to call often. */
     static void ensureGuard(final Context c) {
         long now = System.currentTimeMillis();
-        try {
-            String g = Settings.Global.getString(c.getContentResolver(), "hem_guard");
-            long at = g == null ? 0 : Long.parseLong(g.trim());
-            if (now - at < 75000) return;
-        } catch (Exception ignored) {}
         if (!hasKey(c) || now - lastTry < 90000) return;
         lastTry = now;
         new Thread(() -> {
-            try { run(c); } catch (Throwable t) { Log.d(TAG, "självstart av vakten misslyckades: " + t); }
+            try {
+                boolean alive = false;
+                try {
+                    String g = Settings.Global.getString(c.getContentResolver(), "hem_guard");
+                    alive = g != null && System.currentTimeMillis() - Long.parseLong(g.trim()) < 75000;
+                } catch (Exception ignored) {}
+                if (alive) {
+                    // an old guard without the key server (from before an update): start the new one
+                    try (Socket t = new Socket()) { t.connect(new InetSocketAddress("127.0.0.1", 8091), 600); return; }
+                    catch (Exception e) { Log.d(TAG, "självstart: vakten saknar tangentservern, startar om den"); }
+                }
+                run(c);
+            } catch (Throwable t) { Log.d(TAG, "självstart av vakten misslyckades: " + t); }
         }).start();
     }
 

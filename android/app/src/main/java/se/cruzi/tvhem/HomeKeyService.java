@@ -56,6 +56,32 @@ public class HomeKeyService extends AccessibilityService {
     private static String lastFocus = "";
     private final Handler h = new Handler(Looper.getMainLooper());
     private View overlay;
+    private Remote remote;
+
+    /** Between 04:00 and 05:00, while nobody watches: close everything in the background, so the box is fresh in the morning. */
+    private final Runnable night = new Runnable() {
+        @Override public void run() {
+            h.postDelayed(this, 20 * 60000);
+            java.util.Calendar c = java.util.Calendar.getInstance();
+            if (c.get(java.util.Calendar.HOUR_OF_DAY) != 4) return;
+            android.content.SharedPreferences sp = getSharedPreferences("hem", MODE_PRIVATE);
+            int day = c.get(java.util.Calendar.DAY_OF_YEAR);
+            if (sp.getInt("nightDay", -1) == day) return;
+            String cls = fgCls == null ? "" : fgCls;
+            android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+            if (pm.isInteractive() && !cls.contains("HomeActivity") && !cls.contains("Dream")) return;
+            sp.edit().putInt("nightDay", day).apply();
+            java.util.List<String> stop = new java.util.ArrayList<>();
+            for (android.content.pm.ApplicationInfo ai : getPackageManager().getInstalledApplications(0)) {
+                boolean user = (ai.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) == 0;
+                if ((user || ai.packageName.equals(TELIA)) && !ai.packageName.equals(getPackageName())) stop.add(ai.packageName);
+            }
+            try { android.provider.Settings.Global.putString(getContentResolver(), "hem_stop", android.text.TextUtils.join(",", stop) + "@" + System.currentTimeMillis()); } catch (Exception ignored) {}
+            android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            for (String pk : stop) am.killBackgroundProcesses(pk);
+            Log.d(TAG, "nattrensning: " + stop.size() + " appar");
+        }
+    };
 
     static boolean running() { return instance != null; }
 
@@ -94,6 +120,9 @@ public class HomeKeyService extends AccessibilityService {
         if (pending != null) { showOverlay(pending); schedule(900); }
         h.removeCallbacks(shot);
         h.postDelayed(shot, 15000);
+        if (remote == null) { remote = new Remote(this); remote.start(); }
+        h.removeCallbacks(night);
+        h.postDelayed(night, 60000);
     }
 
     /** Every 15 s while a video plays in another app: keep a small picture of it for "Fortsätt titta" on the home screen. */

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#121318">
+<title>Hem fjärr</title>
+<style>
+:root{--bg:#121318;--card:#1d1f27;--card2:#262935;--tx:#f2f1f5;--mut:#9a9caa;--acc:#7c8cff;--acc2:#a06bff;--ok:#3ecf8e;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+html,body{height:100%;background:var(--bg);color:var(--tx);font:16px/1.35 system-ui,-apple-system,Roboto,sans-serif;overscroll-behavior:none;}
+body{display:flex;flex-direction:column;user-select:none;-webkit-user-select:none;}
+button{font:inherit;color:inherit;border:0;background:var(--card2);border-radius:16px;padding:12px 14px;cursor:pointer;transition:transform .12s,background .2s;}
+button:active{transform:scale(.94);background:#323646;}
+input{font:inherit;color:var(--tx);background:var(--card2);border:1.5px solid #343849;border-radius:16px;padding:13px 15px;width:100%;outline:none;user-select:text;-webkit-user-select:text;}
+input:focus{border-color:var(--acc);}
+header{display:flex;align-items:center;gap:12px;padding:14px 16px 8px;}
+header b{font-size:20px;flex:1;}
+.dot{width:10px;height:10px;border-radius:50%;background:#e5484d;}.dot.on{background:var(--ok);box-shadow:0 0 10px var(--ok);}
+#np{margin:4px 16px 8px;padding:12px 14px;border-radius:18px;background:var(--card);display:none;align-items:center;gap:12px;}
+#np.on{display:flex;}#np div{flex:1;min-width:0;}#np b,#np small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}#np small{color:var(--mut);font-size:14px;}
+#np button{padding:10px 12px;border-radius:50%;width:44px;height:44px;}
+main{flex:1;min-height:0;overflow:hidden;position:relative;}
+.tab{position:absolute;inset:0;overflow-y:auto;padding:4px 16px 16px;display:none;}.tab.on{display:block;}
+#pad{position:relative;height:min(52vh,460px);border-radius:26px;background:radial-gradient(120% 90% at 30% 20%,#262a3a,#191b23);border:1.5px solid #2c3040;touch-action:none;overflow:hidden;}
+#pad .lbl{position:absolute;inset:0;display:grid;place-items:center;color:#5c6075;font-size:15px;text-align:center;pointer-events:none;padding:20px;}
+#pad .rip{position:absolute;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;background:rgba(124,140,255,.35);animation:rip .4s ease-out forwards;pointer-events:none;}
+@keyframes rip{from{transform:scale(.3);opacity:1;}to{transform:scale(1.6);opacity:0;}}
+.row{display:flex;gap:10px;margin-top:10px;}.row>*{flex:1;}
+.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.dpad button{height:54px;font-size:20px;}.dpad .okb{background:linear-gradient(135deg,var(--acc),var(--acc2));font-weight:700;}
+.ic{font-size:20px;}
+#tabs{display:flex;gap:6px;padding:8px 10px calc(10px + env(safe-area-inset-bottom));background:#16171d;border-top:1px solid #23252f;}
+#tabs button{flex:1;background:none;padding:8px 4px;border-radius:14px;color:var(--mut);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+#tabs button .ic{font-size:22px;}#tabs button.on{color:var(--tx);background:var(--card);}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px;}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--card);padding:12px 6px;border-radius:18px;font-size:13px;text-align:center;}
+.app img{width:52px;height:52px;border-radius:14px;}
+.chs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.ch{border-radius:18px;padding:16px 14px;min-height:86px;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;}
+.ch b{font-size:17px;}.ch small{opacity:.75;font-size:13px;}
+h3{font-size:14px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:18px 2px 10px;}
+#chat{display:flex;flex-direction:column;gap:10px;padding-bottom:10px;}
+.msg{max-width:85%;padding:11px 14px;border-radius:18px;background:var(--card);align-self:flex-start;white-space:pre-wrap;}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,var(--acc),var(--acc2));}
+.msg.wait{opacity:.6;}
+.ask{position:sticky;bottom:0;background:var(--bg);padding-top:8px;display:flex;gap:8px;}
+.ask button{flex:0 0 auto;}
+.hint{color:var(--mut);font-size:14px;margin-top:8px;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;}.chips button.on{background:var(--acc);}
+#login{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;justify-content:center;padding:28px;gap:16px;z-index:9;}
+#login.on{display:flex;}#login h1{font-size:28px;}#login input{font-size:32px;letter-spacing:12px;text-align:center;}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#2b2e3b;padding:10px 16px;border-radius:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10;}
+#toast.on{opacity:1;}
+@media (orientation:landscape) and (min-width:800px){#ctl{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:start;}#pad{height:calc(100vh - 230px);}}
+</style></head><body>
+<header><span class="dot" id="dot"></span><b>Hem</b><button id="kbBtn" class="ic" title="Tangentbord">⌨</button></header>
+<div id="np"><div><b id="npt"></b><small id="nps"></small></div><button data-m="prev">⏮</button><button data-m="toggle" id="npp">⏯</button><button data-m="next">⏭</button></div>
+<main>
+ <section class="tab on" id="t-ctl"><div id="ctl">
+  <div><div id="pad"><div class="lbl">Dra ett finger för pekaren · tryck för att klicka<br>håll inne för långt tryck · två fingrar scrollar</div></div>
+   <div class="row" id="kb" style="display:none"><input id="kbIn" placeholder="Skriv här – det hamnar i fältet på tv:n" enterkeyhint="send"><button id="kbSend">Skicka</button></div>
+   <div class="row" id="kb2" style="display:none"><button id="kbUrl">Öppna som länk</button><button id="kbYt">Sök på YouTube</button></div></div>
+  <div>
+   <div class="row"><button data-k="back">↩ Bakåt</button><button data-k="home">⌂ Hem</button><button data-k="menu">☰ Meny</button></div>
+   <div class="dpad"><span></span><button data-k="up">▲</button><span></span><button data-k="left">◀</button><button data-k="ok" class="okb">OK</button><button data-k="right">▶</button><span></span><button data-k="down">▼</button><span></span></div>
+   <div class="row"><button data-k="vdown">🔉</button><button data-k="mute">🔇</button><button data-k="vup">🔊</button><button data-k="play">⏯</button></div>
+  </div></div></section>
+ <section class="tab" id="t-apps"><h3>Appar på tv:n</h3><div class="apps" id="apps"></div></section>
+ <section class="tab" id="t-ch"><h3>Kanaler</h3><div class="chs" id="chs"></div></section>
+ <section class="tab" id="t-ask"><h3>Fråga eller be om något</h3>
+  <div id="chat"><div class="msg">Hej! Säg vad du vill, till exempel ”sätt på SVT1”, ”spela lugn jazz på YouTube”, ”sänk volymen lite” eller ”stäng av tv:n om en timme”. Tryck på mikrofonen på tangentbordet för att prata.</div></div>
+  <div class="ask"><input id="q" placeholder="Skriv eller prata…" enterkeyhint="send"><button id="qs">➤</button></div></section>
+ <section class="tab" id="t-set"><h3>Insomningstimer</h3><div class="chips" id="sleep"><button data-s="30">30 min</button><button data-s="60">60 min</button><button data-s="90">90 min</button><button data-s="120">2 tim</button><button data-s="0">Av</button></div>
+  <p class="hint" id="sleepTxt"></p>
+  <h3>Pekarens fart</h3><input type="range" id="spd" min="1" max="5" step="0.25" style="padding:0;border:0;background:none">
+  <h3>Gemini-nyckel (för Fråga)</h3><div class="row"><input id="gk" placeholder="Klistra in nyckeln" autocomplete="off"><button id="gks">Spara</button></div>
+  <p class="hint" id="gkTxt">Skapa en gratis nyckel på aistudio.google.com under ”Get API key”. Den sparas bara på boxen.</p>
+  <h3>Anslutning</h3><button id="logout">Byt kod</button></section>
+</main>
+<nav id="tabs"><button data-t="ctl" class="on"><span class="ic">🖱</span>Styr</button><button data-t="apps"><span class="ic">▦</span>Appar</button><button data-t="ch"><span class="ic">📺</span>Kanaler</button><button data-t="ask"><span class="ic">✦</span>Fråga</button><button data-t="set"><span class="ic">⚙</span>Mer</button></nav>
+<div id="login"><h1>Anslut till tv:n</h1><p class="hint">Koden står i tv:ns snabbpanel (Meny-knappen) under ”Plattan som fjärrkontroll”.</p><input id="code" inputmode="numeric" maxlength="4" placeholder="····"><button id="codeOk">Anslut</button></div>
+<div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id),LS={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+let ws=null,code=LS.get("code",""),spd=LS.get("spd",2.25),sleepAt=0,tmr;
+function toast(t){$("toast").textContent=t;$("toast").classList.add("on");clearTimeout(tmr);tmr=setTimeout(()=>$("toast").classList.remove("on"),1800);}
+function send(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
+function connect(){if(!code){$("login").classList.add("on");return;}
+  ws=new WebSocket(`ws://${location.host}/ws?k=${code}`);
+  ws.onopen=()=>{$("dot").classList.add("on");$("login").classList.remove("on");};
+  ws.onclose=()=>{$("dot").classList.remove("on");setTimeout(connect,1500);};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data);}catch(x){return;}
+    if(m.t==="hello"){apps(m.apps||[]);np(m.np);sleepAt=m.sleepAt||0;sleepUi();$("gkTxt").textContent=m.gemini?"Nyckeln är sparad på boxen. Klistra in en ny för att byta.":"Skapa en gratis nyckel på aistudio.google.com under ”Get API key”. Den sparas bara på boxen.";}
+    else if(m.t==="np")np(m.np);
+    else if(m.t==="sleep"){sleepAt=m.sleepAt;sleepUi();}
+    else if(m.t==="say"){const w=document.querySelector(".msg.wait");if(w)w.remove();msg(m.s,false);}};}
+async function login(c){const r=await fetch("/check?k="+c).catch(()=>null);if(r&&r.ok){code=c;LS.set("code",c);connect();}else toast("Fel kod");}
+$("codeOk").onclick=()=>login($("code").value.trim());$("code").oninput=e=>{if(e.target.value.length===4)login(e.target.value);};
+$("logout").onclick=()=>{code="";LS.set("code","");if(ws)ws.close();$("login").classList.add("on");};
+/* tabs */
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.id==="t-"+b.dataset.t));if(b.dataset.t==="ch")loadCh();});
+/* buttons */
+document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{send({t:"key",k:b.dataset.k});navigator.vibrate&&navigator.vibrate(8);});
+document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>send({t:"media",c:b.dataset.m}));
+/* touchpad */
+const pad=$("pad"),pts=new Map();let acc={x:0,y:0,sx:0,sy:0},raf=0,down=null,longT=0,moved=0,two=false;
+function flush(){raf=0;if(acc.x||acc.y){send({t:"move",dx:acc.x,dy:acc.y});acc.x=acc.y=0;}if(acc.sx||acc.sy){send({t:"scroll",dx:acc.sx,dy:acc.sy});acc.sx=acc.sy=0;}}
+function sched(){if(!raf)raf=requestAnimationFrame(flush);}
+function ripple(x,y){const r=document.createElement("div");r.className="rip";const b=pad.getBoundingClientRect();r.style.left=x-b.left+"px";r.style.top=y-b.top+"px";pad.appendChild(r);setTimeout(()=>r.remove(),450);}
+pad.addEventListener("pointerdown",e=>{pad.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1){down={t:performance.now(),x:e.clientX,y:e.clientY};moved=0;two=false;clearTimeout(longT);
+    longT=setTimeout(()=>{if(down&&moved<10&&!two){send({t:"tap",long:true});ripple(down.x,down.y);navigator.vibrate&&navigator.vibrate(25);down=null;}},550);}
+  else{two=true;clearTimeout(longT);}});
+pad.addEventListener("pointermove",e=>{const p=pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
+  if(pts.size>=2){acc.sx+=dx/pts.size*2.5;acc.sy+=dy/pts.size*2.5;}
+  else if(!two){const v=Math.hypot(dx,dy),m=spd*(1+Math.min(v/14,2.2));acc.x+=dx*m;acc.y+=dy*m;}sched();});
+function up(e){pts.delete(e.pointerId);clearTimeout(longT);
+  if(pts.size===0){if(down&&!two&&moved<10&&performance.now()-down.t<350){send({t:"tap"});ripple(e.clientX,e.clientY);}down=null;}}
+pad.addEventListener("pointerup",up);pad.addEventListener("pointercancel",up);
+/* keyboard */
+$("kbBtn").onclick=()=>{const on=$("kb").style.display==="none";$("kb").style.display=$("kb2").style.display=on?"flex":"none";if(on)$("kbIn").focus();};
+function sendText(enter){const s=$("kbIn").value;if(!s)return;send({t:"text",s,enter});toast("Skickat till tv:n");}
+$("kbSend").onclick=()=>sendText(true);$("kbIn").addEventListener("keydown",e=>{if(e.key==="Enter")sendText(true);});
+$("kbUrl").onclick=()=>{const s=$("kbIn").value.trim();if(s){send({t:"url",u:s});toast("Öppnar på tv:n");}};
+$("kbYt").onclick=()=>{const s=$("kbIn").value.trim();if(s){send({t:"youtube",q:s});toast("Söker på YouTube");}};
+/* apps */
+function apps(a){a.sort((x,y)=>x.label.localeCompare(y.label,"sv"));$("apps").innerHTML=a.map(x=>`<button class="app" data-p="${x.pkg}"><img loading="lazy" src="/icon?pkg=${encodeURIComponent(x.pkg)}" alt=""><span>${x.label.replace(/</g,"&lt;")}</span></button>`).join("");
+  document.querySelectorAll(".app").forEach(b=>b.onclick=()=>{send({t:"launch",pkg:b.dataset.p});toast("Öppnar "+b.textContent.trim());});}
+/* channels */
+let CH=LS.get("ch",[]);
+function drawCh(){$("chs").innerHTML=CH.map((c,i)=>`<button class="ch" data-i="${i}" style="background:linear-gradient(150deg,${c.col},#15161c)"><b>${c.n}</b><small>${c.s}</small></button>`).join("");
+  document.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{const c=CH[b.dataset.i];send({t:"channel",name:c.n});toast("Startar "+c.n);});}
+function loadCh(){drawCh();fetch("https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/kanaler.txt?t="+Date.now()).then(r=>r.text()).then(t=>{
+  CH=t.split("\n").map(l=>l.trim().split("|")).filter(p=>p.length>=4&&p[1]).map(p=>({n:p[1],s:p[4]||p[3],col:p[5]||"#2a2c31"}));LS.set("ch",CH);drawCh();}).catch(()=>{});}
+/* now playing */
+function np(o){if(!o||!o.title){$("np").classList.remove("on");return;}$("npt").textContent=o.title;$("nps").textContent=o.sub||"";$("npp").textContent=o.playing?"⏸":"▶";$("np").classList.add("on");}
+/* assistant */
+function msg(t,me,wait){const d=document.createElement("div");d.className="msg"+(me?" me":"")+(wait?" wait":"");d.textContent=t;$("chat").appendChild(d);d.scrollIntoView({behavior:"smooth",block:"end"});}
+function ask(){const q=$("q").value.trim();if(!q)return;$("q").value="";msg(q,true);msg("…",false,true);if(!CH.length)loadCh();send({t:"ask",q,channels:CH.map(c=>c.n)});}
+$("qs").onclick=ask;$("q").addEventListener("keydown",e=>{if(e.key==="Enter")ask();});
+/* settings */
+$("spd").value=spd;$("spd").oninput=e=>{spd=+e.target.value;LS.set("spd",spd);};
+$("gks").onclick=()=>{const k=$("gk").value.trim();if(!k)return;send({t:"setkey",key:k});$("gk").value="";toast("Nyckeln sparad på boxen");};
+function sleepUi(){const m=sleepAt?Math.max(1,Math.round((sleepAt-Date.now())/6e4)):0;$("sleepTxt").textContent=m?"Tv:n somnar om "+m+" min.":"Timern är av.";}
+document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{send({t:"sleep",min:+b.dataset.s});toast(+b.dataset.s?"Tv:n somnar om "+b.textContent:"Timern av");});
+setInterval(sleepUi,30000);
+connect();if(CH.length)drawCh();
+</script></body></html>

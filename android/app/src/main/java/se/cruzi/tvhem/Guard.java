@@ -34,6 +34,7 @@ public class Guard extends android.app.IActivityController.Stub {
         set.invoke(am, g, false);
         g.watchHem();
         g.watchStop(am);
+        g.keyServer();
         Log.d(TAG, "vakten är igång");
         System.out.println("vakten är igång");
         Looper.loop();
@@ -84,6 +85,54 @@ public class Guard extends android.app.IActivityController.Stub {
                     }
                 } catch (Throwable e) { Log.d(TAG, "stopp fel " + e); }
                 try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /**
+     * Keys from the tablet remote: Hem may not press keys in other apps, the shell may. Only for this box (127.0.0.1).
+     * Lines: "K <keycode>" presses a key.
+     */
+    private void keyServer() {
+        Thread t = new Thread(() -> {
+            Object im = null; Method inj = null;
+            for (String cn : new String[]{"android.hardware.input.InputManagerGlobal", "android.hardware.input.InputManager"}) {
+                if (inj != null) break;
+                try {
+                    Class<?> c = Class.forName(cn);
+                    im = c.getMethod("getInstance").invoke(null);
+                    inj = c.getMethod("injectInputEvent", android.view.InputEvent.class, int.class);
+                } catch (Throwable ignored) {}
+            }
+            final Object fim = im; final Method finj = inj;
+            Log.d(TAG, "tangentserver " + (inj != null ? "redo" : "utan injektion, använder input"));
+            while (true) {
+                try (java.net.ServerSocket ss = new java.net.ServerSocket(8091, 8, java.net.InetAddress.getByName("127.0.0.1"))) {
+                    while (true) {
+                        final java.net.Socket so = ss.accept();
+                        new Thread(() -> {
+                            try (BufferedReader r = new BufferedReader(new InputStreamReader(so.getInputStream()))) {
+                                String line;
+                                while ((line = r.readLine()) != null) {
+                                    if (!line.startsWith("K ")) continue;
+                                    int code = Integer.parseInt(line.substring(2).trim());
+                                    if (finj != null) {
+                                        long now = android.os.SystemClock.uptimeMillis();
+                                        for (int a : new int[]{android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP}) {
+                                            android.view.KeyEvent e = new android.view.KeyEvent(now, now, a, code, 0, 0,
+                                                android.view.KeyCharacterMap.VIRTUAL_KEYBOARD, 0, android.view.KeyEvent.FLAG_FROM_SYSTEM, android.view.InputDevice.SOURCE_KEYBOARD);
+                                            finj.invoke(fim, e, 0);
+                                        }
+                                    } else Runtime.getRuntime().exec(new String[]{"input", "keyevent", String.valueOf(code)}).waitFor();
+                                }
+                            } catch (Throwable e) { Log.d(TAG, "tangent fel " + e); }
+                            try { so.close(); } catch (Exception ignored) {}
+                        }).start();
+                    }
+                } catch (Throwable e) { Log.d(TAG, "tangentserver fel " + e); }
+                try { Thread.sleep(3000); } catch (InterruptedException ignored) {}
             }
         });
         t.setDaemon(true);
