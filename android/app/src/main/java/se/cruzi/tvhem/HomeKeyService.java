@@ -615,7 +615,7 @@ public class HomeKeyService extends AccessibilityService {
             if (r != null) { r.digits(channelNum); Log.d(TAG, "skriver kanalnummer " + channelNum); }
             return false;
         }
-        if (now - digitsAt < 3600) return false;   // give Telia a moment to switch by number
+        if (now - digitsAt < 4200) return false;   // give Telia a moment to switch by number
         if (!digitsRetried) {
             // once more: the first digits can arrive before Telia listens
             digitsRetried = true;

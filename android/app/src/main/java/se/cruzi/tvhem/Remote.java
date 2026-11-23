@@ -85,7 +85,7 @@ final class Remote {
         for (char ch : num.toCharArray()) if (ch >= '0' && ch <= '9') {
             guardKey(android.view.KeyEvent.KEYCODE_0 + (ch - '0'));
             // a pause between the digits: two equal keys in a row ("11", "222") must not look like one
-            keyQ.execute(() -> { try { Thread.sleep(220); } catch (InterruptedException ignored) {} });
+            keyQ.execute(() -> { try { Thread.sleep(450); } catch (InterruptedException ignored) {} });
         }
     }
 
