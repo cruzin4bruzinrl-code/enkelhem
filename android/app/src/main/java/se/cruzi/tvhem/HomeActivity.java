@@ -116,7 +116,23 @@ public class HomeActivity extends Activity {
     }
 
     // ---------- design: cached copy from Netlify, else the built-in one ----------
+    /** "42.6" from const VERSION="42.6" → 42.006 so versions compare as numbers. */
+    static double verOf(String html) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("const VERSION=\"(\\d+)(?:\\.(\\d+))?\"").matcher(html);
+        if (!m.find()) return 0;
+        return Integer.parseInt(m.group(1)) + (m.group(2) == null ? 0 : Integer.parseInt(m.group(2)) / 1000.0);
+    }
+    private double assetVer = -1;
+    private double assetVer() {
+        if (assetVer < 0) try (InputStream in = getAssets().open("index.html")) {
+            byte[] b = new byte[200000]; int n = in.read(b); assetVer = verOf(new String(b, 0, Math.max(0, n), "UTF-8"));
+        } catch (Exception e) { assetVer = 0; }
+        return assetVer;
+    }
+
     private void loadLocal() {
+        // a freshly installed app carries a newer design than an old downloaded copy: then the built-in one wins
+        try { if (cache.exists() && verOf(new String(Files.readAllBytes(cache.toPath()), "UTF-8")) < assetVer()) cache.delete(); } catch (Exception ignored) {}
         if (cache.exists() && cache.length() > 500) web.loadUrl("file://" + cache.getAbsolutePath());
         else web.loadUrl("file:///android_asset/index.html");
     }
@@ -181,6 +197,7 @@ public class HomeActivity extends Activity {
                 String head = new String(data, 0, Math.min(data.length, 400), "UTF-8").toLowerCase();
                 if (data.length < 500 || !head.contains("<html")) return;
                 if (cache.exists() && Arrays.equals(data, Files.readAllBytes(cache.toPath()))) return;
+                if (verOf(new String(data, "UTF-8")) < assetVer()) return;   // never go back to an older design
                 File tmp = new File(getFilesDir(), "remote.tmp");
                 FileOutputStream fo = new FileOutputStream(tmp);
                 fo.write(data);

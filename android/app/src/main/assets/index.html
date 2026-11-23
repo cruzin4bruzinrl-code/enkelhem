@@ -931,7 +931,7 @@ function custItems(){const t=tuneIx(),v=volIx();return [
    ["sun","Skärmsläckaren startar",saverTxt(),cycleSaver],
    ["sun","Musik i skärmsläckaren",tuneName(t)+(newMusic()?" · OK byter och spelar en bit":" · fler val efter ny app: kör tvapp"),()=>{const L=tuneList(),n=(t+1)%L.length;call("saverTune",n);if(L[n].includes("YouTube"))toast("Spelas från YouTube när skärmsläckaren visas – en liten bild syns i hörnet");else if(n<L.length-1)call("previewMusic");fillPanel();}],
    ["sun","Musikens volym","●".repeat(v)+"○".repeat(5-v)+" · OK ändrar och spelar en bit",()=>{const n=v%5+1;call("saverVol",n);call("previewMusic");fillPanel();}],
-   ["sun","Visa skärmsläckaren nu","Partiklar och musik",()=>{closePanel();setTimeout(()=>{if(B&&B.showSaver)B.showSaver();else startSaver();},400);}]];}
+   ["sun","Visa skärmsläckaren nu","Partiklar och musik · Hem "+VERSION,()=>{closePanel();setTimeout(()=>{if(B&&B.showSaver)B.showSaver();else startSaver();},400);}]];}
 let bi=0;
 function openBgPick(){$("bgl").innerHTML=BGS.map(b=>{const u=(B?"file:///android_asset/":"https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/")+"bgthumb"+b[0]+".jpg";
   return `<div class="${b[0]===bgSuf()?"on":""}" style="background-image:url('${u}')"><span>${b[1]}</span></div>`;}).join("");
