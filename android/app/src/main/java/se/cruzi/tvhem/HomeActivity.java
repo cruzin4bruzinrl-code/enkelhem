@@ -673,6 +673,9 @@ public class HomeActivity extends Activity {
         }
 
         @JavascriptInterface
+        public int musicTunes() { return Ambient.NONE; }
+
+        @JavascriptInterface
         public void previewMusic() { Ambient.preview(HomeActivity.this); }
 
         @JavascriptInterface

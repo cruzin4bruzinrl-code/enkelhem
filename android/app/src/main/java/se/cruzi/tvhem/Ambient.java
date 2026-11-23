@@ -25,6 +25,8 @@ public class Ambient {
     private static volatile int tune;
     private static volatile double gain = 0.11;
     private static final double[] VOL = {0, 0.035, 0.065, 0.11, 0.16, 0.23};
+    // evens out the tunes (measured offline) so every one is clearly heard at the same volume step; quiet rain and waves need more
+    private static final double[] TGAIN = {2.9, 2.7, 6.8, 5.2, 1.7, 4.0, 2.5};
     private static final android.os.Handler H = new android.os.Handler(android.os.Looper.getMainLooper());
     private static final Runnable PREVIEW_END = Ambient::stop;
 
@@ -155,7 +157,7 @@ public class Ambient {
                 double y = s + e * 0.35;
                 echo[ei] = (float) (s + e * 0.45); ei = (ei + 1) % echo.length;
                 master += ((on ? 1 : 0) - master) * (on ? 0.000008 : 0.00004); // ~4 s fade in, ~1 s fade out
-                out[i] = (short) Math.max(-32767, Math.min(32767, y * master * gain * 32767));
+                out[i] = (short) Math.max(-32767, Math.min(32767, y * master * gain * TGAIN[Math.min(tn, 6)] * 32767));
             }
             try { t.write(out, 0, BUF); } catch (Exception e) { break; }
             if (!on && master < 0.002) break;
