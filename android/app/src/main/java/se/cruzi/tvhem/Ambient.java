@@ -23,8 +23,31 @@ public class Ambient {
 
     public static boolean enabled(Context c) { return c.getSharedPreferences("hem", Context.MODE_PRIVATE).getBoolean("saverMusic", true); }
 
+    private static volatile int tune;
+    private static volatile double gain = 0.11;
+    private static final double[] VOL = {0, 0.035, 0.065, 0.11, 0.16, 0.23};
+    private static final android.os.Handler H = new android.os.Handler(android.os.Looper.getMainLooper());
+    private static final Runnable PREVIEW_END = Ambient::stop;
+
+    private static void read(Context c) {
+        android.content.SharedPreferences p = c.getSharedPreferences("hem", Context.MODE_PRIVATE);
+        tune = p.getInt("saverTune", 0);
+        gain = VOL[Math.max(1, Math.min(5, p.getInt("saverVol", 3)))];
+    }
+
+    /** Settings: play a few seconds of the chosen music at the chosen volume. */
+    public static synchronized void preview(Context c) {
+        read(c);
+        H.removeCallbacks(PREVIEW_END);
+        if (tune >= 3) { stop(); return; }
+        if (!run) { run = true; th = new Thread(Ambient::loop, "ambient"); th.start(); }
+        H.postDelayed(PREVIEW_END, 7000);
+    }
+
     public static synchronized void start(Context c) {
-        if (run || !enabled(c)) return;
+        H.removeCallbacks(PREVIEW_END);
+        read(c);
+        if (run || !enabled(c) || tune >= 3) return;
         try { if (((AudioManager) c.getSystemService(Context.AUDIO_SERVICE)).isMusicActive()) return; } catch (Exception ignored) {}
         run = true;
         th = new Thread(Ambient::loop, "ambient");
@@ -51,7 +74,7 @@ public class Ambient {
         int bv = 0;
         float[] echo = new float[(int) (SR * 0.38)];
         int ei = 0;
-        double master = 0, lp = 0;
+        double master = 0, lp = 0, surf = 0;
         long n = 0, nextNote = SR * 2;
         int chord = 0, last = 2;
         java.util.Random rnd = new java.util.Random();
@@ -72,7 +95,7 @@ public class Ambient {
                 pad /= N;
                 lp += (pad - lp) * 0.08;                            // round off the pad so it is soft, not buzzy
                 // a new music-box note now and then, stepping gently through the scale
-                if (n >= nextNote) {
+                if (n >= nextNote && tune == 0) {
                     int step = rnd.nextInt(5) - 2; if (step == 0) step = 1;
                     last = Math.max(0, Math.min(MEL.length - 1, last + step));
                     bf[bv] = MEL[last]; bp[bv] = 0; ba[bv] = 0.55 + 0.25 * rnd.nextDouble();
@@ -86,12 +109,19 @@ public class Ambient {
                     bell += (Math.sin(bp[k]) + 0.25 * Math.sin(2 * bp[k]) + 0.08 * Math.sin(3 * bp[k])) * ba[k];
                     ba[k] *= decay;
                 }
-                double s = lp * 0.55 + bell * 0.28;
+                double s;
+                int tn = tune;
+                if (tn == 1) s = lp * 0.8;
+                else if (tn == 2) {
+                    surf += (rnd.nextGaussian() - surf) * 0.06;            // airy "shhh", not a rumble
+                    double sw = 0.5 - 0.5 * Math.cos(2 * Math.PI * tt / 8.5);
+                    s = surf * 0.55 * sw * sw + lp * 0.18;
+                } else s = lp * 0.55 + bell * 0.28;
                 double e = echo[ei];
                 double y = s + e * 0.35;
                 echo[ei] = (float) (s + e * 0.45); ei = (ei + 1) % echo.length;
                 master += ((on ? 1 : 0) - master) * (on ? 0.000008 : 0.00004); // ~4 s fade in, ~1 s fade out
-                out[i] = (short) Math.max(-32767, Math.min(32767, y * master * 0.12 * 32767));
+                out[i] = (short) Math.max(-32767, Math.min(32767, y * master * gain * 32767));
             }
             try { t.write(out, 0, BUF); } catch (Exception e) { break; }
             if (!on && master < 0.002) break;

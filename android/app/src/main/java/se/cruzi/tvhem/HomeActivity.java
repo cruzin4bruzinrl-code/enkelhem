@@ -195,6 +195,9 @@ public class HomeActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         runTestJs(intent);
+        // HOME pressed while Hem is already open: close whatever is open and show the home screen
+        if (intent.getStringExtra("url") == null && intent.getStringExtra("js64") == null && web != null)
+            web.evaluateJavascript("try{homePressed()}catch(e){}", null);
         if (intent.getStringExtra("url") != null) {
             saveUrl(intent);
             loadLocal();
@@ -654,6 +657,23 @@ public class HomeActivity extends Activity {
         public void showSaver() {
             ui.post(() -> { try { startActivity(new Intent(HomeActivity.this, SaverActivity.class).addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)); } catch (Exception ignored) {} });
         }
+
+        @JavascriptInterface
+        public int saverTune(int set) {
+            android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
+            if (set >= 0) p.edit().putInt("saverTune", set).putBoolean("saverMusic", set < 3).apply();
+            return p.getInt("saverTune", 0);
+        }
+
+        @JavascriptInterface
+        public int saverVol(int set) {
+            android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
+            if (set >= 1 && set <= 5) p.edit().putInt("saverVol", set).apply();
+            return p.getInt("saverVol", 3);
+        }
+
+        @JavascriptInterface
+        public void previewMusic() { Ambient.preview(HomeActivity.this); }
 
         @JavascriptInterface
         public boolean saverMusic(int set) {
