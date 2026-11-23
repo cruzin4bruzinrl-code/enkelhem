@@ -370,7 +370,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="42.5";
+const VERSION="42.6";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -927,6 +927,7 @@ function custItems(){const t=tuneIx(),v=volIx();return [
    ["img","Hemskärmens storlek",sizeOf("homeSize")[1]+" · OK ändrar",()=>cycleSize("homeSize")],
    ["img","Dockans storlek",sizeOf("dockSize")[1]+" · OK ändrar",()=>cycleSize("dockSize")],
    ["img","Tydligt läge",(seeOn()?"På":"Av")+" · större, svart text och namn under ikonerna",()=>{LS.set("see",!seeOn());applySee();applySizes();fillPanel();}],
+   ["sun","Kvällsljus",(todOn()?"På · bakgrunden blir varmare och mörkare på kvällen":"Av · samma ljusa bakgrund hela dagen"),()=>{LS.set("tod",!todOn());tick();fillPanel();}],
    ["sun","Skärmsläckaren startar",saverTxt(),cycleSaver],
    ["sun","Musik i skärmsläckaren",tuneName(t)+(newMusic()?" · OK byter och spelar en bit":" · fler val efter ny app: kör tvapp"),()=>{const L=tuneList(),n=(t+1)%L.length;call("saverTune",n);if(L[n].includes("YouTube"))toast("Spelas från YouTube när skärmsläckaren visas – en liten bild syns i hörnet");else if(n<L.length-1)call("previewMusic");fillPanel();}],
    ["sun","Musikens volym","●".repeat(v)+"○".repeat(5-v)+" · OK ändrar och spelar en bit",()=>{const n=v%5+1;call("saverVol",n);call("previewMusic");fillPanel();}],
@@ -991,10 +992,12 @@ function dateTxt(d){const x=DAG[d.getDay()];return x[0].toUpperCase()+x.slice(1)
 function hhmm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
 const DK=["Sön","Mån","Tis","Ons","Tor","Fre","Lör"],MK=["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
 function wifi(){const r=call("network");if(r===null)return;try{$("wifi").classList.toggle("off",JSON.parse(r).type==="none");}catch(e){}}
-function tod(d){const h=d.getHours(),c=h>=6&&h<9?"dawn":h>=9&&h<15?"day":h>=15&&h<19?"eve":"night";
-  if(!document.body.classList.contains("tod-"+c)){document.body.classList.remove("tod-dawn","tod-day","tod-eve","tod-night");document.body.classList.add("tod-"+c);}}
+/* time-of-day tint is a choice (off by default): in the evening it made the screen darker and harder to read */
+function todOn(){return LS.get("tod",false);}
+function tod(d){const h=d.getHours(),c=!todOn()?"off":h>=6&&h<9?"dawn":h>=9&&h<15?"day":h>=15&&h<19?"eve":"night";
+  if(!document.body.classList.contains("tod-"+c)){document.body.classList.remove("tod-dawn","tod-day","tod-eve","tod-night","tod-off");document.body.classList.add("tod-"+c);}}
 function tick(){const d=new Date();tod(d);$("ct").textContent=hhmm(d);$("cd").textContent=DK[d.getDay()]+" "+d.getDate()+" "+MK[d.getMonth()];wifi();
-  const h=d.getHours();$("night").style.opacity=(h>=22||h<6)?.22:0;if(saverOn){$("st").textContent=hhmm(d);$("sd").textContent=dateTxt(d);}}
+  const h=d.getHours();$("night").style.opacity=todOn()&&(h>=22||h<6)?.22:0;if(saverOn){$("st").textContent=hhmm(d);$("sd").textContent=dateTxt(d);}}
 setInterval(tick,15000);tick();
 const WI={0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",51:"🌦️",53:"🌦️",55:"🌧️",61:"🌦️",63:"🌧️",65:"🌧️",71:"🌨️",73:"🌨️",75:"❄️",80:"🌦️",81:"🌧️",82:"🌧️",95:"⛈️"};
 async function weather(){try{const o=LS.get("ort",null)||{lat:59.33,lon:18.07};
