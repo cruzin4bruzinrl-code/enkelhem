@@ -81,7 +81,13 @@ final class Remote {
     void attach(AccessibilityService s) { svc = s; h.post(() -> { ptr = null; }); }
 
     /** Type a channel number with the digit keys (through the guard). */
-    void digits(String num) { for (char ch : num.toCharArray()) if (ch >= '0' && ch <= '9') guardKey(android.view.KeyEvent.KEYCODE_0 + (ch - '0')); }
+    void digits(String num) {
+        for (char ch : num.toCharArray()) if (ch >= '0' && ch <= '9') {
+            guardKey(android.view.KeyEvent.KEYCODE_0 + (ch - '0'));
+            // a pause between the digits: two equal keys in a row ("11", "222") must not look like one
+            keyQ.execute(() -> { try { Thread.sleep(220); } catch (InterruptedException ignored) {} });
+        }
+    }
 
     Remote(AccessibilityService s) {
         svc = s;

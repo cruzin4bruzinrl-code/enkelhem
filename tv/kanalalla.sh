@@ -1,6 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Startar alla Telia-kanaler på boxen en i taget via Hem och kollar att Telias spelare kommer igång.
 [ -f ~/.tvconf ] && . ~/.tvconf
+# bash kanalalla.sh "Kanal 11" "CNBC" …  provar bara de kanalerna
+ONLY=$(printf '%s\n' "$@")
 adb connect "$ADDR" >/dev/null 2>&1
 A(){ adb -s "$ADDR" shell "$@" </dev/null 2>&1 | tr -d '\r'; }
 NAME=$(A settings get global hem_kanaler)
@@ -10,6 +12,7 @@ DIR=/storage/emulated/0/Download/kanaler_test_$NAME; rm -rf "$DIR"; mkdir -p "$D
 ok=0; fel=0
 while IFS='|' read -r kind name rest; do
   [ "$kind" = telia ] || continue
+  [ -n "$ONLY" ] && ! printf '%s\n' "$ONLY" | grep -qxF "$name" && continue
   A input keyevent 3; sleep 2
   adb -s "$ADDR" logcat -c </dev/null
   w="remoteChannel(\"$name\")"

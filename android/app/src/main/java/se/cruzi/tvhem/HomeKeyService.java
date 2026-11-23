@@ -44,6 +44,7 @@ public class HomeKeyService extends AccessibilityService {
     private static boolean atTop;
     private static String channelNum, numSig = "";
     private static long digitsAt;
+    private static boolean digitsRetried;
     private static int numDir = 1, numSame;
     private static long pendingUntil;
     private static int presses;
@@ -94,7 +95,7 @@ public class HomeKeyService extends AccessibilityService {
         channel = null;
         int c = label.indexOf(':');
         if (c > 0) { channel = label.substring(c + 1).trim(); label = label.substring(0, c); }
-        channelRow = 0; rowDowns = -1; atTop = false; sameTop = 0; lastTop = -1; channelNum = null; digitsAt = 0; numDir = 1; numSame = 0; numSig = "";
+        channelRow = 0; rowDowns = -1; atTop = false; sameTop = 0; lastTop = -1; channelNum = null; digitsAt = 0; digitsRetried = false; numDir = 1; numSame = 0; numSig = "";
         if (channel != null && channel.contains("#")) {
             // "Kanal#16": find the channel by its number in Telia's guide (newer Telia app shows numbers on the logos)
             channelNum = channel.substring(channel.indexOf('#') + 1).trim();
@@ -614,7 +615,15 @@ public class HomeKeyService extends AccessibilityService {
             if (r != null) { r.digits(channelNum); Log.d(TAG, "skriver kanalnummer " + channelNum); }
             return false;
         }
-        if (now - digitsAt < 3200) return false;   // give Telia a moment to switch by number
+        if (now - digitsAt < 3600) return false;   // give Telia a moment to switch by number
+        if (!digitsRetried) {
+            // once more: the first digits can arrive before Telia listens
+            digitsRetried = true;
+            digitsAt = now;
+            Remote r = Remote.get();
+            if (r != null) { r.digits(channelNum); Log.d(TAG, "skriver kanalnumret igen " + channelNum); }
+            return false;
+        }
         if (f.bottom < s.height() * 0.2f) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }   // focus in the tabs: into the grid
         AccessibilityNodeInfo nn = findNumber(root, channelNum, Integer.MAX_VALUE / 4);
         if (nn != null && nn.isVisibleToUser()) {
