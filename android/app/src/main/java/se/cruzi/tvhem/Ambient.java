@@ -7,9 +7,11 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 
 /** Calm music for the screensaver, made on the box (no files, no internet), at a low volume.
- *  0 Speldosa · 1 Lugna ackord · 2 Havsvågor · 3 Regn · 4 Harpa · 5 Vindspel · 6 Mjukt piano · 7 Ingen musik */
+ *  0 Speldosa · 1 Lugna ackord · 2 Havsvågor · 3 Regn · 4 Harpa · 5 Vindspel · 6 Mjukt piano · 7 YouTube-livemusik (spelas av SaverActivity) · 8 Ingen musik */
 public class Ambient {
-    public static final int NONE = 7;
+    public static final int YT = 7, NONE = 8;
+    public static int tuneOf(Context c) { return c.getSharedPreferences("hem", Context.MODE_PRIVATE).getInt("saverTune", 0); }
+    public static int volOf(Context c) { return Math.max(1, Math.min(5, c.getSharedPreferences("hem", Context.MODE_PRIVATE).getInt("saverVol", 3))); }
     private static Thread th;
     private static volatile boolean run;
     private static final int SR = 32000;
@@ -42,15 +44,21 @@ public class Ambient {
     public static synchronized void preview(Context c) {
         read(c);
         H.removeCallbacks(PREVIEW_END);
-        if (tune == NONE) { stop(); return; }
+        if (tune >= YT) { stop(); return; }
         if (!run) { run = true; th = new Thread(Ambient::loop, "ambient"); th.start(); }
         H.postDelayed(PREVIEW_END, 8000);
+    }
+
+    /** Used when the YouTube stream cannot be played: the music box instead. */
+    public static synchronized void startFallback(Context c) {
+        H.removeCallbacks(PREVIEW_END); read(c); tune = 0;
+        if (run) return; run = true; th = new Thread(Ambient::loop, "ambient"); th.start();
     }
 
     public static synchronized void start(Context c) {
         H.removeCallbacks(PREVIEW_END);
         read(c);
-        if (run || tune == NONE) return;
+        if (run || tune >= YT) return;
         try { if (((AudioManager) c.getSystemService(Context.AUDIO_SERVICE)).isMusicActive()) return; } catch (Exception ignored) {}
         run = true;
         th = new Thread(Ambient::loop, "ambient");

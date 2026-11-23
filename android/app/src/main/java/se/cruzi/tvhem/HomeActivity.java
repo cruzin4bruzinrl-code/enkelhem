@@ -673,7 +673,7 @@ public class HomeActivity extends Activity {
         }
 
         @JavascriptInterface
-        public int musicTunes() { return Ambient.NONE; }
+        public int musicTunes() { return Ambient.NONE; } // 8 = this app also has the YouTube stream
 
         @JavascriptInterface
         public void previewMusic() { Ambient.preview(HomeActivity.this); }
