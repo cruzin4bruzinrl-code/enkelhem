@@ -42,7 +42,7 @@ public class SaverActivity extends Activity {
             + "events:{onReady:function(e){e.target.unMute();e.target.setVolume(" + vol + ");e.target.playVideo();},"
             + "onStateChange:function(e){if(e.data===1){clearTimeout(t);document.getElementById('w').className='on';}},"
             + "onError:function(e){Hem.fail('error '+e.data)}}});}"
-            + "</script><script src='https://www.youtube.com/iframe_api' onerror="Hem.fail('no internet')"></script></body></html>";
+            + "</script><script src='https://www.youtube.com/iframe_api' onerror=\"Hem.fail('no internet')\"></script></body></html>";
         float d = getResources().getDisplayMetrics().density;
         android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams((int) (384 * d), (int) (216 * d), android.view.Gravity.BOTTOM | android.view.Gravity.END);
         lp.setMargins(0, 0, (int) (40 * d), (int) (40 * d));
