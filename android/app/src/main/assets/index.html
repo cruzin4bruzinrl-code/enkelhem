@@ -370,7 +370,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="42.7";
+const VERSION="42.8";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -389,6 +389,9 @@ const COL={"YouTube":"#ff0033","SmartTube":"#c62828","Stremio":"#5b3fd1","SVT Pl
 let APPS=[];try{const r=call("getApps");if(r)APPS=JSON.parse(r);}catch(e){}
 if(!APPS.length)APPS=MOCK;
 APPS=APPS.filter(a=>a.pkg!=="se.telia.androidtv.launcher");
+/* apps installed or switched on after Hem started (e.g. Netflix enabled in Play) show up without a restart */
+function refreshApps(){try{const r=call("getApps");if(!r)return false;const L=JSON.parse(r).filter(a=>a.pkg!=="se.telia.androidtv.launcher");
+  const same=L.length===APPS.length&&L.every((a,i)=>APPS[i]&&APPS[i].pkg===a.pkg);if(same)return false;APPS=L;return true;}catch(e){return false;}}
 const byPkg=p=>APPS.find(a=>a.pkg===p);
 const find=re=>APPS.find(a=>re.test(a.label)||re.test(a.pkg));
 
@@ -614,7 +617,7 @@ function desc(a){const s=a.label+" "+a.pkg;for(const[r,d]of DESC)if(r.test(s))re
 let ORB=[],sel=0,lastKey="tv";
 function buildOrbit(){
   const it=[],add=o=>{if(o&&!it.some(x=>x.key===o.key))it.push(o);};
-  const app=(a,name)=>a&&!/netflix/i.test(a.label+a.pkg)?{key:a.pkg,pkg:a.pkg,name:name||a.label,desc:desc(a),col:brand(a),icon:a.icon,run:()=>launch(a.pkg,a.label)}:null;
+  const app=(a,name)=>a?{key:a.pkg,pkg:a.pkg,name:name||a.label,desc:desc(a),col:brand(a),icon:a.icon,run:()=>launch(a.pkg,a.label)}:null;
   add({key:"tv",name:"Live-tv",desc:"Kanaler och tv-guide",col:"#2f6fd6",svg:GLYPH.tv,run:openLive});
   const yt=ytApp();add(yt?app(yt,"YouTube"):{key:"yt",name:"YouTube",desc:"Videor och klipp",col:"#ff2a3a",svg:GLYPH.yt,run:()=>act("youtube")});
   add(app(find(/disney/i)));add(app(find(/spotify/i)));add(app(find(/prime ?video|amazon/i),"Prime Video"));
@@ -843,7 +846,7 @@ function sortedApps(){const f=getFav().filter(Boolean);return [...f.map(byPkg).f
 function fillGrid(){const w=$("gw"),wasOpen=$("grid").classList.contains("open");w.innerHTML="";const f=getFav();
   sortedApps().forEach(a=>{const i=f.indexOf(a.pkg);const c=card(a,i>=0?i+1:0);if(wasOpen)c.classList.add("lit");w.appendChild(c);});}
 let gOff=0;
-function openGrid(){fillGrid();gi=0;gOff=0;zone="grid";$("gw").style.transform="";$("grid").classList.add("open");document.body.classList.add("gridon");render();
+function openGrid(){refreshApps();fillGrid();gi=0;gOff=0;zone="grid";$("gw").style.transform="";$("grid").classList.add("open");document.body.classList.add("gridon");render();
   requestAnimationFrame(()=>requestAnimationFrame(gridIn));}
 function closeGrid(){gridOut();zone="main";document.body.classList.remove("gridon");setTimeout(()=>{$("grid").classList.remove("open");setTimeout(()=>{if(zone!=="grid")$("gw").innerHTML="";},400);},120);render();}
 function gridIn(){const cards=[...document.querySelectorAll("#gw .rc")];cards.forEach((c,i)=>{c.style.transitionDelay=Math.min(i,18)*18+"ms";c.classList.add("lit");});}
@@ -1053,7 +1056,7 @@ document.addEventListener("click",e=>{const t=e.target;let x;bumpIdle();
   if((x=t.closest("#gw .rc"))){gi=[...document.querySelectorAll("#gw .rc")].indexOf(x);render();return gridKey("ok");}
   if((x=t.closest("#nlist .nr"))){nsI=[...document.querySelectorAll("#nlist .nr")].indexOf(x);return newsKey("ok");}
   if(zone==="sheet"&&!t.closest("#sheet"))return closeSheet();});
-window.oceanShown=function(){checkUpdate();tick();if(!leftForApp)return;leftForApp=false;if(zone==="live"){render();return;}
+window.oceanShown=function(){checkUpdate();tick();if(refreshApps())buildOrbit();if(!leftForApp)return;leftForApp=false;if(zone==="live"){render();return;}
   if(saverOn)stopSaver();if(zone==="sheet"||shKind){$("sheet").classList.remove("on");$("home").classList.remove("sheeton");shKind="";}
   if(zone!=="main"){["grid","places"].forEach(i=>$(i).classList.remove("open"));$("qp").classList.remove("open");zone="main";}
   buildOrbit();render();bumpIdle();};
