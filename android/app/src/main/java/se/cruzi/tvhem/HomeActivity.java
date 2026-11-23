@@ -661,7 +661,7 @@ public class HomeActivity extends Activity {
         @JavascriptInterface
         public int saverTune(int set) {
             android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
-            if (set >= 0) p.edit().putInt("saverTune", set).putBoolean("saverMusic", set < 3).apply();
+            if (set >= 0) p.edit().putInt("saverTune", set).putBoolean("saverMusic", set != Ambient.NONE).apply();
             return p.getInt("saverTune", 0);
         }
 

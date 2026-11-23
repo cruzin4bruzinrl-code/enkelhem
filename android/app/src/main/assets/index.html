@@ -184,7 +184,7 @@ body.see #dlabel{bottom:376px;font-size:40px;font-weight:800;text-shadow:0 2px 1
 body.see #dlabel small{font-size:27px;font-weight:600;opacity:1;}
 .clock,.topr,#mw,#cw,#nw,#np{zoom:var(--hz,1);}#dock{zoom:var(--dz,1);}
 #bgpick{background:rgba(3,5,14,.96);padding:80px 110px;}
-.bgl{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:40px;}
+.bgl{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:34px;}
 .bgl div{border-radius:26px;overflow:hidden;background:#222 center/cover;aspect-ratio:16/9;position:relative;transition:transform .3s var(--ease),box-shadow .25s;}
 .bgl div span{position:absolute;left:0;right:0;bottom:0;padding:14px 20px;font-size:28px;font-weight:700;background:linear-gradient(transparent,rgba(0,0,0,.6));}
 .bgl div.on::after{content:"✓";position:absolute;right:16px;top:12px;width:46px;height:46px;border-radius:50%;background:#2f6bff;display:grid;place-items:center;font-size:28px;font-weight:800;}
@@ -245,7 +245,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 #grid .rc.icn{background:rgba(250,247,250,.5);}
 #grid .rc.icn .nm{background:none;color:#1d1b22;text-align:center;font-weight:600;}
 #grid .rc.icn img.ico{margin-bottom:26px;box-shadow:0 8px 18px rgba(30,24,40,.18);}
-#grid h2,#places h2{font-size:44px;font-weight:600;}
+#grid h2,#places h2,#bgpick h2{font-size:44px;font-weight:600;}
 .hint{font-size:23px;opacity:.55;margin:10px 0 36px;}
 #grid .gw .rc{opacity:0;transform:translateY(26px) scale(.96);transition:opacity .35s ease,transform .5s var(--ease),box-shadow .3s;}
 #grid h2,#grid .hint{transform:translateY(-24px);opacity:0;transition:opacity .45s ease .1s,transform .6s var(--ease) .1s;}
@@ -356,7 +356,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="42.1";
+const VERSION="42.2";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -716,7 +716,7 @@ function mainKey(k){
   else if(k==="hold"){const o=ORB[sel];if(o&&o.pkg)toggleFav(o.pkg);}}
 
 /* background photo: bundled with the app (works offline), else from GitHub */
-const BGS=[["","Fjällsjö"],["-gryning","Gryning"],["-hav","Havet"],["-vinterskog","Vinterskog"],["-lavendel","Lavendel"],["-sand","Sanddyner"]];
+const BGS=[["","Fjällsjö"],["-gryning","Gryning"],["-hav","Havet"],["-vinterskog","Vinterskog"],["-lavendel","Lavendel"],["-sand","Sanddyner"],["-host","Höstskog"],["-skargard","Skärgård"],["-ang","Sommaräng"],["-fjall","Snöfjäll"],["-solnedgang","Solnedgång"],["-moln","Moln"]];
 function bgSuf(){const v=LS.get("bgSuf","");return BGS.some(b=>b[0]===v)?v:"";}
 function bgName(){return BGS.find(b=>b[0]===bgSuf())[1];}
 function setBg(){const suf=bgSuf(),local=`file:///android_asset/bg${suf}.jpg`,remote=`https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/bg${suf}.jpg`;
@@ -874,7 +874,7 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["fps","FPS-mätare",(fps?"På":"Av")+" · boxen mätte "+LS.get("measuredFps","?")+" FPS",()=>{toggleFps();fillPanel();}],
    ["set","Inställningar","Boxens inställningar",()=>call("action","settings")]];}
 let QI=[],pMode="main";
-const SIZES=[[.9,"Mindre"],[1,"Normal"],[1.1,"Större"]],TUNES=["Speldosa","Lugna ackord","Havsvågor","Ingen musik"];
+const SIZES=[[.9,"Mindre"],[1,"Normal"],[1.1,"Större"]],TUNES=["Speldosa","Lugna ackord","Havsvågor","Mjukt regn","Harpa","Vindspel","Mjukt piano","Ingen musik"];
 function sizeOf(k){const v=LS.get(k,1);return SIZES.find(x=>x[0]===v)||SIZES[1];}
 function cycleSize(k){const i=SIZES.indexOf(sizeOf(k)),n=SIZES[(i+1)%SIZES.length];LS.set(k,n[0]);applySizes();fillPanel();}
 /* sizes: the dock first, then the home screen shrinks a little by itself if the widgets would reach down into the dock */
@@ -891,7 +891,7 @@ function custItems(){const t=tuneIx(),v=volIx();return [
    ["img","Dockans storlek",sizeOf("dockSize")[1]+" · OK ändrar",()=>cycleSize("dockSize")],
    ["img","Tydligt läge",(seeOn()?"På":"Av")+" · större, svart text och namn under ikonerna",()=>{LS.set("see",!seeOn());applySee();applySizes();fillPanel();}],
    ["sun","Skärmsläckaren startar",saverTxt(),cycleSaver],
-   ["sun","Musik i skärmsläckaren",TUNES[t]+" · OK byter och spelar en bit",()=>{const n=(t+1)%TUNES.length;call("saverTune",n);if(n<3)call("previewMusic");fillPanel();}],
+   ["sun","Musik i skärmsläckaren",TUNES[t]+" · OK byter och spelar en bit",()=>{const n=(t+1)%TUNES.length;call("saverTune",n);if(n<TUNES.length-1)call("previewMusic");fillPanel();}],
    ["sun","Musikens volym","●".repeat(v)+"○".repeat(5-v)+" · OK ändrar och spelar en bit",()=>{const n=v%5+1;call("saverVol",n);call("previewMusic");fillPanel();}],
    ["sun","Visa skärmsläckaren nu","Partiklar och musik",()=>{closePanel();setTimeout(()=>{if(B&&B.showSaver)B.showSaver();else startSaver();},400);}]];}
 let bi=0;
@@ -899,7 +899,7 @@ function openBgPick(){$("bgl").innerHTML=BGS.map(b=>{const u=(B?"file:///android
   return `<div class="${b[0]===bgSuf()?"on":""}" style="background-image:url('${u}')"><span>${b[1]}</span></div>`;}).join("");
   bi=Math.max(0,BGS.findIndex(b=>b[0]===bgSuf()));zone="bgpick";$("qp").classList.remove("open");$("bgpick").classList.add("open");render();}
 function bgKey(k){const N=BGS.length;
-  if(k==="right")bi=Math.min(N-1,bi+1);else if(k==="left")bi=Math.max(0,bi-1);else if(k==="down")bi=Math.min(N-1,bi+3);else if(k==="up")bi=Math.max(0,bi-3);
+  if(k==="right")bi=Math.min(N-1,bi+1);else if(k==="left")bi=Math.max(0,bi-1);else if(k==="down")bi=Math.min(N-1,bi+4);else if(k==="up")bi=Math.max(0,bi-4);
   else if(k==="ok"){LS.set("bgSuf",BGS[bi][0]);setBg();toast("Bakgrund: "+BGS[bi][1]);}
   if(k==="ok"||k==="back"){$("bgpick").classList.remove("open");zone="panel";$("qp").classList.add("open");fillPanel();return;}render();}
 function fillPanel(){QI=pMode==="custom"?custItems():qItems();$("qlist").innerHTML=QI.map(([ic,t,s])=>
