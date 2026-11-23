@@ -807,6 +807,13 @@ public class HomeActivity extends Activity {
             return new long[]{mi.availMem / 1048576, mi.totalMem / 1048576};
         }
 
+        /** Which box this is (set by the setup script): picks this box's own channel list. */
+        @JavascriptInterface
+        public String boxProfile() {
+            String v = Settings.Global.getString(getContentResolver(), "hem_kanaler");
+            return v == null ? "" : v.trim();
+        }
+
         /** Address and code for the tablet remote, and the sleep timer. */
         @JavascriptInterface
         public String remoteInfo() {

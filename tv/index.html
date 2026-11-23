@@ -298,7 +298,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="41.1";
+const VERSION="41.2";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -663,9 +663,14 @@ function parseKanaler(t){const tabs=[];
     let T=tabs.find(x=>x.tab===tab);if(!T){T={tab,ch:[]};tabs.push(T);}
     T.ch.push({k,n,s:s||"",c:c||"#2a2c31",u:k==="yt"?YT(u):u,tg:k==="telia"?u:null});});
   return tabs.length?tabs:null;}
+/* a box with its own Telia package has tv/kanaler-<namn>.txt: its Telia lines replace the shared ones */
+const BOX=(()=>{try{return(B&&B.boxProfile&&B.boxProfile())||"";}catch(e){return "";}})();
+function mergeBox(base,box){if(!box)return base;const own=box.split("\n").filter(l=>l.trim()&&l[0]!=="#");
+  const hasTelia=own.some(l=>l.startsWith("telia|"));return base.split("\n").filter(l=>!(hasTelia&&l.startsWith("telia|"))).concat(own).join("\n");}
 function loadKanaler(){try{const c=LS.get("kanaler",null);if(c){const p=parseKanaler(c);if(p)LIVE.splice(0,LIVE.length,...p);}}catch(e){}
-  fetch(KSRC+"?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{const p=t&&parseKanaler(t);
-    if(p){LS.set("kanaler",t);LIVE.splice(0,LIVE.length,...p);if(zone==="live")fillLive();}}).catch(()=>{});}
+  const get=u=>fetch(u+"?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():null).catch(()=>null);
+  Promise.all([get(KSRC),BOX?get(KSRC.replace("kanaler.txt","kanaler-"+BOX+".txt")):null]).then(([t,b])=>{if(!t)return;const m=mergeBox(t,b);const p=parseKanaler(m);
+    if(p){LS.set("kanaler",m);LIVE.splice(0,LIVE.length,...p);if(zone==="live")fillLive();}});}
 loadKanaler();
 let lt=0,lr=1,li=0,lOff=0;
 function openLive(){loadKanaler();lt=0;lr=1;li=0;zone="live";fillLive();$("live").classList.add("open");render();}

@@ -40,6 +40,8 @@ public class HomeKeyService extends AccessibilityService {
     private long lastBounce;
     private static String channel;
     private static int scans;
+    private static int channelRow, rowDowns = -1, sameTop, lastTop = -1;
+    private static boolean atTop;
     private static long pendingUntil;
     private static int presses;
     private static int phase;
@@ -89,6 +91,12 @@ public class HomeKeyService extends AccessibilityService {
         channel = null;
         int c = label.indexOf(':');
         if (c > 0) { channel = label.substring(c + 1).trim(); label = label.substring(0, c); }
+        channelRow = 0; rowDowns = -1; atTop = false; sameTop = 0; lastTop = -1;
+        if (channel != null && channel.contains("@")) {
+            // "Kanal@7": the channel is row 7 in this box's Telia guide (boxes with other channel packages)
+            try { channelRow = Integer.parseInt(channel.substring(channel.indexOf('@') + 1).trim()); } catch (Exception ignored) {}
+            channel = channel.substring(0, channel.indexOf('@')).trim();
+        }
         scans = 0;
         teliaAllowed = true;
         teliaPage = channel == null;   // Telia's own pages (recordings, account, guide) asked for by the user
@@ -414,8 +422,20 @@ public class HomeKeyService extends AccessibilityService {
             Log.d(TAG, "guide fokus=" + (focus == null ? "inget" : f.toShortString()));
             if (focus == null) return false;
             if (f.left < s.width() * 0.2f && rights < 2) { rights++; press(GLOBAL_ACTION_DPAD_RIGHT); return false; }
-            if (f.centerY() < s.height() * 0.47f) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
-            if (channel != null) {
+            if (f.centerY() < s.height() * 0.47f) { if (channelRow > 0 && rowDowns < 0) atTop = true; press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+            if (channelRow > 0) {
+                // count rows from the first channel: climb to the top, then step down (row - 1) times
+                if (rowDowns < 0) {
+                    if (f.top == lastTop) sameTop++; else sameTop = 0;
+                    lastTop = f.top;
+                    if (!atTop && sameTop < 2 && scans++ < 120) { press(GLOBAL_ACTION_DPAD_UP); return false; }
+                    rowDowns = 0;
+                    Log.d(TAG, "guiden: överst, går ner till rad " + channelRow);
+                }
+                if (rowDowns < channelRow - 1) { rowDowns++; press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+                Log.d(TAG, "rätt rad för " + channel + ": " + channelRow);
+            }
+            if (channel != null && channelRow == 0) {
                 AccessibilityNodeInfo ch = findContains(root, channel, s.width());
                 if (ch != null && ch.isVisibleToUser()) {
                     Rect c = new Rect();
