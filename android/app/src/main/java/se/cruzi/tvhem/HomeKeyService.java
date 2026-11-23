@@ -42,6 +42,7 @@ public class HomeKeyService extends AccessibilityService {
     private static int scans;
     private static int channelRow, rowDowns = -1, sameTop, lastTop = -1;
     private static boolean atTop;
+    private static String channelNum;
     private static long pendingUntil;
     private static int presses;
     private static int phase;
@@ -91,7 +92,12 @@ public class HomeKeyService extends AccessibilityService {
         channel = null;
         int c = label.indexOf(':');
         if (c > 0) { channel = label.substring(c + 1).trim(); label = label.substring(0, c); }
-        channelRow = 0; rowDowns = -1; atTop = false; sameTop = 0; lastTop = -1;
+        channelRow = 0; rowDowns = -1; atTop = false; sameTop = 0; lastTop = -1; channelNum = null;
+        if (channel != null && channel.contains("#")) {
+            // "Kanal#16": find the channel by its number in Telia's guide (newer Telia app shows numbers on the logos)
+            channelNum = channel.substring(channel.indexOf('#') + 1).trim();
+            channel = channel.substring(0, channel.indexOf('#')).trim();
+        }
         if (channel != null && channel.contains("@")) {
             // "Kanal@7": the channel is row 7 in this box's Telia guide (boxes with other channel packages)
             try { channelRow = Integer.parseInt(channel.substring(channel.indexOf('@') + 1).trim()); } catch (Exception ignored) {}
@@ -401,7 +407,7 @@ public class HomeKeyService extends AccessibilityService {
 
         if (phase == 1) {
             // Tv-guide: wait until it has loaded, move focus into the channel grid, then start the channel
-            if (findLabel(root, "Favoritkanaler") == null && findLabel(root, "Tv-guide") == null) {
+            if (findLabel(root, "Favoritkanaler") == null && findLabel(root, "Tv-guide") == null && findNumber(root, null, s.width()) == null) {
                 Log.d(TAG, "väntar på tv-guiden");
                 if (SystemClock.uptimeMillis() - phaseStart > 1600 && retries < 2) {
                     AccessibilityNodeInfo tv = findLabel(root, "Tv");
@@ -423,6 +429,18 @@ public class HomeKeyService extends AccessibilityService {
             if (focus == null) return false;
             if (f.left < s.width() * 0.2f && rights < 2) { rights++; press(GLOBAL_ACTION_DPAD_RIGHT); return false; }
             if (f.centerY() < s.height() * 0.47f) { if (channelRow > 0 && rowDowns < 0) atTop = true; press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+            if (channelNum != null) {
+                if (scans == 0) dumpLeft(root, s.width());
+                AccessibilityNodeInfo nn = findNumber(root, channelNum, s.width());
+                if (nn != null && nn.isVisibleToUser()) {
+                    Rect c = new Rect();
+                    nn.getBoundsInScreen(c);
+                    if (c.bottom < f.top + 10 && scans++ < 200) { press(GLOBAL_ACTION_DPAD_UP); return false; }
+                    if (c.top > f.bottom - 10 && scans++ < 200) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+                    Log.d(TAG, "rätt kanal: nummer " + channelNum + " (" + channel + ")");
+                } else if (scans++ < 160) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }
+                else Log.d(TAG, "hittade inte kanal nummer " + channelNum + ", tar markerad kanal");
+            }
             if (channelRow > 0) {
                 // count rows from the first channel: climb to the top, then step down (row - 1) times
                 if (rowDowns < 0) {
@@ -435,7 +453,7 @@ public class HomeKeyService extends AccessibilityService {
                 if (rowDowns < channelRow - 1) { rowDowns++; press(GLOBAL_ACTION_DPAD_DOWN); return false; }
                 Log.d(TAG, "rätt rad för " + channel + ": " + channelRow);
             }
-            if (channel != null && channelRow == 0) {
+            if (channel != null && channelRow == 0 && channelNum == null) {
                 AccessibilityNodeInfo ch = findContains(root, channel, s.width());
                 if (ch != null && ch.isVisibleToUser()) {
                     Rect c = new Rect();
@@ -565,6 +583,26 @@ public class HomeKeyService extends AccessibilityService {
             CharSequence t = n.getText(), d = n.getContentDescription();
             boolean hit = (t != null && t.toString().toLowerCase().contains(w)) || (d != null && d.toString().toLowerCase().contains(w));
             if (hit) { n.getBoundsInScreen(r); if (r.width() < screenW / 2) return n; }
+            for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
+        }
+        return null;
+    }
+
+    /** A channel number in the guide's left column ("16" on the TV4 Sportkanalen logo). want == null: any number. */
+    private static AccessibilityNodeInfo findNumber(AccessibilityNodeInfo root, String want, int screenW) {
+        ArrayDeque<AccessibilityNodeInfo> q = new ArrayDeque<>();
+        q.add(root);
+        int seen = 0;
+        Rect r = new Rect();
+        while (!q.isEmpty() && seen < 3000) {
+            AccessibilityNodeInfo n = q.poll();
+            if (n == null) continue;
+            seen++;
+            CharSequence t = n.getText();
+            if (t != null) {
+                String v = t.toString().trim();
+                if (v.matches("\\d{1,3}") && (want == null || v.equals(want))) { n.getBoundsInScreen(r); if (r.left < screenW * 0.3f) return n; }
+            }
             for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
         }
         return null;

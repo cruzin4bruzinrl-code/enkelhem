@@ -1,0 +1,46 @@
+# Telia-kanaler på boxen "vanhemmat" – numret efter # är kanalnumret i Telias guide
+telia|TV4|TV4#4|Kanaler|Via Telia|#c4122f
+telia|Kanal 5|Kanal 5#5|Kanaler|Via Telia|#b0182a
+telia|TV6|TV6#6|Kanaler|Via Telia|#3a3a3a
+telia|Sjuan|Sjuan#7|Kanaler|Via Telia|#5b3fc4
+telia|TV8|TV8#8|Kanaler|Via Telia|#c43a4a
+telia|TV10|TV10#10|Kanaler|Via Telia|#b89a10
+telia|Kanal 11|Kanal 11#11|Kanaler|Via Telia|#1f8aa0
+telia|TV12|TV12#12|Kanaler|Via Telia|#d3641a
+telia|TV4 Guld|TV4 Guld#17|Kanaler|Via Telia|#a3142a
+telia|Axess TV|Axess#24|Kanaler|Via Telia|#8a1f3d
+telia|Yle TV1|Yle TV1#221|Kanaler|Via Telia|#2a2a2a
+telia|Yle TV2|Yle TV2#222|Kanaler|Via Telia|#2a2a2a
+telia|TV4 Sportkanalen|Sportkanalen#16|Sport|Via Telia|#c4122f
+telia|Eurosport 2|Eurosport 2#15|Sport|Via Telia|#1d2f6a
+telia|V Sport Extra|V sport extra#69|Sport|Via Telia|#1d4fa0
+telia|V Sport Vinter|V sport vinter#71|Sport|Via Telia|#1d4fa0
+telia|seSport|seSport#66|Sport|Via Telia|#333333
+telia|ATG Live|ATG Live#111|Sport|Via Telia|#1a5a2a
+telia|Liiga 1|Liiga 1#242|Sport|Via Telia|#c4202a
+telia|Liiga 2|Liiga 2#243|Sport|Via Telia|#c4202a
+telia|V Film Action|V film action#53|Film och serier|Via Telia|#1d4fa0
+telia|V Classics|V classics#56|Film och serier|Via Telia|#1d4fa0
+telia|V Crime|V crime#57|Film och serier|Via Telia|#1d4fa0
+telia|SkyShowtime 1|SkyShowtime 1#58|Film och serier|Via Telia|#2a2a40
+telia|SkyShowtime 2|SkyShowtime 2#59|Film och serier|Via Telia|#2a2a40
+telia|MTV|MTV#101|Film och serier|Via Telia|#2a2a2a
+telia|Discovery|Discovery#21|Fakta och nyheter|Via Telia|#1d3f6a
+telia|Animal Planet|Animal Planet#25|Fakta och nyheter|Via Telia|#1d5fa0
+telia|National Geographic|National Geographic#26|Fakta och nyheter|Via Telia|#b89a10
+telia|Nat Geo Wild|Nat Geo Wild#27|Fakta och nyheter|Via Telia|#8a7a10
+telia|Love Nature|Love Nature#28|Fakta och nyheter|Via Telia|#2a6a3a
+telia|History|History#29|Fakta och nyheter|Via Telia|#8a6a1a
+telia|H2|H2#30|Fakta och nyheter|Via Telia|#8a4a1a
+telia|Travelxp|Travelxp#61|Fakta och nyheter|Via Telia|#c41a3a
+telia|Viasat Explore|Viasat Explore#62|Fakta och nyheter|Via Telia|#a01a1a
+telia|Viasat Nature|Viasat Nature#63|Fakta och nyheter|Via Telia|#6a8a1a
+telia|Viasat History|Viasat History#64|Fakta och nyheter|Via Telia|#1d3fa0
+telia|Sky News|Sky News#31|Fakta och nyheter|Via Telia|#a0141f
+telia|CNBC|CNBC#32|Fakta och nyheter|Via Telia|#2a3a5a
+telia|CNN|CNN#33|Fakta och nyheter|Via Telia|#c4121f
+telia|BBC News|BBC News#34|Fakta och nyheter|Via Telia|#a0141f
+telia|BBC Nordic|BBC Nordic#35|Fakta och nyheter|Via Telia|#2a2a2a
+telia|Cartoon Network|Cartoon Network#82|Barn|Via Telia|#2a2a2a
+telia|Disney Channel|Disney Channel#83|Barn|Via Telia|#1d3fa0
+telia|Cartoonito|Cartoonito#86|Barn|Via Telia|#1d8ac4
