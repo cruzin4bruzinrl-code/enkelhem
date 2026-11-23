@@ -213,9 +213,12 @@ public class HomeActivity extends Activity {
         } catch (Exception e) { android.util.Log.i("HemJs", "RESULT fel " + e); }
     }
 
+    static volatile boolean saverIsOn;
+
     @Override
     protected void onPause() {
         super.onPause();
+        saverIsOn = false; Ambient.stop();
         if (earth != null) earth.onPause();
     }
 
@@ -636,6 +639,15 @@ public class HomeActivity extends Activity {
         public void earthSaver(final boolean on) {
             ui.post(() -> { if (earth != null) earth.setSaver(on); refresh60(on); });
             if (on) stopVideoBehind();
+            saverIsOn = on;
+            if (on) ui.postDelayed(() -> { if (saverIsOn) Ambient.start(HomeActivity.this); }, 1500); else Ambient.stop();
+        }
+
+        @JavascriptInterface
+        public boolean saverMusic(int set) {
+            android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
+            if (set >= 0) p.edit().putBoolean("saverMusic", set == 1).apply();
+            return p.getBoolean("saverMusic", true);
         }
 
         /** Tell the guard (Guard.java) that the next Telia start is ours. */

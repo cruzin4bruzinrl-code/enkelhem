@@ -28,9 +28,11 @@ public class ParticleDream extends DreamService {
     @Override public void onDreamingStarted() {
         super.onDreamingStarted();
         if (v != null) { v.setShown(true); v.setSaver(true); }
+        Ambient.start(this);
     }
 
     @Override public void onDreamingStopped() {
+        Ambient.stop();
         if (v != null) v.onPause();
         super.onDreamingStopped();
     }

@@ -304,7 +304,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="41.3";
+const VERSION="41.4";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -753,6 +753,7 @@ function remoteLabel(){const r=rInfo();return r&&r.url?r.url.replace("http://","
 function sleepText(){const r=rInfo();if(!r||!r.sleepAt)return "Av · OK väljer 30, 60, 90 eller 120 min";const m=Math.max(1,Math.round((r.sleepAt-Date.now())/6e4));return "Somnar om "+m+" min · OK ändrar";}
 function cycleSleep(){const r=rInfo(),left=r&&r.sleepAt?Math.round((r.sleepAt-Date.now())/6e4):0,steps=[30,60,90,120,0];
   const next=steps.find(x=>x>left+2);const v=next===undefined?0:next;call("sleepIn",v);toast(v?"Tv:n somnar om "+v+" min":"Insomningstimer av");setTimeout(fillPanel,200);}
+function saverMusicOn(){const r=call("saverMusic",-1);return r===null?true:String(r)==="true";}
 function devName(){return call("deviceName")||"TV:n";}
 function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(LS.get("ort",null)||{name:"Stockholm"}).name;
   return [
@@ -764,6 +765,7 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["cast","Plattan som fjärrkontroll",remoteLabel(),()=>toast("Öppna adressen i plattans webbläsare och skriv koden")],
    ["sun","Insomningstimer",sleepText(),cycleSleep],
    ["sun","Skärmsläckare","Partiklar · startar efter 10 min, OK visar den nu",()=>{closePanel();setTimeout(startSaver,400);}],
+   ["sun","Lugn musik i skärmsläckaren",saverMusicOn()?"På · svag spa-musik":"Av",()=>{call("saverMusic",saverMusicOn()?0:1);fillPanel();}],
    ["img","Mitt innehåll","Inspelat och sparat hos Telia",()=>act("content")],
    ["set","Mitt konto","Ditt Telia-konto",()=>act("account")],
    ["spark","Prestandaläge",perf?"På":"Av",()=>{LS.set("perf",!perf);applyPerf();fillPanel();}],
