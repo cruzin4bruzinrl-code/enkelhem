@@ -409,7 +409,22 @@ public class HomeActivity extends Activity {
     }
 
     /** The guard (started with 'hemvakt' from the phone) stops when the box restarts: say so on the TV. */
+    /** Our particles are the box's screensaver everywhere, not Google's. */
+    private void ensureDream() {
+        try {
+            String me = getPackageName() + "/.ParticleDream";
+            android.content.ContentResolver cr = getContentResolver();
+            if (!me.equals(Settings.Secure.getString(cr, "screensaver_components"))) {
+                Settings.Secure.putString(cr, "screensaver_components", me);
+                Settings.Secure.putString(cr, "screensaver_default_component", me);
+                Settings.Secure.putInt(cr, "screensaver_enabled", 1);
+                android.util.Log.d("HemTv", "skärmsläckare satt till Hem partiklar");
+            }
+        } catch (Exception e) { android.util.Log.d("HemTv", "skärmsläckare: " + e); }
+    }
+
     private void checkGuard() {
+        ensureDream();
         AdbSelf.ensureGuard(this);
         try {
             String g = Settings.Global.getString(getContentResolver(), "hem_guard");
