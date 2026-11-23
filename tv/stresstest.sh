@@ -268,6 +268,18 @@ if [ $JSOK = 1 ]; then
   a logcat -d | tr -d '\r' | grep -E "HemVakt|HemTv" | tail -10 | sed 's/^/     /' >> "$R"
 else say "Hoppas över (testkanalen svarade inte)"; fi
 
+sec "Plattan, skärmsläckare och timer"
+IP=$(echo "$ADDR" | cut -d: -f1)
+r=$(curl -s -m 5 -o /dev/null -w '%{http_code}' "http://$IP:8090/" 2>/dev/null); [ "$r" = 200 ] && say "Plattans sida: OK (http://$IP:8090)" || say "Plattans sida: FEL ($r)"
+r=$(curl -s -m 5 "http://$IP:8090/check?k=0000" -o /dev/null -w '%{http_code}' 2>/dev/null); say "Fel kod nekas: $([ "$r" = 403 ] && echo OK || echo "FEL ($r)")"
+r=$(curl -s -m 5 -o /dev/null -w '%{http_code} %{size_download}' "http://$IP:8090/icon?pkg=com.spotify.tv.android" 2>/dev/null); say "Appikon: $r"
+k=$(S "echo | toybox nc -w 2 127.0.0.1 8091 >/dev/null 2>&1 && echo ja || echo nej"); say "Vaktens tangentserver: $k"
+say "Skärmsläckare: $(S settings get secure screensaver_components)"
+say "Dygnsljus: $(js 'document.body.className' 4)"
+say "Nyheter: $(js 'NEWS.length+" rubriker från "+[...new Set(NEWS.map(x=>x.s))].join(", ")' 4)"
+say "Fortsätt titta: $(js 'CONT?(CONT.title+(CONT.img?" med bild":" utan bild")):"inget"' 4)"
+a logcat -d -s HemTv | grep -E "plattan|insomning|nattrensning|skärmsläckare" | tail -5 | sed 's/^/     /' | while read -r l; do say "$l"; done
+
 sec "Slutläge"
 home; sleep 3; shot 07_slut
 say "Minne app: $(mem)"
