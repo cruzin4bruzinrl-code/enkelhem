@@ -56,7 +56,7 @@ final class Remote {
     static final String TAG = "HemTv";
     static final int PORT = 8090;
     private static Remote inst;
-    private final AccessibilityService svc;
+    private AccessibilityService svc;
     private final Handler h = new Handler(Looper.getMainLooper());
     private final SharedPreferences sp;
     private final CopyOnWriteArrayList<OutputStream> clients = new CopyOnWriteArrayList<>();
@@ -76,6 +76,12 @@ final class Remote {
     private long sleepAt;
 
     static Remote get() { return inst; }
+
+    /** The accessibility service was restarted: keep the running server, use the new service. */
+    void attach(AccessibilityService s) { svc = s; h.post(() -> { ptr = null; }); }
+
+    /** Type a channel number with the digit keys (through the guard). */
+    void digits(String num) { for (char ch : num.toCharArray()) if (ch >= '0' && ch <= '9') guardKey(android.view.KeyEvent.KEYCODE_0 + (ch - '0')); }
 
     Remote(AccessibilityService s) {
         svc = s;

@@ -42,7 +42,9 @@ public class HomeKeyService extends AccessibilityService {
     private static int scans;
     private static int channelRow, rowDowns = -1, sameTop, lastTop = -1;
     private static boolean atTop;
-    private static String channelNum;
+    private static String channelNum, numSig = "";
+    private static long digitsAt;
+    private static int numDir = 1, numSame;
     private static long pendingUntil;
     private static int presses;
     private static int phase;
@@ -92,12 +94,13 @@ public class HomeKeyService extends AccessibilityService {
         channel = null;
         int c = label.indexOf(':');
         if (c > 0) { channel = label.substring(c + 1).trim(); label = label.substring(0, c); }
-        channelRow = 0; rowDowns = -1; atTop = false; sameTop = 0; lastTop = -1; channelNum = null;
+        channelRow = 0; rowDowns = -1; atTop = false; sameTop = 0; lastTop = -1; channelNum = null; digitsAt = 0; numDir = 1; numSame = 0; numSig = "";
         if (channel != null && channel.contains("#")) {
             // "Kanal#16": find the channel by its number in Telia's guide (newer Telia app shows numbers on the logos)
             channelNum = channel.substring(channel.indexOf('#') + 1).trim();
             channel = channel.substring(0, channel.indexOf('#')).trim();
         }
+        pendingUntil = SystemClock.uptimeMillis() + (channelNum != null ? 45000 : 20000);
         if (channel != null && channel.contains("@")) {
             // "Kanal@7": the channel is row 7 in this box's Telia guide (boxes with other channel packages)
             try { channelRow = Integer.parseInt(channel.substring(channel.indexOf('@') + 1).trim()); } catch (Exception ignored) {}
@@ -107,7 +110,7 @@ public class HomeKeyService extends AccessibilityService {
         teliaAllowed = true;
         teliaPage = channel == null;   // Telia's own pages (recordings, account, guide) asked for by the user
         pending = label;
-        pendingUntil = SystemClock.uptimeMillis() + 20000;
+        if (channelNum == null) pendingUntil = SystemClock.uptimeMillis() + 20000;
         presses = 0;
         phase = 0;
         settle = 0;
@@ -134,7 +137,8 @@ public class HomeKeyService extends AccessibilityService {
         if (pending != null) { showOverlay(pending); schedule(900); }
         h.removeCallbacks(shot);
         h.postDelayed(shot, 15000);
-        if (remote == null) { remote = new Remote(this); remote.start(); }
+        if (Remote.get() == null) { remote = new Remote(this); remote.start(); }
+        else { remote = Remote.get(); remote.attach(this); }
         h.removeCallbacks(night);
         h.postDelayed(night, 60000);
     }
@@ -351,7 +355,16 @@ public class HomeKeyService extends AccessibilityService {
         @Override
         public void run() {
             if (pending == null) return;
-            if (SystemClock.uptimeMillis() > pendingUntil || presses > 30) { finish("gav upp"); return; }
+            if (SystemClock.uptimeMillis() > pendingUntil || presses > (channelNum != null ? 90 : 30)) {
+                boolean wasChannel = channel != null;
+                finish("gav upp");
+                // never leave the user on Telia's own pages: back to Hem, and say so
+                if (wasChannel) { goHem(); h.postDelayed(() -> HomeActivity.runJs("window.toast&&toast('Kanalen gick inte att starta – försök igen')"), 900); }
+                return;
+            }
+            // the channel is playing (number typed on the remote, or chosen in the grid): done
+            String fc = fgCls == null ? "" : fgCls;
+            if (channelNum != null && digitsAt > 0 && fc.toLowerCase().contains("player")) { finish("lyckades (" + fc + ")"); return; }
             boolean done = false;
             try { done = step(); } catch (Exception ex) { Log.d(TAG, "fel: " + ex); }
             if (done) finish("lyckades");
@@ -427,6 +440,7 @@ public class HomeKeyService extends AccessibilityService {
             }
             Log.d(TAG, "guide fokus=" + (focus == null ? "inget" : f.toShortString()));
             if (focus == null) return false;
+            if (channelNum != null) return numberStep(root, f, s);
             if (f.left < s.width() * 0.2f && rights < 2) { rights++; press(GLOBAL_ACTION_DPAD_RIGHT); return false; }
             if (f.centerY() < s.height() * 0.47f) { if (channelRow > 0 && rowDowns < 0) atTop = true; press(GLOBAL_ACTION_DPAD_DOWN); return false; }
             if (channelNum != null) {
@@ -586,6 +600,63 @@ public class HomeKeyService extends AccessibilityService {
             for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
         }
         return null;
+    }
+
+    /**
+     * Newer Telia app ("Tv-kanaler": a grid of channel cards with numbers). First the fast way: type the number
+     * (through the guard, like the remote's digit keys). If Telia does not switch, walk the grid to the card.
+     */
+    private boolean numberStep(AccessibilityNodeInfo root, Rect f, Rect s) {
+        long now = SystemClock.uptimeMillis();
+        if (digitsAt == 0) {
+            digitsAt = now;
+            Remote r = Remote.get();
+            if (r != null) { r.digits(channelNum); Log.d(TAG, "skriver kanalnummer " + channelNum); }
+            return false;
+        }
+        if (now - digitsAt < 3200) return false;   // give Telia a moment to switch by number
+        if (f.bottom < s.height() * 0.2f) { press(GLOBAL_ACTION_DPAD_DOWN); return false; }   // focus in the tabs: into the grid
+        AccessibilityNodeInfo nn = findNumber(root, channelNum, Integer.MAX_VALUE / 4);
+        if (nn != null && nn.isVisibleToUser()) {
+            Rect c = new Rect();
+            nn.getBoundsInScreen(c);
+            int px = c.centerX() + 150, py = c.top - 60;   // inside the card: the number sits in its lower left corner
+            if (f.contains(px, py) || (f.contains(c.centerX(), c.centerY()))) {
+                Log.d(TAG, "rätt kanal: nummer " + channelNum + " (" + channel + ")");
+                press(GLOBAL_ACTION_DPAD_CENTER);
+                phase = 2;
+                phaseStart = 0;
+                phaseUntil = SystemClock.uptimeMillis() + 10000;
+                return false;
+            }
+            if (py < f.top) press(GLOBAL_ACTION_DPAD_UP);
+            else if (py > f.bottom) press(GLOBAL_ACTION_DPAD_DOWN);
+            else if (px < f.left) press(GLOBAL_ACTION_DPAD_LEFT);
+            else press(GLOBAL_ACTION_DPAD_RIGHT);
+            return false;
+        }
+        // not on screen: scroll, and turn around at the end of the list
+        String sig = numbersOnScreen(root);
+        if (sig.equals(numSig)) { if (++numSame >= 2) { numDir = -numDir; numSame = 0; } } else numSame = 0;
+        numSig = sig;
+        press(numDir > 0 ? GLOBAL_ACTION_DPAD_DOWN : GLOBAL_ACTION_DPAD_UP);
+        return false;
+    }
+
+    private static String numbersOnScreen(AccessibilityNodeInfo root) {
+        StringBuilder b = new StringBuilder();
+        ArrayDeque<AccessibilityNodeInfo> q = new ArrayDeque<>();
+        q.add(root);
+        int seen = 0;
+        while (!q.isEmpty() && seen < 3000) {
+            AccessibilityNodeInfo n = q.poll();
+            if (n == null) continue;
+            seen++;
+            CharSequence t = n.getText();
+            if (t != null && t.toString().trim().matches("\\d{1,3}")) b.append(t).append(',');
+            for (int i = 0; i < n.getChildCount(); i++) q.add(n.getChild(i));
+        }
+        return b.toString();
     }
 
     /** A channel number in the guide's left column ("16" on the TV4 Sportkanalen logo). want == null: any number. */
