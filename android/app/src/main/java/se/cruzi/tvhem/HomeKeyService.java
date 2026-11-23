@@ -61,6 +61,42 @@ public class HomeKeyService extends AccessibilityService {
     static volatile long requestAt;
     private static String lastFocus = "";
     private final Handler h = new Handler(Looper.getMainLooper());
+
+    /* ---- screensaver: after N seconds without a key press, and only when nothing plays ---- */
+    static volatile long lastInput = System.currentTimeMillis();
+    static void touch() { lastInput = System.currentTimeMillis(); }
+    static int saverSec(android.content.Context c) { return c.getSharedPreferences("hem", MODE_PRIVATE).getInt("saverSec", 30); }
+    private final Runnable idle = new Runnable() {
+        @Override public void run() {
+            h.postDelayed(this, 3000);
+            int sec = saverSec(HomeKeyService.this);
+            if (sec <= 0 || SaverActivity.showing || pending != null) return;
+            long now = System.currentTimeMillis();
+            if (now - lastInput < sec * 1000L || now - requestAt < 90000) return;
+            if (somethingPlays()) { return; }
+            android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+            if (pm != null && !pm.isInteractive()) return;
+            Log.d(TAG, "skärmsläckare efter " + sec + " s");
+            try {
+                startActivity(new Intent(HomeKeyService.this, SaverActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS));
+            } catch (Exception e) { Log.d(TAG, "skärmsläckaren startade inte: " + e); }
+            lastInput = now;
+        }
+    };
+    private boolean somethingPlays() {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(AUDIO_SERVICE);
+            if (am != null && am.isMusicActive()) return true;
+            android.media.session.MediaSessionManager msm = (android.media.session.MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
+            for (android.media.session.MediaController mc : msm.getActiveSessions(new android.content.ComponentName(this, MediaListener.class))) {
+                android.media.session.PlaybackState st = mc.getPlaybackState();
+                if (st != null && st.getState() == android.media.session.PlaybackState.STATE_PLAYING) return true;
+            }
+        } catch (Exception ignored) {}
+        String c = fgCls == null ? "" : fgCls;
+        return c.contains("Player") && !c.contains("se.cruzi"); // a video player on screen (e.g. Telia live) counts as playing
+    }
     private View overlay;
     private Remote remote;
 
@@ -142,6 +178,9 @@ public class HomeKeyService extends AccessibilityService {
         else { remote = Remote.get(); remote.attach(this); }
         h.removeCallbacks(night);
         h.postDelayed(night, 60000);
+        h.removeCallbacks(idle);
+        touch();
+        h.postDelayed(idle, 3000);
     }
 
     /** Every 15 s while a video plays in another app: keep a small picture of it for "Fortsätt titta" on the home screen. */
@@ -205,6 +244,7 @@ public class HomeKeyService extends AccessibilityService {
 
     @Override
     protected boolean onKeyEvent(KeyEvent e) {
+        touch();
         // Back while watching a Telia channel: straight home to Hem instead of into Telia's guide/start page
         if (e.getKeyCode() == KeyEvent.KEYCODE_BACK && pending == null && teliaAllowed && inTelia()) {
             if (e.getAction() == KeyEvent.ACTION_UP) {

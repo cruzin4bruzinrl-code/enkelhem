@@ -253,6 +253,7 @@ final class Remote {
     // ---------------- commands ----------------
 
     private void handle(JSONObject c, OutputStream from) throws Exception {
+        HomeKeyService.touch();
         String t = c.optString("t");
         switch (t) {
             case "move": h.post(() -> move((float) c.optDouble("dx"), (float) c.optDouble("dy"))); break;

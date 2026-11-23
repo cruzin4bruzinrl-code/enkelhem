@@ -41,6 +41,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".SaverActivity" android:exported="false" android:excludeFromRecents="true"
+            android:launchMode="singleInstance" android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|uiMode" />
+
         <activity
             android:name=".PlayerActivity"
             android:exported="true"

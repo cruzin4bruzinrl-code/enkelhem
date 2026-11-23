@@ -644,6 +644,18 @@ public class HomeActivity extends Activity {
         }
 
         @JavascriptInterface
+        public int saverSec(int set) {
+            if (set >= 0) getSharedPreferences("hem", MODE_PRIVATE).edit().putInt("saverSec", set).apply();
+            HomeKeyService.touch();
+            return HomeKeyService.saverSec(HomeActivity.this);
+        }
+
+        @JavascriptInterface
+        public void showSaver() {
+            ui.post(() -> { try { startActivity(new Intent(HomeActivity.this, SaverActivity.class).addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)); } catch (Exception ignored) {} });
+        }
+
+        @JavascriptInterface
         public boolean saverMusic(int set) {
             android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
             if (set >= 0) p.edit().putBoolean("saverMusic", set == 1).apply();

@@ -67,7 +67,7 @@ body.saving #saver{background:transparent;}
 #home.sheeton #dock,#home.sheeton #dlabel{opacity:.25;transition:opacity .3s;}
 #sheet{z-index:6;}
 /* frosted glass: each widget shows the blurred photo exactly behind it (set by frost()), cheap on the box unlike backdrop-filter */
-#mw,#cw,#nw,#dock{background-image:linear-gradient(rgba(250,247,250,.26),rgba(250,247,250,.26)),var(--bgf,none);background-size:100% 100%,1920px 1080px;background-repeat:no-repeat;}
+#mw,#cw,#nw{background-image:linear-gradient(rgba(250,247,250,.26),rgba(250,247,250,.26)),var(--bgf,none);background-size:100% 100%,1920px 1080px;background-repeat:no-repeat;}
 #mw.focus,#cw.focus,#nw.focus{background-image:linear-gradient(rgba(255,255,255,.7),rgba(255,255,255,.7)),var(--bgf,none);}
 .wg{background:rgba(250,247,250,.38);border:1.5px solid rgba(255,255,255,.55);color:#16181d;box-shadow:0 20px 50px rgba(30,25,40,.18);border-radius:34px;}
 #cw{position:absolute;left:96px;top:446px;width:600px;display:none;align-items:center;gap:24px;padding:18px;border-radius:30px;
@@ -127,7 +127,7 @@ body.saving #saver{background:transparent;}
 .sigbars i{width:24px;border-radius:7px;background:rgba(22,24,29,.12);height:0;transition:height .6s var(--ease);}
 .sigbars i.on{background:linear-gradient(180deg,#5b8cff,#a06bff);}
 .shint{margin-top:22px;font-size:19px;opacity:.5;text-align:center;}
-#dock{position:absolute;left:50%;bottom:88px;transform:translateX(-50%);display:flex;gap:30px;padding:26px 34px;border-radius:52px;
+#dock{position:absolute;left:0;right:0;margin:0 auto;width:max-content;bottom:88px;display:flex;gap:30px;padding:26px 34px;border-radius:52px;
   background:rgba(250,247,250,.34);border:1.5px solid rgba(255,255,255,.55);box-shadow:0 30px 70px rgba(30,25,40,.25),inset 0 1px 0 rgba(255,255,255,.6);
   transition:transform .35s var(--ease);}
 .dt{width:156px;height:156px;border-radius:38px;display:grid;place-items:center;position:relative;flex:0 0 auto;
@@ -157,6 +157,31 @@ body.saving #saver{background:transparent;}
   text-shadow:0 2px 14px rgba(0,0,0,.45);transition:opacity .2s ease;}
 #dlabel small{display:block;font-size:22px;font-weight:500;opacity:.85;margin-top:4px;}
 
+.dt .dn{display:none;}
+/* ===== "Tydligt läge": bigger, bolder, black text, clearer glass, names under every icon (for weaker eyes) ===== */
+body.see .clock,body.see .topr{color:#000;}
+body.see .clock .t{font-size:132px;font-weight:400;}
+body.see .clock .d{font-size:44px;font-weight:700;opacity:1;}
+body.see .topr{opacity:1;gap:20px;top:64px;}
+body.see .ti{flex-direction:column;gap:6px;padding:12px 18px;}
+body.see .ti::after{content:attr(data-l);font-size:22px;font-weight:700;}
+body.see .topr svg{width:52px;height:52px;}
+body.see .wx{font-size:40px;font-weight:800;}
+body.see .wx .wsv,body.see .wx svg{width:46px;height:46px;}
+body.see #mw,body.see #cw,body.see #nw,body.see #np{color:#000;background-image:linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.66)),var(--bgf,none);}
+body.see #mw.focus,body.see #cw.focus,body.see #nw.focus{background-image:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.9)),var(--bgf,none);}
+body.see #mw .app,body.see #cw .app,body.see #nw .app,body.see #np .app{font-size:23px;opacity:.85;font-weight:700;}
+body.see #mw b{font-size:40px;}body.see #mw small,body.see #cw small{font-size:26px;opacity:.95;font-weight:600;}
+body.see #mw{top:300px;}body.see #mw .mwp{font-size:30px;}
+body.see #cw{top:512px;}body.see #cw b{font-size:34px;}
+body.see #nw{top:196px;}body.see #nwl .ft b{font-size:31px;}body.see #nwl .ln{font-size:27px;}body.see #nwl .ft small,body.see #nwl .ln small{font-size:22px;opacity:.85;}
+body.see #np b{font-size:36px;}body.see #np small{font-size:28px;opacity:.95;}
+body.see .hint2{font-size:24px!important;font-weight:700;}
+body.see #dock{background:rgba(255,255,255,.55);}
+body.see .dt{height:206px;width:172px;grid-template-rows:auto auto;align-content:start;padding-top:16px;gap:10px;}
+body.see .dt .dn{display:block;font-size:23px;font-weight:800;color:#000;white-space:nowrap;}
+body.see #dlabel{bottom:376px;font-size:40px;font-weight:800;text-shadow:0 2px 12px rgba(0,0,0,.7),0 0 3px rgba(0,0,0,.6);}
+body.see #dlabel small{font-size:27px;font-weight:600;opacity:1;}
 /* top */
 /* cards (Alla appar) */
 .rc{width:262px;height:164px;border-radius:22px;overflow:hidden;position:relative;display:grid;place-items:center;
@@ -266,9 +291,9 @@ body.gridon #home{opacity:0;transform:scale(.97);}
   <div id="home">
     <div class="clock"><div class="t" id="ct">--:--</div><div class="d" id="cd"></div></div>
     <div class="topr">
-      <div class="ti" id="tiwx"><div class="wx" id="wx"></div></div>
-      <div class="ti" id="tiwifi"><svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/></svg></div>
-      <div class="ti" id="tigear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div>
+      <div class="ti" id="tiwx" data-l="Väder"><div class="wx" id="wx"></div></div>
+      <div class="ti" id="tiwifi" data-l="Wi-Fi"><svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/></svg></div>
+      <div class="ti" id="tigear" data-l="Inställningar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></div>
     </div>
     <div id="mw"><svg class="ring" viewBox="0 0 120 120"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8cff"/><stop offset="1" stop-color="#a06bff"/></linearGradient></defs>
       <circle cx="60" cy="60" r="48" class="rb"/><circle cx="60" cy="60" r="48" class="rf" id="mwring"/></svg><div class="mwp" id="mwp">–</div>
@@ -304,7 +329,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="41.4";
+const VERSION="41.6";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -519,7 +544,7 @@ function buildOrbit(){
   add({key:"settings",name:"Inställningar",desc:"Boxens inställningar",col:"rgba(255,255,255,.55)",svg:GLYPH.gear.replace('stroke="currentColor"','stroke="#3a3f4a"'),run:()=>{leftForApp=true;call("action","settings");}});
   ORB=it;
   $("dock").innerHTML=ORB.map(o=>{const inner=o.icon?`<img src="data:image/png;base64,${o.icon}">`:o.svg?o.svg:`<span class="wm">${o.name}</span>`;
-    return `<div class="dt"><div class="tile" style="background:${o.icon?"#fff":o.col||"#5a6b8c"}">${inner}</div></div>`;}).join("");
+    return `<div class="dt"><div class="tile" style="background:${o.icon?"#fff":o.col||"#5a6b8c"}">${inner}</div><span class="dn">${o.name}</span></div>`;}).join("");
   ORB.forEach((o,i)=>o.el=$("dock").children[i]);
   const i=ORB.findIndex(o=>o.key===lastKey);sel=i>=0?i:0;showSel();}
 function showSel(){const o=ORB[sel];if(!o)return;lastKey=o.key;
@@ -528,7 +553,7 @@ function showSel(){const o=ORB[sel];if(!o)return;lastKey=o.key;
   /* many favourites: slide the dock so the chosen tile stays on screen */
   const n=ORB.length,w=186,full=n*w+38,max=1760;let dx=0;
   if(full>max){const c=sel*w+w/2+38;dx=Math.max(-(full-max)/2,Math.min((full-max)/2,full/2-c));}
-  $("dock").style.transform=`translateX(calc(-50% + ${dx}px))`;}
+  $("dock").style.transform=dx?`translateX(${dx}px)`:"none";}
 function setSel(i){sel=Math.max(0,Math.min(ORB.length-1,i));showSel();}
 function activate(){const o=ORB[sel];if(!o)return;try{o.run();}catch(e){toast(o.name+" gick inte att öppna");}}
 /* ===== now playing: Spotify or other music shows a small player on the home screen ===== */
@@ -632,8 +657,8 @@ function setBg(){const local="file:///android_asset/bg.jpg",remote="https://raw.
   bl.onerror=()=>{if(bl.src.indexOf("raw.")<0)bl.src=remote.replace("bg.jpg","bgblur.jpg");};bl.src=(B?local:remote).replace("bg.jpg","bgblur.jpg");
   const fr=new Image();fr.onload=()=>{document.documentElement.style.setProperty("--bgf",`url("${fr.src}")`);frost();};
   fr.onerror=()=>{if(fr.src.indexOf("raw.")<0)fr.src=remote.replace("bg.jpg","bgfrost.jpg");};fr.src=(B?local:remote).replace("bg.jpg","bgfrost.jpg");}
-function frost(){["mw","cw","nw","dock"].forEach(id=>{const e=$(id);if(!e||!e.offsetWidth)return;
-  const x=id==="dock"?e.offsetLeft-e.offsetWidth/2:e.offsetLeft;e.style.backgroundPosition=`0 0,${-x}px ${-e.offsetTop}px`;});}
+function frost(){["mw","cw","nw"].forEach(id=>{const e=$(id);if(!e||!e.offsetWidth)return;
+  const x=e.offsetLeft;e.style.backgroundPosition=`0 0,${-x}px ${-e.offsetTop}px`;});}
 setInterval(frost,4000);
 
 /* the native solar system behind the page is only used by the screensaver */
@@ -753,6 +778,13 @@ function remoteLabel(){const r=rInfo();return r&&r.url?r.url.replace("http://","
 function sleepText(){const r=rInfo();if(!r||!r.sleepAt)return "Av · OK väljer 30, 60, 90 eller 120 min";const m=Math.max(1,Math.round((r.sleepAt-Date.now())/6e4));return "Somnar om "+m+" min · OK ändrar";}
 function cycleSleep(){const r=rInfo(),left=r&&r.sleepAt?Math.round((r.sleepAt-Date.now())/6e4):0,steps=[30,60,90,120,0];
   const next=steps.find(x=>x>left+2);const v=next===undefined?0:next;call("sleepIn",v);toast(v?"Tv:n somnar om "+v+" min":"Insomningstimer av");setTimeout(fillPanel,200);}
+const SAVER_STEPS=[30,300,600,1200,0];
+function saverSecs(){const r=call("saverSec",-1);return r===null?30:+r;}
+function saverTxt(){const s=saverSecs();return s<=0?"Av · OK ändrar":"Startar efter "+(s<60?s+" sek":s/60+" min")+" · OK ändrar";}
+function cycleSaver(){const s=saverSecs(),i=SAVER_STEPS.indexOf(s),n=SAVER_STEPS[(i+1)%SAVER_STEPS.length];call("saverSec",n);
+  toast(n?"Skärmsläckaren startar efter "+(n<60?n+" sekunder":n/60+" minuter"):"Skärmsläckaren är av");fillPanel();}
+function seeOn(){return LS.get("see",BOX!=="");}
+function applySee(){document.body.classList.toggle("see",seeOn());setTimeout(frost,50);}
 function saverMusicOn(){const r=call("saverMusic",-1);return r===null?true:String(r)==="true";}
 function devName(){return call("deviceName")||"TV:n";}
 function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(LS.get("ort",null)||{name:"Stockholm"}).name;
@@ -764,7 +796,9 @@ function qItems(){const perf=LS.get("perf",false),fps=LS.get("fps",false),ort=(L
    ["sun","Väderort",ort,()=>{placesFrom="panel";openPlaces();}],
    ["cast","Plattan som fjärrkontroll",remoteLabel(),()=>toast("Öppna adressen i plattans webbläsare och skriv koden")],
    ["sun","Insomningstimer",sleepText(),cycleSleep],
-   ["sun","Skärmsläckare","Partiklar · startar efter 10 min, OK visar den nu",()=>{closePanel();setTimeout(startSaver,400);}],
+   ["sun","Skärmsläckare",saverTxt(),cycleSaver],
+   ["sun","Visa skärmsläckaren nu","Partiklar och lugn musik",()=>{closePanel();setTimeout(()=>{if(B&&B.showSaver)B.showSaver();else startSaver();},400);}],
+   ["img","Tydligt läge",(seeOn()?"På":"Av")+" · större text, svart text och namn under ikonerna",()=>{LS.set("see",!seeOn());applySee();fillPanel();}],
    ["sun","Lugn musik i skärmsläckaren",saverMusicOn()?"På · svag spa-musik":"Av",()=>{call("saverMusic",saverMusicOn()?0:1);fillPanel();}],
    ["img","Mitt innehåll","Inspelat och sparat hos Telia",()=>act("content")],
    ["set","Mitt konto","Ditt Telia-konto",()=>act("account")],
@@ -851,7 +885,9 @@ function startSaver(){if(saverOn)return;
   if(NATIVE_EARTH){earthState();try{B.earthSaver(true);}catch(e){}document.body.classList.add("saving");$("saver").classList.add("open");return;}
   sPhoto();$("saver").classList.add("open");sT=setInterval(sPhoto,20000);}
 function stopSaver(){saverOn=false;setTimeout(earthState,1300);clearInterval(sT);$("saver").classList.remove("open");if(NATIVE_EARTH){try{B.earthSaver(false);}catch(e){}document.body.classList.remove("saving");}setTimeout(()=>{$("saver").querySelectorAll(".sp").forEach(e=>e.remove());sCur=null;},400);}
-function bumpIdle(){clearTimeout(iT);iT=setTimeout(startSaver,6e5);}bumpIdle();
+/* the app counts idle time itself (HomeKeyService) – in every app, not only here; the page timer is only for a plain browser */
+const NATIVE_SAVER=!!(B&&B.saverSec);
+function bumpIdle(){clearTimeout(iT);if(!NATIVE_SAVER)iT=setTimeout(startSaver,30000);}bumpIdle();
 
 /* ===== self-update from GitHub (only when started through the loader) ===== */
 const SRC="https://raw.githubusercontent.com/cruzin4bruzinrl-code/enkelhem/main/tv/index.html";
@@ -897,7 +933,7 @@ function noScroll(){[document.scrollingElement,document.body,$("stage")].forEach
 addEventListener("scroll",noScroll,true);
 addEventListener("resize",fit);fit();
 if(LS.get("fps",false)){fpsOn=true;$("fps").style.display="block";requestAnimationFrame(fpsLoop);}
-setBg();initEarth();applyPerf();buildOrbit();render();earthState();
+setBg();initEarth();applyPerf();applySee();buildOrbit();render();earthState();
 (function(){let n=0,t0=0;function m(t){if(!t0)t0=t;n++;if(t-t0<2000)return requestAnimationFrame(m);
   LS.set("measuredFps",Math.round(n*1000/(t-t0)));}setTimeout(()=>requestAnimationFrame(m),1500);})();
 </script>
