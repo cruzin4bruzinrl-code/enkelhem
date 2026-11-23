@@ -11,7 +11,7 @@ A am start -n se.cruzi.tvhem/.HomeActivity --es js64 "$(printf '%s' "$w" | base6
 echo "Startar $CH … vänta 30 s"
 sleep 30
 F=/storage/emulated/0/Download/kanalprov.txt
-{ echo "Kanal: $CH"; echo "Nu på skärmen: $(A dumpsys activity activities | grep -m1 topResumedActivity)"; A logcat -d -s HemTv; } > "$F"
+{ echo "Kanal: $CH"; echo "Vakten: $(A pgrep -f "tvhem.Gu[a]rd" | head -1)"; echo "Nu på skärmen: $(A dumpsys activity activities | grep -m1 topResumedActivity)"; A logcat -d -s HemTv; } > "$F"
 adb -s "$ADDR" exec-out screencap -p > /storage/emulated/0/Download/kanalprov.png 2>/dev/null
-grep -E "rätt kanal|hittade inte|klar:|väntar|nummer" "$F" | tail -6
+grep -E "rätt kanal|hittade inte|klar:|skriver|Vakten" "$F" | tail -6
 echo "Klart. Skicka Download/kanalprov.txt och kanalprov.png till Claude."
