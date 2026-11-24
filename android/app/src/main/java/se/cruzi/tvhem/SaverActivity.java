@@ -58,7 +58,7 @@ public class SaverActivity extends Activity {
         setContentView(v);
         // bright picture saver (default): the home screen's own background, drifting slowly, with a big clock — it does not darken the room like the space particles
         android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
-        if (p.getInt("saverStyle", 0) == 0 && !ytFirst()) {
+        if (p.getInt("saverStyle", 1) == 0 && !ytFirst()) {
             try (java.io.InputStream in = getAssets().open("bg" + p.getString("bgSuf", "") + ".jpg")) {
                 pic = new android.widget.ImageView(this);
                 pic.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
