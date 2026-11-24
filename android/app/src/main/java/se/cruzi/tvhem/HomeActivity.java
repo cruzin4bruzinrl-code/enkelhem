@@ -690,6 +690,16 @@ public class HomeActivity extends Activity {
         }
 
         @JavascriptInterface
+        public int saverStyle(int set) {
+            android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
+            if (set >= 0) p.edit().putInt("saverStyle", set).apply();
+            return p.getInt("saverStyle", 0);
+        }
+
+        @JavascriptInterface
+        public void saverBg(String suf) { getSharedPreferences("hem", MODE_PRIVATE).edit().putString("bgSuf", suf == null ? "" : suf).apply(); }
+
+        @JavascriptInterface
         public int musicTunes() { return Ambient.NONE; } // 8 = this app also has the YouTube stream
 
         @JavascriptInterface

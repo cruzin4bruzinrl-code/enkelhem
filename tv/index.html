@@ -370,7 +370,7 @@ body.gridon #home{opacity:0;transform:scale(.97);}
 
 <script>
 "use strict";
-const VERSION="42.8";
+const VERSION="42.9";
 let saverOn=false,sT=0,iT=0,sCur=null;
 const B=window.OceanBridge;
 const $=id=>document.getElementById(id);
@@ -932,6 +932,7 @@ function custItems(){const t=tuneIx(),v=volIx();return [
    ["img","Tydligt läge",(seeOn()?"På":"Av")+" · större, svart text och namn under ikonerna",()=>{LS.set("see",!seeOn());applySee();applySizes();fillPanel();}],
    ["sun","Kvällsljus",(todOn()?"På · bakgrunden blir varmare och mörkare på kvällen":"Av · samma ljusa bakgrund hela dagen"),()=>{LS.set("tod",!todOn());tick();fillPanel();}],
    ["sun","Skärmsläckaren startar",saverTxt(),cycleSaver],
+   ["img","Skärmsläckarens bild",(+call("saverStyle",-1)===1?"Partiklar i rymden (mörk)":"Bakgrundsbilden med stor klocka (ljus)")+" · OK byter",()=>{call("saverStyle",+call("saverStyle",-1)===1?0:1);fillPanel();}],
    ["sun","Musik i skärmsläckaren",tuneName(t)+(newMusic()?" · OK byter och spelar en bit":" · fler val efter ny app: kör tvapp"),()=>{const L=tuneList(),n=(t+1)%L.length;call("saverTune",n);if(L[n].includes("YouTube"))toast("Skärmsläckaren visar spa-videon från YouTube i helskärm");else if(n<L.length-1)call("previewMusic");fillPanel();}],
    ["sun","Musikens volym","●".repeat(v)+"○".repeat(5-v)+" · OK ändrar och spelar en bit",()=>{const n=v%5+1;call("saverVol",n);call("previewMusic");fillPanel();}],
    ["sun","Visa skärmsläckaren nu","Partiklar och musik · Hem "+VERSION,()=>{closePanel();setTimeout(()=>{if(B&&B.showSaver)B.showSaver();else startSaver();},400);}]];}
@@ -941,7 +942,7 @@ function openBgPick(){$("bgl").innerHTML=BGS.map(b=>{const u=(B?"file:///android
   bi=Math.max(0,BGS.findIndex(b=>b[0]===bgSuf()));zone="bgpick";$("qp").classList.remove("open");$("bgpick").classList.add("open");render();}
 function bgKey(k){const N=BGS.length;
   if(k==="right")bi=Math.min(N-1,bi+1);else if(k==="left")bi=Math.max(0,bi-1);else if(k==="down")bi=Math.min(N-1,bi+4);else if(k==="up")bi=Math.max(0,bi-4);
-  else if(k==="ok"){LS.set("bgSuf",BGS[bi][0]);setBg();toast("Bakgrund: "+BGS[bi][1]);}
+  else if(k==="ok"){LS.set("bgSuf",BGS[bi][0]);call("saverBg",BGS[bi][0]);setBg();toast("Bakgrund: "+BGS[bi][1]);}
   if(k==="ok"||k==="back"){$("bgpick").classList.remove("open");zone="panel";$("qp").classList.add("open");fillPanel();return;}render();}
 function fillPanel(){QI=pMode==="custom"?custItems():qItems();$("qlist").innerHTML=QI.map(([ic,t,s])=>
   `<div class="qi"><div class="qic"><svg viewBox="0 0 24 24">${IC[ic]}</svg></div><div><b>${t}</b><small>${s}</small></div></div>`).join("");
@@ -1072,7 +1073,7 @@ function noScroll(){[document.scrollingElement,document.body,$("stage")].forEach
 addEventListener("scroll",noScroll,true);
 addEventListener("resize",fit);fit();
 if(LS.get("fps",false)){fpsOn=true;$("fps").style.display="block";requestAnimationFrame(fpsLoop);}
-setBg();initEarth();applyPerf();applySee();buildOrbit();applySizes();render();earthState();
+call("saverBg",bgSuf());setBg();initEarth();applyPerf();applySee();buildOrbit();applySizes();render();earthState();
 (function(){let n=0,t0=0;function m(t){if(!t0)t0=t;n++;if(t-t0<2000)return requestAnimationFrame(m);
   LS.set("measuredFps",Math.round(n*1000/(t-t0)));}setTimeout(()=>requestAnimationFrame(m),1500);})();
 </script>

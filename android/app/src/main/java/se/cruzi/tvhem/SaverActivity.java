@@ -56,12 +56,52 @@ public class SaverActivity extends Activity {
         getWindow().getDecorView().setBackgroundColor(0xff010208);
         v = new EarthView(this);
         setContentView(v);
+        // bright picture saver (default): the home screen's own background, drifting slowly, with a big clock — it does not darken the room like the space particles
+        android.content.SharedPreferences p = getSharedPreferences("hem", MODE_PRIVATE);
+        if (p.getInt("saverStyle", 0) == 0 && !ytFirst()) {
+            try (java.io.InputStream in = getAssets().open("bg" + p.getString("bgSuf", "") + ".jpg")) {
+                pic = new android.widget.ImageView(this);
+                pic.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                pic.setImageBitmap(android.graphics.BitmapFactory.decodeStream(in));
+                android.widget.FrameLayout root = findViewById(android.R.id.content);
+                root.addView(pic, new android.widget.FrameLayout.LayoutParams(-1, -1));
+                float d = getResources().getDisplayMetrics().density;
+                clock = new android.widget.TextView(this);
+                clock.setTextColor(0xffffffff); clock.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 96);
+                clock.setTypeface(android.graphics.Typeface.create("sans-serif-light", android.graphics.Typeface.NORMAL));
+                clock.setShadowLayer(18 * d, 0, 2 * d, 0x99000000); clock.setLineSpacing(0, 0.9f);
+                android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(-2, -2, android.view.Gravity.BOTTOM | android.view.Gravity.START);
+                lp.setMargins((int) (64 * d), 0, 0, (int) (56 * d));
+                root.addView(clock, lp);
+                v.setVisibility(View.GONE);
+            } catch (Exception ignored) { pic = null; }
+        }
     }
+    private android.widget.ImageView pic;
+    private android.widget.TextView clock;
+    private android.animation.ValueAnimator drift;
+    private final Runnable tickClock = new Runnable() { @Override public void run() {
+        if (clock == null) return;
+        java.util.Date now = new java.util.Date();
+        String t = new java.text.SimpleDateFormat("HH:mm", new java.util.Locale("sv", "SE")).format(now);
+        String d = new java.text.SimpleDateFormat("EEEE d MMMM", new java.util.Locale("sv", "SE")).format(now);
+        android.text.SpannableString sp = new android.text.SpannableString(t + "\n" + d.substring(0, 1).toUpperCase() + d.substring(1));
+        sp.setSpan(new android.text.style.RelativeSizeSpan(0.36f), t.length(), sp.length(), 0);
+        clock.setText(sp);
+        h.postDelayed(this, 15000);
+    }};
 
     @Override protected void onResume() {
         super.onResume();
         showing = true;
-        v.onResume(); v.setShown(true); v.setSaver(true);
+        if (pic != null) {
+            h.post(tickClock);
+            drift = android.animation.ValueAnimator.ofFloat(0f, 1f);
+            drift.setDuration(45000); drift.setRepeatMode(android.animation.ValueAnimator.REVERSE); drift.setRepeatCount(-1);
+            drift.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+            drift.addUpdateListener(a -> { float f = (float) a.getAnimatedValue(); pic.setScaleX(1.04f + 0.1f * f); pic.setScaleY(1.04f + 0.1f * f); pic.setTranslationX(-40 * f * getResources().getDisplayMetrics().density); });
+            drift.start();
+        } else { v.onResume(); v.setShown(true); v.setSaver(true); }
         h.postDelayed(music, ytFirst() ? 100 : 1500);
     }
 
@@ -69,7 +109,9 @@ public class SaverActivity extends Activity {
         h.removeCallbacks(music);
         Ambient.stop();
         if (yt != null) { try { yt.loadUrl("about:blank"); yt.destroy(); } catch (Exception ignored) {} yt = null; }
-        v.onPause();
+        if (drift != null) drift.cancel();
+        h.removeCallbacks(tickClock);
+        if (pic == null) v.onPause();
         showing = false;
         HomeKeyService.touch();
         super.onPause();
