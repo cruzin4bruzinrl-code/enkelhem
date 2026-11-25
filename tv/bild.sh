@@ -45,11 +45,6 @@ ok "Surround (Dolby/DTS) skickas när tv:n eller förstärkaren klarar det"
 S settings delete global encoded_surround_output_enabled_formats >/dev/null 2>&1
 AUD=$(S dumpsys audio | grep -m1 -oiE 'HDMI[^,]*' )
 [ -n "$AUD" ] && ok "Ljudet går via ${AUD}"
-# volume steps: make sure media is not left very low on the box itself (the TV remote controls the rest)
-V=$(S cmd media_session volume --stream 3 --get 2>/dev/null | grep -oE 'volume is [0-9]+' | grep -oE '[0-9]+')
-M=$(S cmd media_session volume --stream 3 --get 2>/dev/null | grep -oE 'in range \[[0-9]+\.\.[0-9]+\]' | grep -oE '[0-9]+\]' | tr -d ']')
-if [ -n "$V" ] && [ -n "$M" ] && [ "$V" -lt $((M*2/3)) ]; then S cmd media_session volume --stream 3 --set $M >/dev/null 2>&1; ok "Boxens egen volym var låg ($V/$M) – nu full, styr med tv:ns volym"; fi
-
 echo
 printf '\033[32mKlart.\033[0m Starta om boxen en gång.\n'
 echo "Tips för tv:n själv (görs med tv:ns egen kontroll): bildläge Film/Naturlig, stäng av rörelseutjämning och energisparläge."
