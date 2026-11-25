@@ -34,6 +34,23 @@ S pm trim-caches 64G >/dev/null; ok "Cache rensad"
 echo "  Optimerar apparna (kan ta några minuter)…"
 S cmd package bg-dexopt-job >/dev/null && ok "Apparna optimerade" || no "Optimeringen hoppades över"
 
+echo; echo "Turbo"
+# the apps you open most are compiled fully ahead of time: they start faster and stutter less (takes a little more storage)
+for p in se.cruzi.tvhem se.telia.android.tv se.tv4.android.tv com.google.android.youtube.tv com.liskovsoft.smarttubetv.beta com.spotify.tv.android com.disney.disneyplus com.netflix.ninja com.android.chrome com.google.android.webview; do
+  S pm path $p 2>/dev/null | grep -q apk || continue
+  S cmd package compile -m speed -f $p >/dev/null 2>&1 && ok "Snabbstart: $(echo $p | awk -F. '{print $(NF-1)"."$NF}')"
+done
+for p in $(S pm list packages 2>/dev/null | grep -iE 'telia|tv4' | cut -d: -f2); do S cmd package compile -m speed $p >/dev/null 2>&1; done
+# fewer apps kept waiting in the background: more free memory for the one on screen (the box has little RAM)
+S device_config put activity_manager max_cached_processes 12 >/dev/null 2>&1 && ok "Färre appar ligger kvar i bakgrunden"
+S device_config set_sync_disabled_for_tests persistent >/dev/null 2>&1
+# tidy the flash storage (TRIM) so reading and writing stay quick
+S sm idle-maint run >/dev/null 2>&1 && ok "Lagringen städad (TRIM)"
+# no logging of everything that happens = less background writing
+S settings put global netstats_enabled 0 >/dev/null 2>&1
+S setprop persist.logd.size 65536 >/dev/null 2>&1
+ok "Mindre loggning i bakgrunden"
+
 echo; echo "Reklam och avlyssning"
 curl -fsSL "$RAW/integritet.sh?v=$RANDOM" | bash | sed '1,2d;/Ångra allt/d;/Kör hemtest/d'
 
