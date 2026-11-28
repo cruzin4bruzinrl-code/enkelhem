@@ -11,6 +11,7 @@ no(){ printf '  \033[31m✗\033[0m %s\n' "$*"; }
 PKG=se.cruzi.tvhem
 echo "Box: $ADDR ($(S getprop ro.product.model))"
 
+if S pm path $PKG | grep -q apk; then
 echo; echo "Skärmsläckare"
 S settings put secure screensaver_components $PKG/.ParticleDream
 S settings put secure screensaver_default_component $PKG/.ParticleDream
@@ -23,6 +24,7 @@ ok "Startar efter $((t/60000)) min, även inne i appar"
 S am start -n com.android.systemui/.Somnambulator >/dev/null; sleep 4
 if S dumpsys dreams | grep -q ParticleDream; then ok "Provkörd: partiklarna visas"; else no "Kunde inte provköra – den startar ändå av sig själv efter $((t/60000)) min"; fi
 S input keyevent KEYCODE_WAKEUP >/dev/null; S am start -n $PKG/.HomeActivity >/dev/null
+fi
 
 echo; echo "Snabbare"
 for k in window_animation_scale transition_animation_scale animator_duration_scale; do S settings put global $k 0.5; done
